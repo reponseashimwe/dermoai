@@ -1,0 +1,45 @@
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Data (optional: uncomment if raw/processed data should not be committed)
+# data/raw/*/images/
+# data/processed/
+# data/augmented/
+
+# Models / checkpoints (often large)
+# models/checkpoints/
+# models/final/
+
+# Results / logs
+*.log
+results/experiments/*/
+
+# Environment
+.env
+.env.local
+*.env
