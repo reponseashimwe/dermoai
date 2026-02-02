@@ -26,7 +26,7 @@ build/
 *.swp
 *.swo
 
-Data (optional: uncomment if raw/processed data should not be committed)
+# Data (optional: uncomment if raw/processed data should not be committed)
 data/raw/*/images/
 # data/processed/
 # data/augmented/
