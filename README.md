@@ -1,6 +1,18 @@
-# DermoAI Dataset Download & Filtering
+# DermoAI
 
-Scripts for downloading and filtering Fitzpatrick17k and ISIC datasets for FST V-VI images.
+AI-assisted dermatological triage (FST V–VI focus). Scripts and notebooks for dataset download, filtering, and EDA.
+
+## Large files and GitHub
+
+**ISIC metadata** (`data/raw/isic/isic_metadata.csv`) is **~112 MB** and exceeds GitHub’s 100 MB limit. It is in `.gitignore` and is **not** in the repo.
+
+**To get the full project data (same structure as this repo):**
+
+- **Google Drive:** [dermoai folder](https://drive.google.com/drive/folders/13ZYlwGxlQpN17szV3-leiCCjs9lqb_Ay) — contains `data/`, `notebooks/`, `results/`. Download and merge into your clone so that `data/raw/isic/isic_metadata.csv` (and optionally images) are in place.
+
+**To get ISIC data yourself:** use the [ISIC CLI](https://github.com/ImageMarkup/isic-cli) or see [data/raw/isic/README.md](data/raw/isic/README.md).
+
+**After cloning:** If you only need to run EDA on existing data, place `isic_metadata.csv` in `data/raw/isic/` (from Drive or your own export). Fitzpatrick17k can be obtained via the download script or from the same Drive folder — see [data/raw/fitzpatrick17k/README.md](data/raw/fitzpatrick17k/README.md).
 
 ## Quick Start
 
@@ -68,26 +80,26 @@ python filter_dataset.py \
 
 ## Directory Structure
 
-After running all scripts:
+Layout matches the [Google Drive folder](https://drive.google.com/drive/folders/13ZYlwGxlQpN17szV3-leiCCjs9lqb_Ay) (`data/`, `notebooks/`, `results/`).
+
+After setup (Drive download or scripts):
 
 ```
 data/
-├── fitzpatrick17k/
-│   ├── images/              # Downloaded images
-│   ├── fitzpatrick17k.csv   # Full metadata
-│   ├── fitzpatrick17k_fst_v_vi.csv  # Filtered metadata
-│   ├── download_report.json
-│   └── filtered/            # Quality-filtered dataset
-│       ├── verified_fst_v_vi.csv
-│       ├── flagged_for_review.csv
-│       ├── invalid_labels.csv
-│       └── filtering_report.json
-└── isic/
-    ├── images/              # Manually downloaded images
-    ├── metadata/
-    ├── DOWNLOAD_INSTRUCTIONS.txt
-    └── filtered/            # Quality-filtered dataset
-        └── ...
+├── raw/
+│   ├── fitzpatrick17k/
+│   │   ├── images/
+│   │   ├── fitzpatrick17k.csv
+│   │   ├── fitzpatrick17k_fst_v_vi.csv
+│   │   └── README.md
+│   └── isic/
+│       ├── isic_metadata.csv   # From Drive or ISIC CLI (~112 MB, not in git)
+│       ├── images/             # Optional
+│       └── README.md
+notebooks/
+│   └── 01_data_exploration.ipynb
+results/
+└── eda/                        # Outputs from EDA (figures, CSVs, summary JSON)
 ```
 
 ## Filtering Logic
@@ -151,14 +163,9 @@ isic image download --search '{"fitzpatrick": {"$in": [5, 6]}}'
 
 ## Next Steps
 
-After downloading and filtering:
+After data is in place:
 
-1. **Data Analysis** (Week 2 objective)
-
-    ```bash
-    jupyter notebook data_analysis.ipynb
-    ```
-
+1. **EDA** — `notebooks/01_data_exploration.ipynb` (Fitzpatrick17k + ISIC, 9-category strategy, Stage 1 augmentation).
 2. **Data Augmentation**
     - Apply color jittering
     - Rotation, flipping
