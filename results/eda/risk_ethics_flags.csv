@@ -1,0 +1,5 @@
+Risk Type,Count,Severity,Mitigation
+Low-sample malignant conditions,5,HIGH,Aggressive augmentation (10x) + weighted loss
+Severe class imbalance,52,MEDIUM,Stratified sampling + focal loss
+FST label inconsistency,53%,MEDIUM,Use fitzpatrick_scale as primary; validate on both
+Insufficient validation samples,64,MEDIUM,Use k-fold cross-validation for rare classes

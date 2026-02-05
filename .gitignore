@@ -31,6 +31,9 @@ data/raw/*/images/
 # data/processed/
 # data/augmented/
 
+# Large files (exceed GitHub 100 MB limit) — download from Drive or ISIC CLI (see README)
+data/raw/isic/isic_metadata.csv
+
 # Models / checkpoints (often large)
 # models/checkpoints/
 # models/final/
@@ -43,3 +46,7 @@ results/experiments/*/
 .env
 .env.local
 *.env
+
+
+# MD files
+task.md

@@ -1,0 +1,8 @@
+category,current_samples,target_samples,augmentation_needed,augmentation_factor
+malignant epidermal,108,200,92,2.0x
+benign epidermal,102,200,98,2.0x
+benign dermal,77,200,123,3.0x
+malignant melanoma,45,200,155,5.0x
+malignant dermal,36,200,164,6.0x
+benign melanocyte,24,200,176,9.0x
+malignant cutaneous lymphoma,17,200,183,12.0x

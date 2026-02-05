@@ -1,0 +1,113 @@
+condition,current_samples,category,target_samples,augmentation_factor,augmented_samples
+pityriasis rubra pilaris,127,Low Priority (≥50 samples),127,1,127
+lichen planus,116,Low Priority (≥50 samples),116,1,116
+lupus erythematosus,89,Low Priority (≥50 samples),89,1,89
+psoriasis,85,Low Priority (≥50 samples),85,1,85
+neurofibromatosis,74,Low Priority (≥50 samples),74,1,74
+scabies,73,Low Priority (≥50 samples),73,1,73
+squamous cell carcinoma,63,Low Priority (≥50 samples),63,1,63
+vitiligo,60,Low Priority (≥50 samples),60,1,60
+sarcoidosis,50,Low Priority (≥50 samples),50,1,50
+neutrophilic dermatoses,46,Moderate (30-49 samples),50,2,92
+scleroderma,45,Moderate (30-49 samples),50,2,90
+keloid,44,Moderate (30-49 samples),50,2,88
+nematode infection,44,Moderate (30-49 samples),50,2,88
+papilomatosis confluentes and reticulate,42,Moderate (30-49 samples),50,2,84
+folliculitis,40,Moderate (30-49 samples),50,2,80
+dariers disease,39,Moderate (30-49 samples),50,2,78
+prurigo nodularis,38,Moderate (30-49 samples),50,2,76
+kaposi sarcoma,36,Moderate (30-49 samples),50,2,72
+ehlers danlos syndrome,35,Moderate (30-49 samples),50,2,70
+xeroderma pigmentosum,34,Moderate (30-49 samples),50,2,68
+melanoma,32,Moderate (30-49 samples),50,2,64
+lichen amyloidosis,31,Moderate (30-49 samples),50,2,62
+basal cell carcinoma,31,Moderate (30-49 samples),50,2,62
+acanthosis nigricans,28,High Priority (10-29 samples),30,2,56
+pityriasis rosea,28,High Priority (10-29 samples),30,2,56
+fixed eruptions,26,High Priority (10-29 samples),30,2,52
+factitial dermatitis,25,High Priority (10-29 samples),30,2,50
+eczema,24,High Priority (10-29 samples),30,2,48
+allergic contact dermatitis,24,High Priority (10-29 samples),30,2,48
+erythema multiforme,23,High Priority (10-29 samples),30,2,46
+drug eruption,23,High Priority (10-29 samples),30,2,46
+acne vulgaris,22,High Priority (10-29 samples),30,2,44
+granuloma annulare,21,High Priority (10-29 samples),30,2,42
+photodermatoses,20,High Priority (10-29 samples),30,2,40
+tungiasis,19,High Priority (10-29 samples),30,2,38
+lichen simplex,19,High Priority (10-29 samples),30,2,38
+naevus comedonicus,18,High Priority (10-29 samples),30,2,36
+acne,18,High Priority (10-29 samples),30,2,36
+scleromyxedema,18,High Priority (10-29 samples),30,2,36
+necrobiosis lipoidica,17,High Priority (10-29 samples),30,2,34
+halo nevus,17,High Priority (10-29 samples),30,2,34
+dermatomyositis,17,High Priority (10-29 samples),30,2,34
+mycosis fungoides,17,High Priority (10-29 samples),30,2,34
+tuberous sclerosis,16,High Priority (10-29 samples),30,2,32
+ichthyosis vulgaris,15,High Priority (10-29 samples),30,2,30
+porphyria,15,High Priority (10-29 samples),30,2,30
+syringoma,14,High Priority (10-29 samples),30,3,42
+porokeratosis actinic,14,High Priority (10-29 samples),30,3,42
+stasis edema,13,High Priority (10-29 samples),30,3,39
+erythema elevatum diutinum,13,High Priority (10-29 samples),30,3,39
+epidermolysis bullosa,13,High Priority (10-29 samples),30,3,39
+actinic keratosis,12,High Priority (10-29 samples),30,3,36
+lupus subacute,12,High Priority (10-29 samples),30,3,36
+mucous cyst,11,High Priority (10-29 samples),30,3,33
+drug induced pigmentary changes,11,High Priority (10-29 samples),30,3,33
+lymphangioma,11,High Priority (10-29 samples),30,3,33
+urticaria pigmentosa,11,High Priority (10-29 samples),30,3,33
+mucinosis,11,High Priority (10-29 samples),30,3,33
+behcets disease,10,High Priority (10-29 samples),30,3,30
+calcinosis cutis,10,High Priority (10-29 samples),30,3,30
+hidradenitis,9,Critical (< 10 samples),30,4,36
+seborrheic keratosis,9,Critical (< 10 samples),30,4,36
+pilar cyst,9,Critical (< 10 samples),30,4,36
+telangiectases,9,Critical (< 10 samples),30,4,36
+juvenile xanthogranuloma,9,Critical (< 10 samples),30,4,36
+hailey hailey disease,9,Critical (< 10 samples),30,4,36
+dyshidrotic eczema,8,Critical (< 10 samples),30,4,32
+striae,8,Critical (< 10 samples),30,4,32
+seborrheic dermatitis,8,Critical (< 10 samples),30,4,32
+xanthomas,7,Critical (< 10 samples),30,5,35
+cheilitis,7,Critical (< 10 samples),30,5,35
+sun damaged skin,6,Critical (< 10 samples),30,5,30
+pyogenic granuloma,6,Critical (< 10 samples),30,5,30
+pustular psoriasis,6,Critical (< 10 samples),30,5,30
+milia,6,Critical (< 10 samples),30,5,30
+nevus sebaceous of jadassohn,6,Critical (< 10 samples),30,5,30
+myiasis,6,Critical (< 10 samples),30,5,30
+superficial spreading melanoma ssm,5,Critical (< 10 samples),30,6,30
+congenital nevus,5,Critical (< 10 samples),30,6,30
+neurodermatitis,5,Critical (< 10 samples),30,6,30
+porokeratosis of mibelli,5,Critical (< 10 samples),30,6,30
+fordyce spots,5,Critical (< 10 samples),30,6,30
+granuloma pyogenic,5,Critical (< 10 samples),30,6,30
+pityriasis lichenoides chronica,5,Critical (< 10 samples),30,6,30
+stevens johnson syndrome,5,Critical (< 10 samples),30,6,30
+keratosis pilaris,5,Critical (< 10 samples),30,6,30
+lyme disease,5,Critical (< 10 samples),30,6,30
+incontinentia pigmenti,5,Critical (< 10 samples),30,6,30
+langerhans cell histiocytosis,4,Critical (< 10 samples),30,8,32
+epidermal nevus,4,Critical (< 10 samples),30,8,32
+port wine stain,4,Critical (< 10 samples),30,8,32
+erythema nodosum,4,Critical (< 10 samples),30,8,32
+malignant melanoma,4,Critical (< 10 samples),30,8,32
+acrodermatitis enteropathica,4,Critical (< 10 samples),30,8,32
+lentigo maligna,4,Critical (< 10 samples),30,8,32
+rhinophyma,3,Critical (< 10 samples),30,10,30
+paronychia,3,Critical (< 10 samples),30,10,30
+tick bite,3,Critical (< 10 samples),30,10,30
+neurotic excoriations,3,Critical (< 10 samples),30,10,30
+becker nevus,2,Critical (< 10 samples),30,15,30
+acquired autoimmune bullous diseaseherpes gestationis,2,Critical (< 10 samples),30,15,30
+aplasia cutis,2,Critical (< 10 samples),30,15,30
+pediculosis lids,2,Critical (< 10 samples),30,15,30
+disseminated actinic porokeratosis,2,Critical (< 10 samples),30,15,30
+urticaria,2,Critical (< 10 samples),30,15,30
+livedo reticularis,2,Critical (< 10 samples),30,15,30
+nevocytic nevus,2,Critical (< 10 samples),30,15,30
+erythema annulare centrifigum,2,Critical (< 10 samples),30,15,30
+perioral dermatitis,1,Critical (< 10 samples),30,30,30
+solid cystic basal cell carcinoma,1,Critical (< 10 samples),30,30,30
+basal cell carcinoma morpheiform,1,Critical (< 10 samples),30,30,30
+dermatofibroma,1,Critical (< 10 samples),30,30,30
