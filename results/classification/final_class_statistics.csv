@@ -1,0 +1,23 @@
+final_class,num_original_conditions,original_sample_count,train_samples,val_samples,test_samples,class_type
+Rare Inflammatory Conditions,59,818,546,92,180,grouped
+Rare Genetic Disorders,9,170,115,21,34,grouped
+Rare Benign Tumors,19,141,89,11,41,grouped
+pityriasis rubra pilaris,1,127,88,19,20,independent
+lichen planus,1,116,81,17,18,independent
+lupus erythematosus,1,89,62,13,14,independent
+psoriasis,1,85,59,12,14,independent
+neurofibromatosis,1,74,51,11,12,independent
+scabies,1,73,51,10,12,independent
+squamous cell carcinoma,1,63,44,9,10,independent
+vitiligo,1,60,42,9,9,independent (pending review)
+sarcoidosis,1,50,35,7,8,independent (pending review)
+keloid,1,44,30,6,8,independent (pending review)
+Rare Malignancies,7,44,26,3,15,grouped
+folliculitis,1,40,28,6,6,independent (pending review)
+prurigo nodularis,1,38,26,5,7,independent (default)
+kaposi sarcoma,1,36,25,5,6,independent
+melanoma,1,32,22,4,6,independent (default)
+basal cell carcinoma,1,31,21,4,6,independent (default)
+halo nevus,1,17,11,2,4,independent (default)
+congenital nevus,1,5,3,0,2,independent (default)
+nevocytic nevus,1,2,1,0,1,independent (default)

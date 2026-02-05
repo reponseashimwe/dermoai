@@ -1,0 +1,5 @@
+Condition,Total,Train,Val,Test,Malignancy,Rwanda_Priority,Clinical_Rationale,Training_Viable
+scabies,73,51,10,12,non-neoplastic,Scabies,"Common parasitic infection, can progress to secondary infection",YES
+squamous cell carcinoma,63,44,9,10,malignant,Squamous Cell Carcinoma,"Sun exposure, important cancer to detect",YES
+keloid,44,30,6,8,non-neoplastic,Keloid,"Genetic predisposition in African populations, significant QOL impact",YES
+folliculitis,40,28,6,6,non-neoplastic,Folliculitis,Common bacterial skin infection,MARGINAL

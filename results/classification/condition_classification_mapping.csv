@@ -1,0 +1,113 @@
+original_condition,original_sample_count,train_samples,val_samples,test_samples,nine_label,three_label,final_class,class_type,rationale
+pityriasis rubra pilaris,127,88,19,20,inflammatory,non-neoplastic,pityriasis rubra pilaris,independent,"≥50 train samples (88), clinically distinct"
+lichen planus,116,81,17,18,inflammatory,non-neoplastic,lichen planus,independent,"≥50 train samples (81), clinically distinct"
+lupus erythematosus,89,62,13,14,inflammatory,non-neoplastic,lupus erythematosus,independent,"≥50 train samples (62), clinically distinct"
+psoriasis,85,59,12,14,inflammatory,non-neoplastic,psoriasis,independent,"≥50 train samples (59), clinically distinct"
+neurofibromatosis,74,51,11,12,genodermatoses,non-neoplastic,neurofibromatosis,independent,"≥50 train samples (51), clinically distinct"
+scabies,73,51,10,12,inflammatory,non-neoplastic,scabies,independent,"≥50 train samples (51), clinically distinct"
+squamous cell carcinoma,63,44,9,10,malignant epidermal,malignant,squamous cell carcinoma,independent,Malignant + 44 train samples
+vitiligo,60,42,9,9,inflammatory,non-neoplastic,vitiligo,independent (pending review),42 train samples - assess visual distinctiveness - NEEDS EXPERT REVIEW
+sarcoidosis,50,35,7,8,inflammatory,non-neoplastic,sarcoidosis,independent (pending review),35 train samples - assess visual distinctiveness - NEEDS EXPERT REVIEW
+neutrophilic dermatoses,46,32,6,8,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+scleroderma,45,31,6,8,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+nematode infection,44,30,6,8,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+keloid,44,30,6,8,inflammatory,non-neoplastic,keloid,independent (pending review),Rwanda priority but only 30 train - assess feasibility - NEEDS EXPERT REVIEW
+papilomatosis confluentes and reticulate,42,29,6,7,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+folliculitis,40,28,6,6,inflammatory,non-neoplastic,folliculitis,independent (pending review),Rwanda priority but only 28 train - assess feasibility - NEEDS EXPERT REVIEW
+dariers disease,39,27,5,7,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+prurigo nodularis,38,26,5,7,benign epidermal,benign,prurigo nodularis,independent (default),Defaulted to independent - needs review
+kaposi sarcoma,36,25,5,6,malignant dermal,malignant,kaposi sarcoma,independent,Malignant but only 25 train - heavy augmentation needed
+ehlers danlos syndrome,35,24,5,6,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+xeroderma pigmentosum,34,23,5,6,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+melanoma,32,22,4,6,malignant melanoma,malignant,melanoma,independent (default),Defaulted to independent - needs review
+basal cell carcinoma,31,21,4,6,malignant epidermal,malignant,basal cell carcinoma,independent (default),Defaulted to independent - needs review
+lichen amyloidosis,31,21,4,6,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+pityriasis rosea,28,19,4,5,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+acanthosis nigricans,28,19,4,5,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+fixed eruptions,26,18,3,5,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+factitial dermatitis,25,17,3,5,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+allergic contact dermatitis,24,16,3,5,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+eczema,24,16,3,5,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+drug eruption,23,16,3,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+erythema multiforme,23,16,3,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+acne vulgaris,22,15,3,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+granuloma annulare,21,14,3,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+photodermatoses,20,14,3,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+lichen simplex,19,13,2,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+tungiasis,19,13,2,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+naevus comedonicus,18,12,2,4,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+scleromyxedema,18,12,2,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+acne,18,12,2,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+halo nevus,17,11,2,4,benign melanocyte,benign,halo nevus,independent (default),Defaulted to independent - needs review
+necrobiosis lipoidica,17,11,2,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+mycosis fungoides,17,11,2,4,malignant cutaneous lymphoma,malignant,Rare Malignancies,grouped,Grouped with other rare malignant conditions
+dermatomyositis,17,11,2,4,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+tuberous sclerosis,16,11,2,3,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+porphyria,15,10,2,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+ichthyosis vulgaris,15,10,2,3,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+porokeratosis actinic,14,9,2,3,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+syringoma,14,9,2,3,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+stasis edema,13,9,1,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+erythema elevatum diutinum,13,9,1,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+epidermolysis bullosa,13,9,1,3,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+lupus subacute,12,8,1,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+actinic keratosis,12,8,1,3,malignant epidermal,malignant,Rare Malignancies,grouped,Grouped with other rare malignant conditions
+mucinosis,11,7,1,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+urticaria pigmentosa,11,7,1,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+lymphangioma,11,7,1,3,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+mucous cyst,11,7,1,3,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+drug induced pigmentary changes,11,7,1,3,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+calcinosis cutis,10,7,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+behcets disease,10,7,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+telangiectases,9,6,1,2,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+hailey hailey disease,9,6,1,2,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+juvenile xanthogranuloma,9,6,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+seborrheic keratosis,9,6,1,2,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+hidradenitis,9,6,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+pilar cyst,9,6,1,2,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+seborrheic dermatitis,8,5,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+striae,8,5,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+dyshidrotic eczema,8,5,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+cheilitis,7,4,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+xanthomas,7,4,1,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+pyogenic granuloma,6,4,0,2,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+sun damaged skin,6,4,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+nevus sebaceous of jadassohn,6,4,0,2,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+pustular psoriasis,6,4,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+myiasis,6,4,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+milia,6,4,0,2,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+keratosis pilaris,5,3,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+granuloma pyogenic,5,3,0,2,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+porokeratosis of mibelli,5,3,0,2,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+neurodermatitis,5,3,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+pityriasis lichenoides chronica,5,3,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+lyme disease,5,3,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+incontinentia pigmenti,5,3,0,2,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+stevens johnson syndrome,5,3,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+superficial spreading melanoma ssm,5,3,0,2,malignant melanoma,malignant,Rare Malignancies,grouped,Grouped with other rare malignant conditions
+fordyce spots,5,3,0,2,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+congenital nevus,5,3,0,2,benign melanocyte,benign,congenital nevus,independent (default),Defaulted to independent - needs review
+malignant melanoma,4,2,0,2,malignant melanoma,malignant,Rare Malignancies,grouped,Grouped with other rare malignant conditions
+lentigo maligna,4,2,0,2,malignant melanoma,malignant,Rare Malignancies,grouped,Grouped with other rare malignant conditions
+acrodermatitis enteropathica,4,2,0,2,genodermatoses,non-neoplastic,Rare Genetic Disorders,grouped,Grouped with other rare genetic conditions
+langerhans cell histiocytosis,4,2,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+erythema nodosum,4,2,0,2,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+epidermal nevus,4,2,0,2,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+port wine stain,4,2,0,2,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+rhinophyma,3,2,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+paronychia,3,2,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+neurotic excoriations,3,2,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+tick bite,3,2,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+urticaria,2,1,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+disseminated actinic porokeratosis,2,1,0,1,benign epidermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+livedo reticularis,2,1,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+pediculosis lids,2,1,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+nevocytic nevus,2,1,0,1,benign melanocyte,benign,nevocytic nevus,independent (default),Defaulted to independent - needs review
+aplasia cutis,2,1,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+becker nevus,2,1,0,1,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
+erythema annulare centrifigum,2,1,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+acquired autoimmune bullous diseaseherpes gestationis,2,1,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+perioral dermatitis,1,0,0,1,inflammatory,non-neoplastic,Rare Inflammatory Conditions,grouped,Grouped with other rare inflammatory conditions
+solid cystic basal cell carcinoma,1,0,0,1,malignant epidermal,malignant,Rare Malignancies,grouped,Grouped with other rare malignant conditions
+basal cell carcinoma morpheiform,1,0,0,1,malignant epidermal,malignant,Rare Malignancies,grouped,Grouped with other rare malignant conditions
+dermatofibroma,1,0,0,1,benign dermal,benign,Rare Benign Tumors,grouped,Grouped with other rare benign neoplasms
