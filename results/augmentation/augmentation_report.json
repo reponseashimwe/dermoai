@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "date_created": "2026-02-05T19:59:05.209736",
+    "random_seed": 42,
+    "split_ratios": {
+      "train": 0.7,
+      "val": 0.15,
+      "test": 0.15
+    },
+    "image_size": [
+      224,
+      224
+    ],
+    "total_original_images": 2155,
+    "total_final_classes": 12
+  },
+  "split_statistics": {
+    "train": {
+      "total_images": 1507,
+      "per_class": {
+        "scabies": 51,
+        "neurofibromatosis": 52,
+        "squamous_cell_carcinoma": 44,
+        "pityriasis_rubra_pilaris": 89,
+        "inflammatory": 666,
+        "lupus_erythematosus": 63,
+        "psoriasis": 59,
+        "lichen_planus": 81,
+        "malignant_skin_lesions": 100,
+        "vitiligo": 42,
+        "genodermatoses": 118,
+        "benign_neoplastic_lesions": 142
+      }
+    },
+    "val": {
+      "total_images": 324,
+      "per_class": {
+        "scabies": 11,
+        "neurofibromatosis": 11,
+        "squamous_cell_carcinoma": 10,
+        "pityriasis_rubra_pilaris": 19,
+        "inflammatory": 143,
+        "lupus_erythematosus": 13,
+        "psoriasis": 13,
+        "lichen_planus": 18,
+        "malignant_skin_lesions": 21,
+        "vitiligo": 9,
+        "genodermatoses": 26,
+        "benign_neoplastic_lesions": 30
+      }
+    },
+    "test": {
+      "total_images": 324,
+      "per_class": {
+        "scabies": 11,
+        "neurofibromatosis": 11,
+        "squamous_cell_carcinoma": 9,
+        "pityriasis_rubra_pilaris": 19,
+        "inflammatory": 143,
+        "lupus_erythematosus": 13,
+        "psoriasis": 13,
+        "lichen_planus": 17,
+        "malignant_skin_lesions": 22,
+        "vitiligo": 9,
+        "genodermatoses": 26,
+        "benign_neoplastic_lesions": 31
+      }
+    },
+    "augmented": {
+      "total_images": 2939,
+      "per_class": {
+        "scabies": 153,
+        "neurofibromatosis": 156,
+        "squamous_cell_carcinoma": 110,
+        "pityriasis_rubra_pilaris": 267,
+        "inflammatory": 999,
+        "lupus_erythematosus": 189,
+        "psoriasis": 177,
+        "lichen_planus": 243,
+        "malignant_skin_lesions": 150,
+        "vitiligo": 105,
+        "genodermatoses": 177,
+        "benign_neoplastic_lesions": 213
+      }
+    }
+  },
+  "augmentation_policy": {
+    "purpose": "Regularization, not class balancing",
+    "scope": "Training set only",
+    "max_factor": 3.0,
+    "transforms": [
+      "HorizontalFlip",
+      "VerticalFlip",
+      "Rotate (\u00b115\u00b0)",
+      "RandomBrightnessContrast (\u00b10.1)"
+    ],
+    "factors": {
+      "inflammatory": 1.5,
+      "benign_neoplastic_lesions": 1.5,
+      "genodermatoses": 1.5,
+      "malignant_skin_lesions": 1.5,
+      "pityriasis_rubra_pilaris": 3.0,
+      "lichen_planus": 3.0,
+      "lupus_erythematosus": 3.0,
+      "psoriasis": 3.0,
+      "neurofibromatosis": 3.0,
+      "scabies": 3.0,
+      "squamous_cell_carcinoma": 2.5,
+      "vitiligo": 2.5
+    }
+  },
+  "data_leakage_check": {
+    "train_val_overlap": 0,
+    "train_test_overlap": 0,
+    "val_test_overlap": 0,
+    "status": "PASS"
+  }
+}

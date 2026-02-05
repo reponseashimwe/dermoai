@@ -26,10 +26,10 @@ build/
 *.swp
 *.swo
 
-# Data (optional: uncomment if raw/processed data should not be committed)
+# Data — image folders (large, not committed)
 data/raw/*/images/
-# data/processed/
-# data/augmented/
+data/processed/fitzpatrick17k/*
+data/augmented/train/*
 
 # Large files (exceed GitHub 100 MB limit) — download from Drive or ISIC CLI (see README)
 data/raw/isic/isic_metadata.csv
