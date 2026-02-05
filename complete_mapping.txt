@@ -1,0 +1,115 @@
+# Complete condition mapping (preserving 9-label taxonomy)
+CONDITION_MAPPING = {
+    'acanthosis nigricans': ('inflammatory', 'grouped'),  # inflammatory
+    'acne': ('inflammatory', 'grouped'),  # inflammatory
+    'acne vulgaris': ('inflammatory', 'grouped'),  # inflammatory
+    'acquired autoimmune bullous diseaseherpes gestationis': ('inflammatory', 'grouped'),  # inflammatory
+    'acrodermatitis enteropathica': ('genodermatoses', 'grouped'),  # genodermatoses
+    'actinic keratosis': ('malignant_skin_lesions', 'grouped'),  # malignant epidermal
+    'allergic contact dermatitis': ('inflammatory', 'grouped'),  # inflammatory
+    'aplasia cutis': ('inflammatory', 'grouped'),  # inflammatory
+    'basal cell carcinoma': ('malignant_skin_lesions', 'grouped'),  # malignant epidermal
+    'basal cell carcinoma morpheiform': ('malignant_skin_lesions', 'grouped'),  # malignant epidermal
+    'becker nevus': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'behcets disease': ('inflammatory', 'grouped'),  # inflammatory
+    'calcinosis cutis': ('inflammatory', 'grouped'),  # inflammatory
+    'cheilitis': ('inflammatory', 'grouped'),  # inflammatory
+    'congenital nevus': ('benign_neoplastic_lesions', 'grouped'),  # benign melanocyte
+    'dariers disease': ('genodermatoses', 'grouped'),  # genodermatoses
+    'dermatofibroma': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'dermatomyositis': ('inflammatory', 'grouped'),  # inflammatory
+    'disseminated actinic porokeratosis': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'drug eruption': ('inflammatory', 'grouped'),  # inflammatory
+    'drug induced pigmentary changes': ('inflammatory', 'grouped'),  # inflammatory
+    'dyshidrotic eczema': ('inflammatory', 'grouped'),  # inflammatory
+    'eczema': ('inflammatory', 'grouped'),  # inflammatory
+    'ehlers danlos syndrome': ('genodermatoses', 'grouped'),  # genodermatoses
+    'epidermal nevus': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'epidermolysis bullosa': ('genodermatoses', 'grouped'),  # genodermatoses
+    'erythema annulare centrifigum': ('inflammatory', 'grouped'),  # inflammatory
+    'erythema elevatum diutinum': ('inflammatory', 'grouped'),  # inflammatory
+    'erythema multiforme': ('inflammatory', 'grouped'),  # inflammatory
+    'erythema nodosum': ('inflammatory', 'grouped'),  # inflammatory
+    'factitial dermatitis': ('inflammatory', 'grouped'),  # inflammatory
+    'fixed eruptions': ('inflammatory', 'grouped'),  # inflammatory
+    'folliculitis': ('inflammatory', 'grouped'),  # inflammatory
+    'fordyce spots': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'granuloma annulare': ('inflammatory', 'grouped'),  # inflammatory
+    'granuloma pyogenic': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'hailey hailey disease': ('genodermatoses', 'grouped'),  # genodermatoses
+    'halo nevus': ('benign_neoplastic_lesions', 'grouped'),  # benign melanocyte
+    'hidradenitis': ('inflammatory', 'grouped'),  # inflammatory
+    'ichthyosis vulgaris': ('genodermatoses', 'grouped'),  # genodermatoses
+    'incontinentia pigmenti': ('genodermatoses', 'grouped'),  # genodermatoses
+    'juvenile xanthogranuloma': ('inflammatory', 'grouped'),  # inflammatory
+    'kaposi sarcoma': ('malignant_skin_lesions', 'grouped'),  # malignant dermal
+    'keloid': ('inflammatory', 'grouped'),  # inflammatory
+    'keratosis pilaris': ('inflammatory', 'grouped'),  # inflammatory
+    'langerhans cell histiocytosis': ('inflammatory', 'grouped'),  # inflammatory
+    'lentigo maligna': ('malignant_skin_lesions', 'grouped'),  # malignant melanoma
+    'lichen amyloidosis': ('inflammatory', 'grouped'),  # inflammatory
+    'lichen planus': ('lichen_planus', 'independent'),  # inflammatory
+    'lichen simplex': ('inflammatory', 'grouped'),  # inflammatory
+    'livedo reticularis': ('inflammatory', 'grouped'),  # inflammatory
+    'lupus erythematosus': ('lupus_erythematosus', 'independent'),  # inflammatory
+    'lupus subacute': ('inflammatory', 'grouped'),  # inflammatory
+    'lyme disease': ('inflammatory', 'grouped'),  # inflammatory
+    'lymphangioma': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'malignant melanoma': ('malignant_skin_lesions', 'grouped'),  # malignant melanoma
+    'melanoma': ('malignant_skin_lesions', 'grouped'),  # malignant melanoma
+    'milia': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'mucinosis': ('inflammatory', 'grouped'),  # inflammatory
+    'mucous cyst': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'mycosis fungoides': ('malignant_skin_lesions', 'grouped'),  # malignant cutaneous lymphoma
+    'myiasis': ('inflammatory', 'grouped'),  # inflammatory
+    'naevus comedonicus': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'necrobiosis lipoidica': ('inflammatory', 'grouped'),  # inflammatory
+    'nematode infection': ('inflammatory', 'grouped'),  # inflammatory
+    'neurodermatitis': ('inflammatory', 'grouped'),  # inflammatory
+    'neurofibromatosis': ('neurofibromatosis', 'independent'),  # genodermatoses
+    'neurotic excoriations': ('inflammatory', 'grouped'),  # inflammatory
+    'neutrophilic dermatoses': ('inflammatory', 'grouped'),  # inflammatory
+    'nevocytic nevus': ('benign_neoplastic_lesions', 'grouped'),  # benign melanocyte
+    'nevus sebaceous of jadassohn': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'papilomatosis confluentes and reticulate': ('inflammatory', 'grouped'),  # inflammatory
+    'paronychia': ('inflammatory', 'grouped'),  # inflammatory
+    'pediculosis lids': ('inflammatory', 'grouped'),  # inflammatory
+    'perioral dermatitis': ('inflammatory', 'grouped'),  # inflammatory
+    'photodermatoses': ('inflammatory', 'grouped'),  # inflammatory
+    'pilar cyst': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'pityriasis lichenoides chronica': ('inflammatory', 'grouped'),  # inflammatory
+    'pityriasis rosea': ('inflammatory', 'grouped'),  # inflammatory
+    'pityriasis rubra pilaris': ('pityriasis_rubra_pilaris', 'independent'),  # inflammatory
+    'porokeratosis actinic': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'porokeratosis of mibelli': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'porphyria': ('inflammatory', 'grouped'),  # inflammatory
+    'port wine stain': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'prurigo nodularis': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'psoriasis': ('psoriasis', 'independent'),  # inflammatory
+    'pustular psoriasis': ('inflammatory', 'grouped'),  # inflammatory
+    'pyogenic granuloma': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'rhinophyma': ('inflammatory', 'grouped'),  # inflammatory
+    'sarcoidosis': ('inflammatory', 'grouped'),  # inflammatory
+    'scabies': ('scabies', 'independent'),  # inflammatory
+    'scleroderma': ('inflammatory', 'grouped'),  # inflammatory
+    'scleromyxedema': ('inflammatory', 'grouped'),  # inflammatory
+    'seborrheic dermatitis': ('inflammatory', 'grouped'),  # inflammatory
+    'seborrheic keratosis': ('benign_neoplastic_lesions', 'grouped'),  # benign epidermal
+    'solid cystic basal cell carcinoma': ('malignant_skin_lesions', 'grouped'),  # malignant epidermal
+    'squamous cell carcinoma': ('squamous_cell_carcinoma', 'independent'),  # malignant epidermal
+    'stasis edema': ('inflammatory', 'grouped'),  # inflammatory
+    'stevens johnson syndrome': ('inflammatory', 'grouped'),  # inflammatory
+    'striae': ('inflammatory', 'grouped'),  # inflammatory
+    'sun damaged skin': ('inflammatory', 'grouped'),  # inflammatory
+    'superficial spreading melanoma ssm': ('malignant_skin_lesions', 'grouped'),  # malignant melanoma
+    'syringoma': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'telangiectases': ('benign_neoplastic_lesions', 'grouped'),  # benign dermal
+    'tick bite': ('inflammatory', 'grouped'),  # inflammatory
+    'tuberous sclerosis': ('genodermatoses', 'grouped'),  # genodermatoses
+    'tungiasis': ('inflammatory', 'grouped'),  # inflammatory
+    'urticaria': ('inflammatory', 'grouped'),  # inflammatory
+    'urticaria pigmentosa': ('inflammatory', 'grouped'),  # inflammatory
+    'vitiligo': ('vitiligo', 'independent'),  # inflammatory
+    'xanthomas': ('inflammatory', 'grouped'),  # inflammatory
+    'xeroderma pigmentosum': ('genodermatoses', 'grouped'),  # genodermatoses
+}
