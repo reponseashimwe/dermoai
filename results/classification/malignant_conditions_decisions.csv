@@ -1,0 +1,12 @@
+Condition,Total,Train,Val,Test,Nine_Label,Clinical_Importance,Clinical_Note,Decision,Rationale
+squamous cell carcinoma,63,44,9,10,malignant epidermal,HIGH,Common/relevant in Rwanda context,INDEPENDENT,HIGH importance + 44 train samples
+kaposi sarcoma,36,25,5,6,malignant dermal,HIGH,Common/relevant in Rwanda context,INDEPENDENT (with caveats),HIGH importance overrides small sample (25 train) - augment heavily
+melanoma,32,22,4,6,malignant melanoma,CRITICAL,"Deadliest skin cancer, high mortality if missed",INDEPENDENT (with caveats),CRITICAL importance overrides small sample (22 train) - augment heavily
+basal cell carcinoma,31,21,4,6,malignant epidermal,HIGH,Most common skin cancer globally,INDEPENDENT (with caveats),HIGH importance overrides small sample (21 train) - augment heavily
+mycosis fungoides,17,11,2,4,malignant cutaneous lymphoma,MODERATE,Less common but still malignant,GROUP/DROP,"Only 11 train samples - ethically concerning, document limitation"
+actinic keratosis,12,8,1,3,malignant epidermal,MODERATE,Less common but still malignant,GROUP/DROP,"Only 8 train samples - ethically concerning, document limitation"
+superficial spreading melanoma ssm,5,3,0,2,malignant melanoma,CRITICAL,"Deadliest skin cancer, high mortality if missed",GROUP/DROP,"Only 3 train samples - ethically concerning, document limitation"
+malignant melanoma,4,2,0,2,malignant melanoma,CRITICAL,"Deadliest skin cancer, high mortality if missed",GROUP/DROP,"Only 2 train samples - ethically concerning, document limitation"
+lentigo maligna,4,2,0,2,malignant melanoma,MODERATE,Less common but still malignant,GROUP/DROP,"Only 2 train samples - ethically concerning, document limitation"
+solid cystic basal cell carcinoma,1,0,0,1,malignant epidermal,HIGH,Most common skin cancer globally,GROUP/DROP,"Only 0 train samples - ethically concerning, document limitation"
+basal cell carcinoma morpheiform,1,0,0,1,malignant epidermal,HIGH,Most common skin cancer globally,GROUP/DROP,"Only 0 train samples - ethically concerning, document limitation"
