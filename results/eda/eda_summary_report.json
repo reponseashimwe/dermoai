@@ -1,0 +1,61 @@
+{
+  "dataset_info": {
+    "total_samples": 2155,
+    "fst_v_samples": 1527,
+    "fst_vi_samples": 628,
+    "total_conditions": 112,
+    "nine_partition_categories": 9,
+    "three_partition_categories": 3
+  },
+  "class_distribution": {
+    "malignant_samples": 206,
+    "benign_samples": 203,
+    "non_neoplastic_samples": 1746,
+    "malignant_percentage": 9.559164733178655,
+    "mean_samples_per_class": 19.241071428571427,
+    "median_samples_per_class": 11.0,
+    "max_min_ratio": 127.0
+  },
+  "imbalance_analysis": {
+    "rare_classes": 52,
+    "uncommon_classes": 52,
+    "common_classes": 8,
+    "rare_malignant_conditions": 5
+  },
+  "augmentation_requirements": {
+    "conditions_needing_augmentation": 103,
+    "dataset_expansion_factor": 2.262180974477958,
+    "target_min_samples_per_class": 30
+  },
+  "split_strategy": {
+    "train_size": 1508,
+    "val_size": 323,
+    "test_size": 324,
+    "split_ratio": "70/15/15",
+    "stratification": "FST + three_partition_label"
+  },
+  "image_characteristics": {
+    "mean_width": 522.988,
+    "mean_height": 450.714,
+    "mean_aspect_ratio": 1.2126303498601352,
+    "mean_file_size_kb": 90.954251953125
+  },
+  "ethics_risks": {
+    "num_risks_identified": 4,
+    "high_severity_risks": 1
+  },
+  "nine_category_analysis": {
+    "num_categories": 9,
+    "mean_samples_per_category": 239.4,
+    "median_samples_per_category": 77,
+    "min_samples_per_category": 17,
+    "max_samples_per_category": 1502,
+    "imbalance_ratio": "88.4:1",
+    "categories_needing_augmentation": 7
+  },
+  "training_strategy": {
+    "label_column": "nine_partition_label",
+    "num_classes": 9,
+    "approach": "9-category pathology classification + rule-based urgency mapping"
+  }
+}

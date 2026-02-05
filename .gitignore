@@ -43,3 +43,7 @@ results/experiments/*/
 .env
 .env.local
 *.env
+
+
+# MD files
+task.md
