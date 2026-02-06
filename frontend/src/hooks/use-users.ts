@@ -1,0 +1,21 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { listUsers, deactivateUser } from "@/lib/api/users";
+
+export function useUsers() {
+  return useQuery({
+    queryKey: ["users"],
+    queryFn: listUsers,
+  });
+}
+
+export function useDeactivateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => deactivateUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
