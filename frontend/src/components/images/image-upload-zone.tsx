@@ -11,11 +11,13 @@ import { cn } from "@/lib/utils";
 interface ImageUploadZoneProps {
   consultationId: string;
   className?: string;
+  compact?: boolean;
 }
 
 export function ImageUploadZone({
   consultationId,
   className,
+  compact,
 }: ImageUploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -40,6 +42,31 @@ export function ImageUploadZone({
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }
+  }
+
+  if (compact) {
+    return (
+      <div className={cn(className)}>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          loading={uploading}
+        >
+          <Upload className="h-4 w-4" />
+          Upload
+        </Button>
+      </div>
+    );
   }
 
   return (

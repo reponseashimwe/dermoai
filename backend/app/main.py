@@ -16,9 +16,11 @@ from app.routers import (
     patients,
     practitioners,
     retraining_logs,
+    stats,
     triage,
     users,
 )
+from app.core.seed import run_seed
 from app.services.cloudinary_service import configure_cloudinary
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,10 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_cloudinary()
+    try:
+        await run_seed()
+    except Exception as e:
+        logger.warning("Seed skipped or failed: %s", e)
     yield
 
 
@@ -57,6 +63,7 @@ def create_app() -> FastAPI:
     application.include_router(clinical_reviews.router)
     application.include_router(notifications.router)
     application.include_router(retraining_logs.router)
+    application.include_router(stats.router)
 
     @application.get("/health")
     async def health_check():

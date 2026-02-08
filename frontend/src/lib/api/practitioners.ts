@@ -1,5 +1,35 @@
 import { fetchClient } from "./client";
-import type { Practitioner, PractitionerUpdate, ApprovalAction } from "@/types/api";
+import type {
+  Practitioner,
+  PractitionerAvailable,
+  PractitionerUpdate,
+  PractitionerStatusUpdate,
+  ApprovalAction,
+} from "@/types/api";
+
+export async function listAvailablePractitioners(params?: {
+  practitioner_type?: string;
+  online_only?: boolean;
+}): Promise<PractitionerAvailable[]> {
+  const sp = new URLSearchParams();
+  if (params?.practitioner_type != null)
+    sp.set("practitioner_type", params.practitioner_type);
+  if (params?.online_only != null)
+    sp.set("online_only", String(params.online_only));
+  const q = sp.toString();
+  return fetchClient<PractitionerAvailable[]>(
+    `/api/practitioners/available${q ? `?${q}` : ""}`
+  );
+}
+
+export async function updateMyStatus(
+  data: PractitionerStatusUpdate
+): Promise<Practitioner> {
+  return fetchClient<Practitioner>("/api/practitioners/me/status", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
 
 export async function listPractitioners(): Promise<Practitioner[]> {
   return fetchClient<Practitioner[]>("/api/practitioners/");

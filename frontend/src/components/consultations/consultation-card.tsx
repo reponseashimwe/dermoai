@@ -11,9 +11,14 @@ interface ConsultationCardProps {
 }
 
 export function ConsultationCard({ consultation }: ConsultationCardProps) {
+  const isUrgent = consultation.urgency === "URGENT";
   return (
     <Link href={`/consultations/${consultation.consultation_id}`}>
-      <Card className="cursor-pointer transition-shadow hover:shadow-md">
+      <Card
+        className={`cursor-pointer transition-shadow hover:shadow-md ${
+          isUrgent ? "border-l-4 border-l-red-500" : ""
+        }`}
+      >
         <CardContent className="flex items-center gap-4 py-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
             <FileText className="h-5 w-5 text-slate-600" />

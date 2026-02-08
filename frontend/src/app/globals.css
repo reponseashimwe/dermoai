@@ -12,14 +12,20 @@
   --color-primary-800: #084d73;
   --color-primary-900: #0a3f5e;
 
+  /* Semantic: urgency and status */
   --color-urgent: #DC2626;
   --color-urgent-light: #FEE2E2;
   --color-safe: #16A34A;
   --color-safe-light: #DCFCE7;
   --color-warning: #F59E0B;
   --color-warning-light: #FEF3C7;
+  --color-success: #16A34A;
+  --color-error: #DC2626;
+  --color-info: #078ece;
 
   --font-sans: var(--font-dm-sans);
+
+  /* Spacing: use gap-3, gap-4, gap-6 for consistency */
 }
 
 :root {

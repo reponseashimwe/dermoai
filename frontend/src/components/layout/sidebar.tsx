@@ -12,6 +12,9 @@ import {
   UserCog,
   Database,
   Bell,
+  CheckSquare,
+  Video,
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
@@ -25,15 +28,18 @@ interface SidebarItem {
 }
 
 const navItems: SidebarItem[] = [
-  { href: "/", label: "Home", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/scan-history", label: "Scans", icon: History, roles: ["USER", "PRACTITIONER", "ADMIN"] },
   { href: "/consultations", label: "Consults", icon: ClipboardList, roles: ["USER", "PRACTITIONER", "ADMIN"] },
-  { href: "/patients", label: "Patients", icon: Users, roles: ["USER", "PRACTITIONER", "ADMIN"] },
+  { href: "/patients", label: "Patients", icon: Users, roles: ["PRACTITIONER", "ADMIN"] },
+  { href: "/review-queue", label: "Review Queue", icon: CheckSquare, roles: ["PRACTITIONER"] },
+  { href: "/telemedicine", label: "Video Call", icon: Video, roles: ["USER", "PRACTITIONER", "ADMIN"] },
   { href: "/notifications", label: "Alerts", icon: Bell, roles: ["USER", "PRACTITIONER", "ADMIN"] },
 ];
 
 const adminItems: SidebarItem[] = [
   { href: "/admin", label: "Admin", icon: ShieldCheck, roles: ["ADMIN"] },
+  { href: "/admin/images", label: "Images", icon: ImageIcon, roles: ["ADMIN"] },
   { href: "/admin/practitioners", label: "Doctors", icon: UserCog, roles: ["ADMIN"] },
   { href: "/admin/users", label: "Users", icon: Users, roles: ["ADMIN"] },
   { href: "/admin/retraining-logs", label: "Models", icon: Database, roles: ["ADMIN"] },
@@ -60,7 +66,7 @@ export function Sidebar({ user }: { user: User | null }) {
         {visibleNav.map((item) => {
           const active =
             pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}

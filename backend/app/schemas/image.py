@@ -44,3 +44,12 @@ class QuickScanResponse(BaseModel):
 
 class AttachImageRequest(BaseModel):
     consultation_id: uuid.UUID
+
+
+class ImageListResponse(BaseModel):
+    items: list[ImageRead]
+    total: int
+
+
+class ImageReviewUpdate(BaseModel):
+    reviewed_label: str

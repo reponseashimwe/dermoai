@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Logo } from "@/components/layout/logo";
 import { ScanUploadForm } from "@/components/scan/scan-upload-form";
@@ -29,6 +31,17 @@ const features = [
 
 export default function HomePage() {
 	const { user, isLoading } = useAuth();
+	const router = useRouter();
+
+	useEffect(() => {
+		if (!isLoading && user) {
+			router.replace("/dashboard");
+		}
+	}, [isLoading, user, router]);
+
+	if (!isLoading && user) {
+		return null;
+	}
 
 	return (
 		<>

@@ -118,6 +118,11 @@ export interface AttachImageRequest {
   consultation_id: string;
 }
 
+export interface ImageListResponse {
+  items: Image[];
+  total: number;
+}
+
 // Clinical Review
 export interface ClinicalReview {
   review_id: string;
@@ -146,15 +151,61 @@ export interface Practitioner {
   approval_status: "PENDING" | "APPROVED" | "REJECTED";
   expertise: string | null;
   is_active: boolean;
+  is_online?: boolean;
+  last_active?: string | null;
   created_at: string;
+}
+
+export interface PractitionerAvailable extends Practitioner {
+  name: string;
+  email: string;
 }
 
 export interface PractitionerUpdate {
   expertise?: string;
 }
 
+export interface PractitionerStatusUpdate {
+  is_online: boolean;
+}
+
 export interface ApprovalAction {
   approval_status: "APPROVED" | "REJECTED";
+}
+
+// Dashboard stats
+export interface RecentActivityItem {
+  kind: string;
+  id: string;
+  summary: string;
+  at: string;
+}
+
+export interface AdminStats {
+  total_users: number;
+  total_practitioners: number;
+  total_specialists: number;
+  total_consultations: number;
+  total_images: number;
+  total_patients: number;
+  pending_approvals: number;
+  urgent_cases: number;
+  recent_activity: RecentActivityItem[];
+}
+
+export interface PractitionerStats {
+  my_reviews: number;
+  pending_consultations: number;
+  urgent_cases: number;
+  patients_seen: number;
+  avg_response_time_hours: number | null;
+}
+
+export interface UserStats {
+  my_consultations: number;
+  my_scans: number;
+  pending_results: number;
+  urgent_alerts: number;
 }
 
 // Notification

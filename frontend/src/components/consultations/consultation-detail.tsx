@@ -11,6 +11,7 @@ import { AggregatedResultCard } from "@/components/images/aggregated-result-card
 import { ImageGallery } from "@/components/images/image-gallery";
 import { ImageUploadZone } from "@/components/images/image-upload-zone";
 import { AttachScanModal } from "@/components/images/attach-scan-modal";
+import { UrgentConsultationBanner } from "@/components/telemedicine/urgent-consultation-banner";
 import { formatDate } from "@/lib/utils";
 import { Paperclip, User } from "lucide-react";
 
@@ -52,43 +53,49 @@ export function ConsultationDetail({
         <ConsultationStatusBadge status={consultation.status} />
       </div>
 
-      {/* Patient Info */}
-      {patient && (
-        <Card>
-          <CardContent className="flex items-center gap-3 py-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100">
-              <User className="h-4 w-4 text-primary-700" />
-            </div>
-            <div>
-              <p className="font-medium text-slate-900">{patient.name}</p>
-              {patient.phone_number && (
-                <p className="text-xs text-slate-500">{patient.phone_number}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {consultation.urgency === "URGENT" && (
+        <UrgentConsultationBanner consultationId={consultation.consultation_id} />
       )}
 
-      {/* Aggregated Result */}
-      <AggregatedResultCard consultation={consultation} />
+      {/* Patient + Result: 2-column on desktop */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {patient && (
+          <Card>
+            <CardContent className="flex items-center gap-3 py-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100">
+                <User className="h-4 w-4 text-primary-700" />
+              </div>
+              <div>
+                <p className="font-medium text-slate-900">{patient.name}</p>
+                {patient.phone_number && (
+                  <p className="text-xs text-slate-500">{patient.phone_number}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        <AggregatedResultCard consultation={consultation} />
+      </div>
 
-      {/* Images */}
+      {/* Images: compact row with gallery + upload/attach */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold text-slate-900">Images</h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAttachOpen(true)}
-            >
-              <Paperclip className="h-4 w-4" />
-              Attach Scan
-            </Button>
+            <div className="flex gap-2">
+              <ImageUploadZone consultationId={consultationId} compact />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAttachOpen(true)}
+              >
+                <Paperclip className="h-4 w-4" />
+                Attach Scan
+              </Button>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <ImageUploadZone consultationId={consultationId} />
+        <CardContent>
           <ImageGallery consultationId={consultationId} />
         </CardContent>
       </Card>

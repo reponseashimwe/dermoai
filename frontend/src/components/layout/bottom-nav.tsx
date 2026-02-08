@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/", label: "Home", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/consultations", label: "Consults", icon: ClipboardList },
   { href: "/scan-history", label: "Scan", icon: ScanLine, primary: true },
   { href: "/notifications", label: "Alerts", icon: Bell },
@@ -28,7 +28,7 @@ export function BottomNav() {
         {items.map((item) => {
           const active =
             pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
           if (item.primary) {
             return (

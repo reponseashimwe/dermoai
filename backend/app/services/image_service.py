@@ -1,7 +1,8 @@
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.image import Image
@@ -141,6 +142,76 @@ async def list_for_user(user_id: UUID, db: AsyncSession) -> list[Image]:
         .order_by(Image.uploaded_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def list_unreviewed(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 20,
+) -> tuple[list[Image], int]:
+    """List images that allow review and have no reviewed_label yet (for specialist review queue)."""
+    criteria = (
+        Image.allowed_review.is_(True),
+        Image.reviewed_label.is_(None),
+    )
+    count_result = await db.execute(select(func.count()).select_from(Image).where(*criteria))
+    total = count_result.scalar() or 0
+    result = await db.execute(
+        select(Image)
+        .where(*criteria)
+        .order_by(Image.uploaded_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return list(result.scalars().all()), total
+
+
+async def list_all(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 20,
+    consultation_id: UUID | None = None,
+    uploaded_by: UUID | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+) -> tuple[list[Image], int]:
+    """List all images (admin). Optional filters."""
+    criteria = []
+    if consultation_id is not None:
+        criteria.append(Image.consultation_id == consultation_id)
+    if uploaded_by is not None:
+        criteria.append(Image.uploaded_by == uploaded_by)
+    if date_from is not None:
+        criteria.append(Image.uploaded_at >= date_from)
+    if date_to is not None:
+        criteria.append(Image.uploaded_at <= date_to)
+
+    count_query = select(func.count()).select_from(Image)
+    if criteria:
+        count_query = count_query.where(*criteria)
+    count_result = await db.execute(count_query)
+    total = count_result.scalar() or 0
+
+    list_query = select(Image).order_by(Image.uploaded_at.desc()).offset(skip).limit(limit)
+    if criteria:
+        list_query = list_query.where(*criteria)
+    result = await db.execute(list_query)
+    return list(result.scalars().all()), total
+
+
+async def update_reviewed_label(
+    image_id: UUID, reviewed_label: str, db: AsyncSession
+) -> Image:
+    image = await get_image(image_id, db)
+    if not image.allowed_review:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Image does not allow review",
+        )
+    image.reviewed_label = reviewed_label
+    await db.commit()
+    await db.refresh(image)
+    return image
 
 
 async def delete_image(image_id: UUID, db: AsyncSession) -> None:

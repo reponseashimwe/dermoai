@@ -54,7 +54,7 @@ export default function PatientsPage() {
       )}
 
       {patients && patients.length > 0 && (
-        <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {patients.map((p) => (
             <PatientCard
               key={p.patient_id}
@@ -62,6 +62,17 @@ export default function PatientsPage() {
               onClick={() => router.push(`/patients/${p.patient_id}`)}
             />
           ))}
+          <Card
+            className="flex cursor-pointer flex-col items-center justify-center border-dashed py-8 transition-shadow hover:shadow-md"
+            onClick={() => setShowCreate(true)}
+          >
+            <CardContent className="flex flex-col items-center gap-2">
+              <Plus className="h-8 w-8 text-slate-400" />
+              <span className="text-sm font-medium text-slate-600">
+                Add Patient
+              </span>
+            </CardContent>
+          </Card>
         </div>
       )}
 

@@ -11,10 +11,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { CheckCircle2, XCircle, UserCheck } from "lucide-react";
 
-export function PendingPractitionerList() {
+interface PendingPractitionerListProps {
+  limit?: number;
+}
+
+export function PendingPractitionerList({ limit }: PendingPractitionerListProps = {}) {
   const { data: pending, isLoading } = usePendingPractitioners();
   const approve = useApprovePractitioner();
   const { toast } = useToast();
+  const list = limit != null && pending ? pending.slice(0, limit) : pending ?? [];
 
   async function handleAction(
     practitionerId: string,
@@ -44,7 +49,7 @@ export function PendingPractitionerList() {
     );
   }
 
-  if (!pending?.length) {
+  if (!list.length) {
     return (
       <EmptyState
         icon={<UserCheck className="h-10 w-10" />}
@@ -56,7 +61,7 @@ export function PendingPractitionerList() {
 
   return (
     <div className="space-y-3">
-      {pending.map((p) => (
+      {list.map((p) => (
         <PractitionerCard
           key={p.practitioner_id}
           practitioner={p}
