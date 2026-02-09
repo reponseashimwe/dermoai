@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "date_created": "2026-02-05T19:59:05.209736",
+    "date_created": "2026-02-09T12:20:53.011437",
     "random_seed": 42,
     "split_ratios": {
       "train": 0.7,
@@ -12,75 +12,59 @@
       224
     ],
     "total_original_images": 2155,
-    "total_final_classes": 12
+    "total_final_classes": 8
   },
   "split_statistics": {
     "train": {
       "total_images": 1507,
       "per_class": {
-        "scabies": 51,
-        "neurofibromatosis": 52,
-        "squamous_cell_carcinoma": 44,
-        "pityriasis_rubra_pilaris": 89,
-        "inflammatory": 666,
-        "lupus_erythematosus": 63,
-        "psoriasis": 59,
-        "lichen_planus": 81,
-        "malignant_skin_lesions": 100,
-        "vitiligo": 42,
-        "genodermatoses": 118,
-        "benign_neoplastic_lesions": 142
+        "genetic_neurocutaneous": 172,
+        "pigmentary": 42,
+        "eczematous_dermatitis": 666,
+        "malignant": 144,
+        "benign_neoplastic": 141,
+        "papulosquamous": 148,
+        "autoimmune": 143,
+        "parasitic": 51
       }
     },
     "val": {
       "total_images": 324,
       "per_class": {
-        "scabies": 11,
-        "neurofibromatosis": 11,
-        "squamous_cell_carcinoma": 10,
-        "pityriasis_rubra_pilaris": 19,
-        "inflammatory": 143,
-        "lupus_erythematosus": 13,
-        "psoriasis": 13,
-        "lichen_planus": 18,
-        "malignant_skin_lesions": 21,
-        "vitiligo": 9,
-        "genodermatoses": 26,
-        "benign_neoplastic_lesions": 30
+        "genetic_neurocutaneous": 36,
+        "pigmentary": 9,
+        "eczematous_dermatitis": 143,
+        "malignant": 31,
+        "benign_neoplastic": 31,
+        "papulosquamous": 32,
+        "autoimmune": 31,
+        "parasitic": 11
       }
     },
     "test": {
       "total_images": 324,
       "per_class": {
-        "scabies": 11,
-        "neurofibromatosis": 11,
-        "squamous_cell_carcinoma": 9,
-        "pityriasis_rubra_pilaris": 19,
-        "inflammatory": 143,
-        "lupus_erythematosus": 13,
-        "psoriasis": 13,
-        "lichen_planus": 17,
-        "malignant_skin_lesions": 22,
-        "vitiligo": 9,
-        "genodermatoses": 26,
-        "benign_neoplastic_lesions": 31
+        "genetic_neurocutaneous": 36,
+        "pigmentary": 9,
+        "eczematous_dermatitis": 143,
+        "malignant": 31,
+        "benign_neoplastic": 31,
+        "papulosquamous": 32,
+        "autoimmune": 31,
+        "parasitic": 11
       }
     },
     "augmented": {
-      "total_images": 2939,
+      "total_images": 3147,
       "per_class": {
-        "scabies": 153,
-        "neurofibromatosis": 156,
-        "squamous_cell_carcinoma": 110,
-        "pityriasis_rubra_pilaris": 267,
-        "inflammatory": 999,
-        "lupus_erythematosus": 189,
-        "psoriasis": 177,
-        "lichen_planus": 243,
-        "malignant_skin_lesions": 150,
-        "vitiligo": 105,
-        "genodermatoses": 177,
-        "benign_neoplastic_lesions": 213
+        "genetic_neurocutaneous": 430,
+        "pigmentary": 126,
+        "eczematous_dermatitis": 999,
+        "malignant": 360,
+        "benign_neoplastic": 352,
+        "papulosquamous": 370,
+        "autoimmune": 357,
+        "parasitic": 153
       }
     }
   },
@@ -95,18 +79,14 @@
       "RandomBrightnessContrast (\u00b10.1)"
     ],
     "factors": {
-      "inflammatory": 1.5,
-      "benign_neoplastic_lesions": 1.5,
-      "genodermatoses": 1.5,
-      "malignant_skin_lesions": 1.5,
-      "pityriasis_rubra_pilaris": 3.0,
-      "lichen_planus": 3.0,
-      "lupus_erythematosus": 3.0,
-      "psoriasis": 3.0,
-      "neurofibromatosis": 3.0,
-      "scabies": 3.0,
-      "squamous_cell_carcinoma": 2.5,
-      "vitiligo": 2.5
+      "eczematous_dermatitis": 1.5,
+      "genetic_neurocutaneous": 2.5,
+      "papulosquamous": 2.5,
+      "malignant": 2.5,
+      "autoimmune": 2.5,
+      "benign_neoplastic": 2.5,
+      "parasitic": 3.0,
+      "pigmentary": 3.0
     }
   },
   "data_leakage_check": {
