@@ -7,6 +7,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import settings
+from app.core.migrate import run_migrations
+from app.core.seed import run_seed
 from app.routers import (
     auth,
     clinical_reviews,
@@ -26,6 +28,13 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Run migrations then seed on startup
+    try:
+        await run_migrations()
+        await run_seed()
+    except Exception as e:
+        logger.exception("Startup migration/seed failed: %s", e)
+        raise
     configure_cloudinary()
     yield
 
