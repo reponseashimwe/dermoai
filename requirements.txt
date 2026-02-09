@@ -16,3 +16,6 @@ isic-cli>=2.0.0
 # For model training (later)
 torch>=2.0.0
 torchvision>=0.15.0
+
+albumentations
+opencv-python-headless
