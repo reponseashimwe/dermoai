@@ -113,22 +113,45 @@ The backend expects a trained Keras model for inference. Place the exported mode
 - `models/final/best_model.keras` (or `dermoai_final_model.keras`)
 - `models/final/class_names.json`
 
-These are produced by running the training notebook `notebooks/04_model_training.ipynb`. Without these files, the scan/triage endpoints will fail at startup.
+These are produced by running the training notebook `notebooks/04_model_training.ipynb` (see Notebooks below). Without these files, the scan/triage endpoints will fail at startup.
 
-### 5. Optional: data and notebooks (ML pipeline)
+---
 
-For dataset download, filtering, and training:
+## Datasets
+
+The ML pipeline uses two dermatology datasets for **Fitzpatrick Skin Types (FST) V–VI**. Run commands from the **project root**. Install dependencies: `pip install -r requirements.txt`.
+
+**Download** (script: `src/data/download.py`; output under `data/raw/`):
 
 ```bash
-# From project root
-pip install -r requirements.txt
+python src/data/download.py
 python src/data/download.py --dataset fitzpatrick17k
-python src/data/filter.py --dataset fitzpatrick17k
+python src/data/download.py --dataset isic
 ```
 
-Then run the Jupyter notebooks in order: `01_data_exploration.ipynb`, `02_condition_classification_strategy.ipynb`, `03_data_augmentation.ipynb`, `04_model_training.ipynb`. See `docs/PROJECT_REPORT.md` for details.
+**Layout:** `data/raw/fitzpatrick17k/` (images, CSVs) and `data/raw/isic/` (metadata, optional images). ISIC metadata (`isic_metadata.csv`) is ~112 MB and not in the repo. Full data: [Google Drive dermoai folder](https://drive.google.com/drive/folders/13ZYlwGxlQpN17szV3-leiCCjs9lqb_Ay). See [data/raw/isic/README.md](data/raw/isic/README.md) and [data/raw/fitzpatrick17k/README.md](data/raw/fitzpatrick17k/README.md) for other options.
 
-**Note:** ISIC metadata (`data/raw/isic/isic_metadata.csv`) is large (~112 MB) and not in the repo; see the [data README](data/raw/isic/README.md) or the project Google Drive folder for full data.
+---
+
+## Notebooks
+
+The analysis and model training pipeline lives in Jupyter notebooks under `notebooks/`. Run them **in order** after data is downloaded. Use the same Python environment as for the data scripts (`pip install -r requirements.txt`); training also needs TensorFlow (in root `requirements.txt`).
+
+| Notebook | Purpose | Outputs |
+|----------|---------|---------|
+| **01_data_exploration.ipynb** | EDA on Fitzpatrick17k and ISIC: dataset integrity, label distribution, FST V vs VI, class imbalance, augmentation needs, malignant vs non-malignant balance; ISIC FST coverage; cross-dataset synthesis. | `results/eda/` (figures, CSVs, summary JSON). |
+| **02_condition_classification_strategy.ipynb** | Defines the condition taxonomy: map 112 original diagnoses to 9 then 8 categories. Rules: ≥50 train samples → independent class; 40–49 with clinical priority → independent; else group by taxonomy. | `results/classification/` (condition mapping, class statistics, priority/risk tables). |
+| **03_data_augmentation.ipynb** | Augmentation strategy for class imbalance: policy (e.g. horizontal/vertical flip, rotation ±15°, brightness/contrast), scope (training only), split and per-class statistics. | `results/augmentation/augmentation_report.json` and related outputs. |
+| **04_model_training.ipynb** | Train recall-optimized MobileNetV2 on FST V–VI data: focal loss, two-phase fine-tuning, malignant-specific threshold at inference. Target: malignant recall ≥80%. Exports best model and class names. | `models/final/best_model.keras` (or `dermoai_final_model.keras`), `models/final/class_names.json`. |
+
+**Run from project root:**
+
+```bash
+jupyter notebook notebooks/01_data_exploration.ipynb
+# Then 02, 03, 04 in order
+```
+
+Or open the `notebooks/` directory in Jupyter Lab / VS Code and run the cells in sequence. The backend inference service expects the outputs of **04_model_training.ipynb** in `models/final/`.
 
 ---
 
@@ -229,12 +252,18 @@ Content emphasizes a practical walkthrough of app functionalities (quick scan, c
 dermoai/
 ├── backend/          # FastAPI app (API, auth, DB, ML inference, Cloudinary, LiveKit)
 ├── frontend/         # Next.js app (dashboard, scan, consultations, review, admin)
-├── notebooks/       # 01 EDA, 02 condition strategy, 03 augmentation, 04 training
-├── src/data/        # download.py, filter.py (FST V–VI datasets)
-├── results/         # EDA, classification, augmentation outputs
-├── models/final/    # best_model.keras, class_names.json (from notebook 04)
-├── screenshots/     # App interface screenshots
-└── docs/            # PROJECT_REPORT.md (detailed documentation)
+├── notebooks/        # See "Notebooks" section above
+│   ├── 01_data_exploration.ipynb
+│   ├── 02_condition_classification_strategy.ipynb
+│   ├── 03_data_augmentation.ipynb
+│   └── 04_model_training.ipynb
+├── src/data/         # See "Datasets" section above
+│   └── download.py   # Download Fitzpatrick17k / ISIC (FST V–VI)
+├── data/             # raw/ (download output), processed/, augmented/
+├── results/          # EDA, classification, augmentation outputs (from notebooks)
+├── models/final/     # best_model.keras, class_names.json (from notebook 04)
+├── screenshots/      # App interface screenshots
+└── docs/             # PROJECT_REPORT.md (detailed documentation)
 ```
 
 ---
