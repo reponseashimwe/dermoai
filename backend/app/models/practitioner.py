@@ -23,6 +23,10 @@ class Practitioner(Base):
     )
     expertise: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_online: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_active: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -30,4 +34,14 @@ class Practitioner(Base):
     user: Mapped["User"] = relationship("User", back_populates="practitioner")
     clinical_reviews: Mapped[list["ClinicalReview"]] = relationship(
         "ClinicalReview", back_populates="practitioner"
+    )
+    initiated_teleconsultations: Mapped[list["Teleconsultation"]] = relationship(
+        "Teleconsultation",
+        foreign_keys="Teleconsultation.practitioner_id",
+        back_populates="practitioner",
+    )
+    accepted_teleconsultations: Mapped[list["Teleconsultation"]] = relationship(
+        "Teleconsultation",
+        foreign_keys="Teleconsultation.specialist_id",
+        back_populates="specialist",
     )

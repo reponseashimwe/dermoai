@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Logo } from "@/components/layout/logo";
 import { ScanUploadForm } from "@/components/scan/scan-upload-form";
@@ -29,23 +31,24 @@ const features = [
 
 export default function HomePage() {
 	const { user, isLoading } = useAuth();
+	const router = useRouter();
+
+	useEffect(() => {
+		if (!isLoading && user) {
+			router.replace("/dashboard");
+		}
+	}, [isLoading, user, router]);
+
+	if (!isLoading && user) {
+		return null;
+	}
 
 	return (
 		<>
-			{/* Mobile: full-width header + content */}
-			<div className='flex h-screen flex-col overflow-hidden bg-white lg:hidden relative'>
-				<div
-					className='absolute inset-0 flex flex-row pointer-events-none'
-					aria-hidden
-				>
-					<div className='absolute left-0 top-0 h-full w-1/2 bg-slate-50' />
-					<div
-						className='absolute right-0 top-0 h-full w-1/2'
-						style={{ backgroundColor: "#ffffff" }}
-					/>
-				</div>
+			{/* Mobile to md: single-column, full-width whole screen */}
+			<div className='flex min-h-screen flex-col bg-white lg:hidden'>
 				<Header />
-				<main className='mx-auto flex w-full max-w-7xl flex-1 flex-col overflow-hidden px-6 pt-8'>
+				<main className='flex flex-1 w-full flex-col overflow-hidden px-4 pt-6 pb-8 sm:px-6 sm:pt-8'>
 					<div className='mb-6 flex justify-center gap-6'>
 						{features.map((f, i) => (
 							<div
@@ -79,9 +82,9 @@ export default function HomePage() {
 
 			{/* Desktop: relative wrapper + absolute full-viewport backgrounds (left gray, right white), content in max-w-7xl above */}
 			<div className='relative hidden min-h-screen w-full lg:block'>
-				{/* Absolute backgrounds — full viewport, not affected by max-w-7xl inner content */}
+				{/* Absolute backgrounds — full viewport, behind content */}
 				<div
-					className='absolute inset-0 flex flex-row pointer-events-none'
+					className='absolute inset-0 z-0 flex flex-row pointer-events-none'
 					aria-hidden
 				>
 					<div className='absolute left-0 top-0 h-full w-1/2 bg-slate-50' />

@@ -10,19 +10,17 @@ from app.schemas.auth import (
     RegisterRequest,
     TokenResponse,
 )
-from app.schemas.user import UserRead
 from app.services import auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserRead, status_code=201)
+@router.post("/register", response_model=TokenResponse, status_code=201)
 async def register(
     data: RegisterRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    user = await auth_service.register(data, db)
-    return user
+    return await auth_service.register(data, db)
 
 
 @router.post("/login", response_model=TokenResponse)

@@ -16,6 +16,7 @@ class ClinicalReviewRead(BaseModel):
     review_id: uuid.UUID
     consultation_id: uuid.UUID
     practitioner_id: uuid.UUID
+    practitioner_name: str | None = None
     diagnosis: str
     treatment_plan: str | None = None
     notes: str | None = None

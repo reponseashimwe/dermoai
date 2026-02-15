@@ -8,6 +8,10 @@ export async function createPatient(data: PatientCreate): Promise<Patient> {
   });
 }
 
+export async function getMyPatient(): Promise<Patient> {
+  return fetchClient<Patient>("/api/patients/me");
+}
+
 export async function listPatients(): Promise<Patient[]> {
   return fetchClient<Patient[]>("/api/patients/");
 }

@@ -16,7 +16,7 @@ from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 
 
-async def register(data: RegisterRequest, db: AsyncSession) -> User:
+async def register(data: RegisterRequest, db: AsyncSession) -> TokenResponse:
     result = await db.execute(select(User).where(User.email == data.email))
     if result.scalar_one_or_none():
         raise HTTPException(
@@ -55,7 +55,10 @@ async def register(data: RegisterRequest, db: AsyncSession) -> User:
 
     await db.commit()
     await db.refresh(user)
-    return user
+    return TokenResponse(
+        access_token=create_access_token(str(user.user_id), user.role),
+        refresh_token=create_refresh_token(str(user.user_id)),
+    )
 
 
 async def login(data: LoginRequest, db: AsyncSession) -> TokenResponse:

@@ -4,6 +4,7 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 import { Sidebar } from "@/components/layout/sidebar";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { TeleconsultationListener } from "@/components/telemedicine/teleconsultation-listener";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardLayout({
@@ -15,6 +16,7 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
+      <TeleconsultationListener />
       <div className="min-h-screen bg-slate-100">
         <Sidebar user={user} />
 

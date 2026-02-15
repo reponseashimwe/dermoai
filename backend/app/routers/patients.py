@@ -22,6 +22,15 @@ async def create_patient(
     return await patient_service.create_patient(data, db)
 
 
+@router.get("/me", response_model=PatientRead)
+async def get_my_patient(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Return the patient record linked to the current user (for self-service consultations)."""
+    return await patient_service.get_patient_by_user_id(current_user.user_id, db)
+
+
 @router.get("/", response_model=list[PatientRead])
 async def list_patients(
     _user: Annotated[User, Depends(get_current_user)],

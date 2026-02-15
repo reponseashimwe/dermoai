@@ -3,9 +3,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listConsultationImages,
+  listUnreviewedImages,
+  listReviewedImages,
+  listAllImages,
   uploadToConsultation,
   attachToConsultation,
+  updateImageReview,
   deleteImage,
+} from "@/lib/api/images";
+import type {
+  ListUnreviewedParams,
+  ListReviewedParams,
+  ListAllImagesParams,
 } from "@/lib/api/images";
 
 export function useConsultationImages(consultationId: string) {
@@ -49,6 +58,31 @@ export function useAttachImage() {
   });
 }
 
+export function useUpdateImageReview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      imageId,
+      reviewedLabel,
+    }: {
+      imageId: string;
+      reviewedLabel: string;
+    }) => updateImageReview(imageId, reviewedLabel),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["images", "unreviewed"] });
+      queryClient.invalidateQueries({ queryKey: ["images", "reviewed"] });
+      queryClient.invalidateQueries({ queryKey: ["consultation-images"] });
+    },
+  });
+}
+
+export function useReviewedImages(params: ListReviewedParams = {}) {
+  return useQuery({
+    queryKey: ["images", "reviewed", params.skip ?? 0, params.limit ?? 20],
+    queryFn: () => listReviewedImages(params),
+  });
+}
+
 export function useDeleteImage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -57,5 +91,19 @@ export function useDeleteImage() {
       queryClient.invalidateQueries({ queryKey: ["consultation-images"] });
       queryClient.invalidateQueries({ queryKey: ["consultations"] });
     },
+  });
+}
+
+export function useUnreviewedImages(params: ListUnreviewedParams = {}) {
+  return useQuery({
+    queryKey: ["images", "unreviewed", params.skip ?? 0, params.limit ?? 20],
+    queryFn: () => listUnreviewedImages(params),
+  });
+}
+
+export function useAllImages(params: ListAllImagesParams = {}) {
+  return useQuery({
+    queryKey: ["images", "all", params],
+    queryFn: () => listAllImages(params),
   });
 }

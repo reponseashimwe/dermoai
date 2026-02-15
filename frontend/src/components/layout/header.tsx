@@ -32,7 +32,7 @@ export function Header() {
 
           {!isLoading && user && (
             <>
-              <Link href="/consultations" className="flex min-h-[44px] items-center sm:min-h-0">
+              <Link href="/dashboard" className="flex min-h-[44px] items-center sm:min-h-0">
                 <Button size="sm" className="text-sm font-medium">Dashboard</Button>
               </Link>
               <Link href="/profile" className="flex min-h-[44px] min-w-[44px] items-center justify-center sm:min-h-0 sm:min-w-0" aria-label="Profile">

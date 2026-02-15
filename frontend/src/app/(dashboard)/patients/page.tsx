@@ -54,7 +54,7 @@ export default function PatientsPage() {
       )}
 
       {patients && patients.length > 0 && (
-        <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {patients.map((p) => (
             <PatientCard
               key={p.patient_id}

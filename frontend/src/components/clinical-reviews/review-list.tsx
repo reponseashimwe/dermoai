@@ -3,7 +3,6 @@
 import { useConsultationReviews } from "@/hooks/use-clinical-reviews";
 import { ReviewCard } from "./review-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ClipboardList } from "lucide-react";
 
 interface ReviewListProps {
@@ -25,11 +24,10 @@ export function ReviewList({ consultationId }: ReviewListProps) {
 
   if (!reviews?.length) {
     return (
-      <EmptyState
-        icon={<ClipboardList className="h-10 w-10" />}
-        title="No reviews yet"
-        description="Clinical reviews from practitioners will appear here."
-      />
+      <div className="flex items-center gap-2 py-3 text-sm text-slate-500">
+        <ClipboardList className="h-4 w-4 shrink-0 text-slate-400" />
+        <span>No reviews yet. Clinical reviews from practitioners will appear here.</span>
+      </div>
     );
   }
 

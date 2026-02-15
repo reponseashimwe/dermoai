@@ -41,3 +41,6 @@ class Consultation(Base):
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="consultation"
     )
+    teleconsultations: Mapped[list["Teleconsultation"]] = relationship(
+        "Teleconsultation", back_populates="consultation"
+    )

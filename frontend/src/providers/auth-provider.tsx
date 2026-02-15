@@ -55,13 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (registerData: Omit<RegisterRequest, "role"> & { role: string }) => {
-      await fetchClient<User>("/api/auth/register", {
+      const data = await fetchClient<TokenResponse>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify(registerData),
         skipAuth: true,
       });
+      setTokens(data.access_token, data.refresh_token);
+      await refreshUser();
     },
-    []
+    [refreshUser]
   );
 
   const logout = useCallback(() => {

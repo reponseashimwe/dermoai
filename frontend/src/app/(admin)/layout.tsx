@@ -18,7 +18,7 @@ export default function AdminLayout({
       <div className="min-h-screen bg-slate-50">
         <Sidebar user={user} />
 
-        <div className="md:ml-[72px]">
+        <div className="md:ml-[80px]">
           <DashboardHeader />
           <main className="px-4 py-6 pb-20 md:px-6 md:pb-6">
             {children}

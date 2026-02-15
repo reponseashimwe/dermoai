@@ -18,6 +18,11 @@ export function ReviewCard({ review }: ReviewCardProps) {
             <span className="text-sm font-medium text-slate-700">
               Clinical Review
             </span>
+            {review.practitioner_name && (
+              <span className="text-xs text-slate-500">
+                by {review.practitioner_name}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {review.is_final && (

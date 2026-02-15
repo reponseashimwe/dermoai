@@ -14,6 +14,11 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
+    # LiveKit (video calls)
+    LIVEKIT_API_KEY: str = ""
+    LIVEKIT_API_SECRET: str = ""
+    LIVEKIT_URL: str = "ws://localhost:7880"
+      
     # Optional: seed a default admin on first run (set in .env for dev)
     SEED_ADMIN_EMAIL: str = ""
     SEED_ADMIN_PASSWORD: str = ""

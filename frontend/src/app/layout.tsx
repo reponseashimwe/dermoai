@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   description:
     "AI-assisted dermatological triage for resource-limited settings in Rwanda. Get instant skin condition predictions optimized for darker skin tones.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/icons/icon-192x192.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
