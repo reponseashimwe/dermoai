@@ -4,13 +4,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listConsultationImages,
   listUnreviewedImages,
+  listReviewedImages,
   listAllImages,
   uploadToConsultation,
   attachToConsultation,
   updateImageReview,
   deleteImage,
 } from "@/lib/api/images";
-import type { ListUnreviewedParams, ListAllImagesParams } from "@/lib/api/images";
+import type {
+  ListUnreviewedParams,
+  ListReviewedParams,
+  ListAllImagesParams,
+} from "@/lib/api/images";
 
 export function useConsultationImages(consultationId: string) {
   return useQuery({
@@ -65,8 +70,16 @@ export function useUpdateImageReview() {
     }) => updateImageReview(imageId, reviewedLabel),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["images", "unreviewed"] });
+      queryClient.invalidateQueries({ queryKey: ["images", "reviewed"] });
       queryClient.invalidateQueries({ queryKey: ["consultation-images"] });
     },
+  });
+}
+
+export function useReviewedImages(params: ListReviewedParams = {}) {
+  return useQuery({
+    queryKey: ["images", "reviewed", params.skip ?? 0, params.limit ?? 20],
+    queryFn: () => listReviewedImages(params),
   });
 }
 

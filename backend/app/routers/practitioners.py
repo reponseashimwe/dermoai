@@ -21,14 +21,17 @@ router = APIRouter(prefix="/api/practitioners", tags=["practitioners"])
 
 @router.get("/available", response_model=list[PractitionerAvailableRead])
 async def list_available_practitioners(
-    _user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
     practitioner_type: str | None = None,
     online_only: bool = True,
 ):
-    """List practitioners (online only by default), optionally filtered by type. Includes name and email."""
+    """List practitioners (online only by default), optionally filtered by type. Excludes current user. Includes name and email."""
     practitioners = await practitioner_service.list_available(
-        db, practitioner_type=practitioner_type, online_only=online_only
+        db,
+        practitioner_type=practitioner_type,
+        online_only=online_only,
+        exclude_user_id=current_user.user_id,
     )
     return [
         PractitionerAvailableRead(

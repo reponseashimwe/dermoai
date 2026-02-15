@@ -11,6 +11,11 @@ export interface ListUnreviewedParams {
   limit?: number;
 }
 
+export interface ListReviewedParams {
+  skip?: number;
+  limit?: number;
+}
+
 export interface ListAllImagesParams {
   skip?: number;
   limit?: number;
@@ -62,6 +67,14 @@ export async function listUnreviewedImages(
   const { skip = 0, limit = 20 } = params;
   const sp = new URLSearchParams({ skip: String(skip), limit: String(limit) });
   return fetchClient<ImageListResponse>(`/api/images/unreviewed?${sp}`);
+}
+
+export async function listReviewedImages(
+  params: ListReviewedParams = {}
+): Promise<ImageListResponse> {
+  const { skip = 0, limit = 20 } = params;
+  const sp = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  return fetchClient<ImageListResponse>(`/api/images/reviewed?${sp}`);
 }
 
 export async function listAllImages(

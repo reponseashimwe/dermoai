@@ -36,7 +36,7 @@ export function ConsultationList() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {consultations.map((c) => (
         <ConsultationCard key={c.consultation_id} consultation={c} />
       ))}

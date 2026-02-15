@@ -35,3 +35,13 @@ class Practitioner(Base):
     clinical_reviews: Mapped[list["ClinicalReview"]] = relationship(
         "ClinicalReview", back_populates="practitioner"
     )
+    initiated_teleconsultations: Mapped[list["Teleconsultation"]] = relationship(
+        "Teleconsultation",
+        foreign_keys="Teleconsultation.practitioner_id",
+        back_populates="practitioner",
+    )
+    accepted_teleconsultations: Mapped[list["Teleconsultation"]] = relationship(
+        "Teleconsultation",
+        foreign_keys="Teleconsultation.specialist_id",
+        back_populates="specialist",
+    )

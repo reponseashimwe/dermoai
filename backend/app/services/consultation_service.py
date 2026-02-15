@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.consultation import Consultation
 from app.models.image import Image
+from app.models.user import User
 from app.schemas.consultation import ConsultationCreate, ConsultationUpdate
 from app.services import ml_service
 
@@ -24,7 +25,12 @@ async def create_consultation(
     return consultation
 
 
-async def get_consultation(consultation_id: UUID, db: AsyncSession) -> Consultation:
+async def get_consultation(
+    consultation_id: UUID,
+    db: AsyncSession,
+    *,
+    current_user: User | None = None,
+) -> Consultation:
     result = await db.execute(
         select(Consultation)
         .options(selectinload(Consultation.images))
@@ -35,20 +41,38 @@ async def get_consultation(consultation_id: UUID, db: AsyncSession) -> Consultat
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Consultation not found"
         )
+    # Patients may only access their own consultations (created by them)
+    if current_user and current_user.role == "USER":
+        if consultation.created_by != current_user.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Consultation not found"
+            )
     return consultation
 
 
-async def list_consultations(db: AsyncSession) -> list[Consultation]:
-    result = await db.execute(
-        select(Consultation).order_by(Consultation.created_at.desc())
-    )
+async def list_consultations(
+    db: AsyncSession,
+    *,
+    current_user: User,
+) -> list[Consultation]:
+    query = select(Consultation).order_by(Consultation.created_at.desc())
+    # Patients see only consultations they created (their own)
+    if current_user.role == "USER":
+        query = query.where(Consultation.created_by == current_user.user_id)
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 
 async def update_consultation(
-    consultation_id: UUID, data: ConsultationUpdate, db: AsyncSession
+    consultation_id: UUID,
+    data: ConsultationUpdate,
+    db: AsyncSession,
+    *,
+    current_user: User | None = None,
 ) -> Consultation:
-    consultation = await get_consultation(consultation_id, db)
+    consultation = await get_consultation(
+        consultation_id, db, current_user=current_user
+    )
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(consultation, field, value)
     await db.commit()

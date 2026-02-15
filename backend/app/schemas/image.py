@@ -13,6 +13,7 @@ class ImageRead(BaseModel):
     predicted_condition: str | None = None
     confidence: float | None = None
     reviewed_label: str | None = None
+    reviewed_as_final: bool = False
     uploaded_at: datetime
     file_size: int | None = None
     source: str

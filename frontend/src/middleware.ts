@@ -13,9 +13,9 @@ export function middleware(request: NextRequest) {
   // This middleware provides a fast redirect for obvious cases.
   const hasToken = request.cookies.get("dermoai_has_session")?.value === "true";
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages to dashboard
   if (hasToken && authPaths.some((p) => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();

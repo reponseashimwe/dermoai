@@ -40,6 +40,7 @@ export function useUpdateMyStatus() {
     mutationFn: (data: PractitionerStatusUpdate) => updateMyStatus(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["practitioners"] });
+      queryClient.invalidateQueries({ queryKey: ["practitioners", "available"] });
     },
   });
 }

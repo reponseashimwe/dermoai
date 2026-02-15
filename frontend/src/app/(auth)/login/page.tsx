@@ -37,7 +37,7 @@ export default function LoginPage() {
 		setError(null);
 		try {
 			await login(data.email, data.password);
-			router.push("/");
+			router.push("/dashboard");
 		} catch (err) {
 			if (isApiError(err)) {
 				setError(err.detail);

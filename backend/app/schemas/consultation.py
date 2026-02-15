@@ -23,3 +23,7 @@ class ConsultationRead(BaseModel):
 
 class ConsultationUpdate(BaseModel):
     status: str | None = None
+
+
+class ConsultationImagesConsentUpdate(BaseModel):
+    consent_to_reuse: bool

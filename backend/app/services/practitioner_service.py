@@ -27,6 +27,10 @@ async def get_practitioner_by_user_id(user_id: UUID, db: AsyncSession) -> Practi
     return result.scalar_one_or_none()
 
 
+# Alias for routers that use get_by_user_id
+get_by_user_id = get_practitioner_by_user_id
+
+
 async def list_practitioners(db: AsyncSession) -> list[Practitioner]:
     result = await db.execute(
         select(Practitioner).order_by(Practitioner.created_at.desc())
@@ -76,8 +80,9 @@ async def list_available(
     db: AsyncSession,
     practitioner_type: str | None = None,
     online_only: bool = True,
+    exclude_user_id: UUID | None = None,
 ) -> list[Practitioner]:
-    """List practitioners (optionally online only, optionally filtered by type). Loads user relation."""
+    """List practitioners (optionally online only, optionally filtered by type). Excludes current user when exclude_user_id is set. Loads user relation."""
     query = (
         select(Practitioner)
         .options(selectinload(Practitioner.user))
@@ -87,6 +92,8 @@ async def list_available(
         query = query.where(Practitioner.is_online.is_(True))
     if practitioner_type is not None:
         query = query.where(Practitioner.practitioner_type == practitioner_type)
+    if exclude_user_id is not None:
+        query = query.where(Practitioner.user_id != exclude_user_id)
     query = query.order_by(
         nulls_last(Practitioner.last_active.desc()),
         Practitioner.created_at.desc(),

@@ -33,3 +33,16 @@ export async function updateConsultation(
     body: JSON.stringify(data),
   });
 }
+
+export async function setConsultationImagesConsent(
+  consultationId: string,
+  consentToReuse: boolean
+): Promise<{ updated: number }> {
+  return fetchClient<{ updated: number }>(
+    `/api/consultations/${consultationId}/images-consent`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ consent_to_reuse: consentToReuse }),
+    }
+  );
+}

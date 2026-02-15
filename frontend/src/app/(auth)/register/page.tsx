@@ -69,7 +69,7 @@ export default function RegisterPage() {
 				practitioner_type: data.role === "PRACTITIONER" ? data.practitioner_type : undefined,
 				expertise: data.role === "PRACTITIONER" ? data.expertise : undefined,
 			});
-			router.push("/login?registered=true");
+			router.push("/dashboard");
 		} catch (err) {
 			if (isApiError(err)) {
 				setError(err.detail);

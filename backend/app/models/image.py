@@ -27,6 +27,7 @@ class Image(Base):
     predicted_condition: Mapped[str | None] = mapped_column(String, nullable=True)
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     reviewed_label: Mapped[str | None] = mapped_column(String, nullable=True)
+    reviewed_as_final: Mapped[bool] = mapped_column(Boolean, default=False)
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

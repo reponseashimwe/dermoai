@@ -3,11 +3,13 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.clinical_review import ClinicalReview
 from app.models.consultation import Consultation
 from app.models.image import Image
-from app.schemas.clinical_review import ClinicalReviewCreate
+from app.models.practitioner import Practitioner
+from app.schemas.clinical_review import ClinicalReviewCreate, ClinicalReviewRead
 
 
 async def create_review(
@@ -48,12 +50,13 @@ async def create_review(
     db.add(review)
 
     if data.is_final:
-        # Propagate diagnosis to all consultation images
+        # Propagate diagnosis to all consultation images (final = specialist)
         img_result = await db.execute(
             select(Image).where(Image.consultation_id == data.consultation_id)
         )
         for img in img_result.scalars().all():
             img.reviewed_label = data.diagnosis
+            img.reviewed_as_final = True
 
         consultation.status = "CLOSED"
     elif consultation.status == "OPEN":
@@ -66,13 +69,34 @@ async def create_review(
 
 async def list_for_consultation(
     consultation_id: UUID, db: AsyncSession
-) -> list[ClinicalReview]:
+) -> list[ClinicalReviewRead]:
     result = await db.execute(
         select(ClinicalReview)
         .where(ClinicalReview.consultation_id == consultation_id)
         .order_by(ClinicalReview.created_at.desc())
+        .options(
+            selectinload(ClinicalReview.practitioner).selectinload(Practitioner.user)
+        )
     )
-    return list(result.scalars().all())
+    reviews = list(result.scalars().all())
+    return [
+        ClinicalReviewRead(
+            review_id=r.review_id,
+            consultation_id=r.consultation_id,
+            practitioner_id=r.practitioner_id,
+            practitioner_name=(
+                r.practitioner.user.name
+                if r.practitioner and r.practitioner.user
+                else None
+            ),
+            diagnosis=r.diagnosis,
+            treatment_plan=r.treatment_plan,
+            notes=r.notes,
+            is_final=r.is_final,
+            created_at=r.created_at,
+        )
+        for r in reviews
+    ]
 
 
 async def get_review(review_id: UUID, db: AsyncSession) -> ClinicalReview:

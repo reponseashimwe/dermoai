@@ -6,6 +6,7 @@ import {
   getConsultation,
   createConsultation,
   updateConsultation,
+  setConsultationImagesConsent,
 } from "@/lib/api/consultations";
 import type { ConsultationCreate, ConsultationUpdate } from "@/types/api";
 
@@ -42,6 +43,30 @@ export function useUpdateConsultation() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["consultations"] });
       queryClient.invalidateQueries({ queryKey: ["consultations", id] });
+    },
+  });
+}
+
+export function useSetConsultationImagesConsent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      consultationId,
+      consentToReuse,
+    }: {
+      consultationId: string;
+      consentToReuse: boolean;
+    }) => setConsultationImagesConsent(consultationId, consentToReuse),
+    onSuccess: (_, { consultationId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["consultation-images", consultationId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["images", "unreviewed"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["images", "reviewed"],
+      });
     },
   });
 }

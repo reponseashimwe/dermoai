@@ -15,9 +15,9 @@ export function ImageGallery({ consultationId }: ImageGalleryProps) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="aspect-square w-full" />
+          <Skeleton key={i} className="h-20 w-full" />
         ))}
       </div>
     );
@@ -34,10 +34,12 @@ export function ImageGallery({ consultationId }: ImageGalleryProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <ul className="space-y-2">
       {images.map((img) => (
-        <ImageCard key={img.image_id} image={img} />
+        <li key={img.image_id}>
+          <ImageCard image={img} variant="row" />
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

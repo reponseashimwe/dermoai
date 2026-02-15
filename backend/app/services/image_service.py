@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.image import Image
@@ -16,10 +16,10 @@ async def quick_scan(
     consent_to_reuse: bool = False,
 ) -> dict:
     upload_result = await cloudinary_service.upload_image(file)
-
-    condition = ml_service.predict(upload_result["url"])
-    confidence = ml_service.get_confidence(upload_result["url"])
-    urgency = ml_service.classify_urgency(condition, confidence)
+    prediction = ml_service.predict_with_details(upload_result["url"])
+    condition = prediction["predicted_condition"]
+    confidence = prediction["confidence"]
+    urgency = prediction["urgency"]
 
     image = Image(
         uploaded_by=user_id,
@@ -57,9 +57,9 @@ async def upload_to_consultation(
     await consultation_service.get_consultation(consultation_id, db)
 
     upload_result = await cloudinary_service.upload_image(file)
-
-    condition = ml_service.predict(upload_result["url"])
-    confidence = ml_service.get_confidence(upload_result["url"])
+    prediction = ml_service.predict_with_details(upload_result["url"])
+    condition = prediction["predicted_condition"]
+    confidence = prediction["confidence"]
 
     image = Image(
         consultation_id=consultation_id,
@@ -134,6 +134,20 @@ async def list_for_consultation(
     return list(result.scalars().all())
 
 
+async def set_consultation_images_consent(
+    consultation_id: UUID, consent_to_reuse: bool, db: AsyncSession
+) -> int:
+    """Set consent_to_reuse for all images in this consultation. Returns count updated."""
+    result = await db.execute(
+        select(Image).where(Image.consultation_id == consultation_id)
+    )
+    images = list(result.scalars().all())
+    for img in images:
+        img.consent_to_reuse = consent_to_reuse
+    await db.commit()
+    return len(images)
+
+
 async def list_for_user(user_id: UUID, db: AsyncSession) -> list[Image]:
     """List quick-scan images for a user."""
     result = await db.execute(
@@ -149,16 +163,39 @@ async def list_unreviewed(
     skip: int = 0,
     limit: int = 20,
 ) -> tuple[list[Image], int]:
-    """List images that allow review and have no reviewed_label yet (for specialist review queue)."""
+    """List images eligible for review: no reviewed_label yet, and (allowed_review, or in a consultation, or consent_to_reuse)."""
     criteria = (
-        Image.allowed_review.is_(True),
         Image.reviewed_label.is_(None),
+        or_(
+            Image.allowed_review.is_(True),
+            Image.consultation_id.isnot(None),
+            Image.consent_to_reuse.is_(True),
+        ),
     )
     count_result = await db.execute(select(func.count()).select_from(Image).where(*criteria))
     total = count_result.scalar() or 0
     result = await db.execute(
         select(Image)
         .where(*criteria)
+        .order_by(Image.uploaded_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return list(result.scalars().all()), total
+
+
+async def list_reviewed(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 20,
+) -> tuple[list[Image], int]:
+    """List images that have been reviewed (have reviewed_label). Paginated."""
+    criteria = Image.reviewed_label.isnot(None)
+    count_result = await db.execute(select(func.count()).select_from(Image).where(criteria))
+    total = count_result.scalar() or 0
+    result = await db.execute(
+        select(Image)
+        .where(criteria)
         .order_by(Image.uploaded_at.desc())
         .offset(skip)
         .limit(limit)
@@ -203,12 +240,15 @@ async def update_reviewed_label(
     image_id: UUID, reviewed_label: str, db: AsyncSession
 ) -> Image:
     image = await get_image(image_id, db)
-    if not image.allowed_review:
+    if not image.allowed_review and not image.consultation_id and not image.consent_to_reuse:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Image does not allow review",
         )
     image.reviewed_label = reviewed_label
+    image.reviewed_as_final = False  # Set via queue, not final clinical review
+    if image.consultation_id:
+        image.allowed_review = True  # Ensure consultation images are marked allowed
     await db.commit()
     await db.refresh(image)
     return image

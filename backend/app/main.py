@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.routers import (
     auth,
     clinical_reviews,
+    conditions,
     consultations,
     images,
     notifications,
@@ -17,11 +18,15 @@ from app.routers import (
     practitioners,
     retraining_logs,
     stats,
+    teleconsultations,
     triage,
     users,
+    websocket,
 )
 from app.core.seed import run_seed
 from app.services.cloudinary_service import configure_cloudinary
+from app.services import condition_service
+from app.core.database import async_session
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +36,9 @@ async def lifespan(app: FastAPI):
     configure_cloudinary()
     try:
         await run_seed()
+        # Seed predefined conditions
+        async with async_session() as db:
+            await condition_service.seed_predefined_conditions(db)
     except Exception as e:
         logger.warning("Seed skipped or failed: %s", e)
     yield
@@ -64,6 +72,9 @@ def create_app() -> FastAPI:
     application.include_router(notifications.router)
     application.include_router(retraining_logs.router)
     application.include_router(stats.router)
+    application.include_router(conditions.router)
+    application.include_router(teleconsultations.router)
+    application.include_router(websocket.router)
 
     @application.get("/health")
     async def health_check():

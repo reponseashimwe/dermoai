@@ -1,0 +1,38 @@
+{
+  "model": {
+    "architecture": "MobileNetV2",
+    "input_shape": [
+      224,
+      224,
+      3
+    ],
+    "num_classes": 8,
+    "weights": "imagenet",
+    "dropout_rate": 0.55
+  },
+  "training": {
+    "batch_size": 32,
+    "phase1_epochs": 30,
+    "phase2_epochs": 15,
+    "initial_lr": 5e-05,
+    "finetune_lr": 1e-06,
+    "use_class_weights": true
+  },
+  "callbacks": {
+    "early_stopping_patience": 7,
+    "reduce_lr_patience": 3,
+    "reduce_lr_factor": 0.5,
+    "min_lr": 1e-07
+  },
+  "evaluation": {
+    "urgent_classes": [
+      "malignant"
+    ],
+    "benign_classes": [
+      "benign_neoplastic"
+    ],
+    "min_recall_threshold": 0.5,
+    "urgent_recall_target": 0.8,
+    "fst_equity_gap_threshold": 0.1
+  }
+}

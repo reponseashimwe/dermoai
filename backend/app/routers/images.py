@@ -57,6 +57,18 @@ async def list_unreviewed_images(
     return ImageListResponse(items=[ImageRead.model_validate(i) for i in items], total=total)
 
 
+@router.get("/reviewed", response_model=ImageListResponse)
+async def list_reviewed_images(
+    _user: Annotated[User, Depends(require_role("PRACTITIONER"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """List images that have been reviewed (have reviewed_label). Paginated."""
+    items, total = await image_service.list_reviewed(db, skip=skip, limit=limit)
+    return ImageListResponse(items=[ImageRead.model_validate(i) for i in items], total=total)
+
+
 @router.get("/all", response_model=ImageListResponse)
 async def list_all_images(
     _user: Annotated[User, Depends(require_role("ADMIN"))],

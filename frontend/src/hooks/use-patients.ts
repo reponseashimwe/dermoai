@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listPatients,
   getPatient,
+  getMyPatient,
   createPatient,
   updatePatient,
 } from "@/lib/api/patients";
@@ -13,6 +14,14 @@ export function usePatients() {
   return useQuery({
     queryKey: ["patients"],
     queryFn: listPatients,
+  });
+}
+
+export function useMyPatient(enabled = true) {
+  return useQuery({
+    queryKey: ["patients", "me"],
+    queryFn: getMyPatient,
+    enabled,
   });
 }
 
@@ -30,6 +39,7 @@ export function useCreatePatient() {
     mutationFn: (data: PatientCreate) => createPatient(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patients", "me"] });
     },
   });
 }

@@ -91,6 +91,7 @@ export interface Image {
   predicted_condition: string | null;
   confidence: number | null;
   reviewed_label: string | null;
+  reviewed_as_final: boolean;
   uploaded_at: string;
   file_size: number | null;
   source: string;
@@ -128,6 +129,7 @@ export interface ClinicalReview {
   review_id: string;
   consultation_id: string;
   practitioner_id: string;
+  practitioner_name: string | null;
   diagnosis: string;
   treatment_plan: string | null;
   notes: string | null;

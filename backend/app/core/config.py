@@ -14,6 +14,11 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
+    # LiveKit (video calls)
+    LIVEKIT_API_KEY: str = ""
+    LIVEKIT_API_SECRET: str = ""
+    LIVEKIT_URL: str = "ws://localhost:7880"
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 
