@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     LIVEKIT_API_KEY: str = ""
     LIVEKIT_API_SECRET: str = ""
     LIVEKIT_URL: str = "ws://localhost:7880"
+      
+    # Optional: seed a default admin on first run (set in .env for dev)
+    SEED_ADMIN_EMAIL: str = ""
+    SEED_ADMIN_PASSWORD: str = ""
+    SEED_ADMIN_NAME: str = "Admin"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 
