@@ -8,6 +8,7 @@ AI-assisted dermatological triage for resource-limited settings. The system clas
 
 - Frontend (Vercel): [https://dermo.vercel.app/](https://dermo.vercel.app/)
 - Backend API (Render): [https://dermoai-24lz.onrender.com](https://dermoai-24lz.onrender.com)
+- API docs (Swagger): [https://dermoai-24lz.onrender.com/docs](https://dermoai-24lz.onrender.com/docs)
 
 ---
 
@@ -21,11 +22,11 @@ DermoAI is a full-stack application that combines:
 
 **Tools and technologies:**
 
-| Layer   | Technologies |
-|--------|----------------|
-| ML/Data | Python, TensorFlow/Keras, Jupyter, Fitzpatrick17k and ISIC (FST V–VI), Pandas, OpenCV, Albumentations |
-| Backend | FastAPI, PostgreSQL (asyncpg), SQLAlchemy, Cloudinary (images), LiveKit (video), JWT auth |
-| Frontend | Next.js 14+, TypeScript, React Query, Axios, Tailwind CSS, PWA-capable |
+| Layer    | Technologies                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| ML/Data  | Python, TensorFlow/Keras, Jupyter, Fitzpatrick17k and ISIC (FST V–VI), Pandas, OpenCV, Albumentations |
+| Backend  | FastAPI, PostgreSQL (asyncpg), SQLAlchemy, Cloudinary (images), LiveKit (video), JWT auth             |
+| Frontend | Next.js 14+, TypeScript, React Query, Axios, Tailwind CSS, PWA-capable                                |
 
 ---
 
@@ -56,23 +57,23 @@ pip install -r requirements.txt
 
 Create a `.env` file in `backend/` (copy from `backend/.env.example`). Required and optional variables:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection (asyncpg driver) | `postgresql+asyncpg://postgres:password@localhost:5432/dermoai` |
-| `SECRET_KEY` | JWT signing secret | `your-secret-key-change-in-production` |
-| `ALGORITHM` | JWT algorithm | `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime | `30` |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifetime | `7` |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | From [Cloudinary](https://cloudinary.com) dashboard |
-| `CLOUDINARY_API_KEY` | Cloudinary API key | |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret | |
-| `CORS_ORIGINS` | Allowed frontend origins (JSON array) | `["http://localhost:3000"]` |
-| `LIVEKIT_URL` | LiveKit server URL (WebSocket) | `wss://your-project.livekit.cloud` |
-| `LIVEKIT_API_KEY` | LiveKit API key | From [LiveKit Cloud](https://cloud.livekit.io) |
-| `LIVEKIT_API_SECRET` | LiveKit API secret | |
-| `SEED_ADMIN_EMAIL` | (Optional) Admin email to seed on first run | `admin@example.com` or leave empty |
-| `SEED_ADMIN_PASSWORD` | (Optional) Admin password for seed | |
-| `SEED_ADMIN_NAME` | (Optional) Admin display name | `Admin` |
+| Variable                      | Description                                 | Example                                                         |
+| ----------------------------- | ------------------------------------------- | --------------------------------------------------------------- |
+| `DATABASE_URL`                | PostgreSQL connection (asyncpg driver)      | `postgresql+asyncpg://postgres:password@localhost:5432/dermoai` |
+| `SECRET_KEY`                  | JWT signing secret                          | `your-secret-key-change-in-production`                          |
+| `ALGORITHM`                   | JWT algorithm                               | `HS256`                                                         |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime                       | `30`                                                            |
+| `REFRESH_TOKEN_EXPIRE_DAYS`   | Refresh token lifetime                      | `7`                                                             |
+| `CLOUDINARY_CLOUD_NAME`       | Cloudinary cloud name                       | From [Cloudinary](https://cloudinary.com) dashboard             |
+| `CLOUDINARY_API_KEY`          | Cloudinary API key                          |                                                                 |
+| `CLOUDINARY_API_SECRET`       | Cloudinary API secret                       |                                                                 |
+| `CORS_ORIGINS`                | Allowed frontend origins (JSON array)       | `["http://localhost:3000"]`                                     |
+| `LIVEKIT_URL`                 | LiveKit server URL (WebSocket)              | `wss://your-project.livekit.cloud`                              |
+| `LIVEKIT_API_KEY`             | LiveKit API key                             | From [LiveKit Cloud](https://cloud.livekit.io)                  |
+| `LIVEKIT_API_SECRET`          | LiveKit API secret                          |                                                                 |
+| `SEED_ADMIN_EMAIL`            | (Optional) Admin email to seed on first run | `admin@example.com` or leave empty                              |
+| `SEED_ADMIN_PASSWORD`         | (Optional) Admin password for seed          |                                                                 |
+| `SEED_ADMIN_NAME`             | (Optional) Admin display name               | `Admin`                                                         |
 
 Run migrations and start the API (migrations run on startup):
 
@@ -93,10 +94,10 @@ npm install
 
 Create `.env.local` (or `.env`) in `frontend/` (copy from `frontend/.env.example`):
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:8000` (local) or `https://dermoai-24lz.onrender.com` (production) |
-| `NEXT_PUBLIC_LIVEKIT_URL` | LiveKit WebSocket URL for teleconsultation | `wss://your-project.livekit.cloud` (from LiveKit Cloud) |
+| Variable                  | Description                                | Example                                                                             |
+| ------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`     | Backend API base URL                       | `http://localhost:8000` (local) or `https://dermoai-24lz.onrender.com` (production) |
+| `NEXT_PUBLIC_LIVEKIT_URL` | LiveKit WebSocket URL for teleconsultation | `wss://your-project.livekit.cloud` (from LiveKit Cloud)                             |
 
 Start the development server:
 
@@ -135,14 +136,16 @@ python src/data/download.py --dataset isic
 
 ## Notebooks
 
+**For submission review:** Notebooks 01–04 together constitute the complete ML pipeline. Review in sequence, with **04_model_training.ipynb** containing the final model and performance metrics.
+
 The analysis and model training pipeline lives in Jupyter notebooks under `notebooks/`. Run them **in order** after data is downloaded. Use the same Python environment as for the data scripts (`pip install -r requirements.txt`); training also needs TensorFlow (in root `requirements.txt`).
 
-| Notebook | Purpose | Outputs |
-|----------|---------|---------|
-| **01_data_exploration.ipynb** | EDA on Fitzpatrick17k and ISIC: dataset integrity, label distribution, FST V vs VI, class imbalance, augmentation needs, malignant vs non-malignant balance; ISIC FST coverage; cross-dataset synthesis. | `results/eda/` (figures, CSVs, summary JSON). |
-| **02_condition_classification_strategy.ipynb** | Defines the condition taxonomy: map 112 original diagnoses to 9 then 8 categories. Rules: ≥50 train samples → independent class; 40–49 with clinical priority → independent; else group by taxonomy. | `results/classification/` (condition mapping, class statistics, priority/risk tables). |
-| **03_data_augmentation.ipynb** | Augmentation strategy for class imbalance: policy (e.g. horizontal/vertical flip, rotation ±15°, brightness/contrast), scope (training only), split and per-class statistics. | `results/augmentation/augmentation_report.json` and related outputs. |
-| **04_model_training.ipynb** | Train recall-optimized MobileNetV2 on FST V–VI data: focal loss, two-phase fine-tuning, malignant-specific threshold at inference. Target: malignant recall ≥80%. Exports best model and class names. | `models/final/best_model.keras` (or `dermoai_final_model.keras`), `models/final/class_names.json`. |
+| Notebook                                                                                               | Purpose                                                                                                                                                                                                  | Outputs                                                                                            |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [**01_data_exploration.ipynb**](notebooks/01_data_exploration.ipynb)                                   | EDA on Fitzpatrick17k and ISIC: dataset integrity, label distribution, FST V vs VI, class imbalance, augmentation needs, malignant vs non-malignant balance; ISIC FST coverage; cross-dataset synthesis. | `results/eda/` (figures, CSVs, summary JSON).                                                      |
+| [**02_condition_classification_strategy.ipynb**](notebooks/02_condition_classification_strategy.ipynb) | Defines the condition taxonomy: map 112 original diagnoses to 9 then 8 categories. Rules: ≥50 train samples → independent class; 40–49 with clinical priority → independent; else group by taxonomy.     | `results/classification/` (condition mapping, class statistics, priority/risk tables).             |
+| [**03_data_augmentation.ipynb**](notebooks/03_data_augmentation.ipynb)                                 | Augmentation strategy for class imbalance: policy (e.g. horizontal/vertical flip, rotation ±15°, brightness/contrast), scope (training only), split and per-class statistics.                            | `results/augmentation/augmentation_report.json` and related outputs.                               |
+| [**04_model_training.ipynb**](notebooks/04_model_training.ipynb)                                       | Train recall-optimized MobileNetV2 on FST V–VI data: focal loss, two-phase fine-tuning, malignant-specific threshold at inference. Target: malignant recall ≥80%. Exports best model and class names.    | `models/final/best_model.keras` (or `dermoai_final_model.keras`), `models/final/class_names.json`. |
 
 **Run from project root:**
 
@@ -155,38 +158,59 @@ Or open the `notebooks/` directory in Jupyter Lab / VS Code and run the cells in
 
 ---
 
-## Designs and Screenshots
+## Model Performance
 
-Application interfaces and flows are captured in the [screenshots](screenshots) directory.
+The trained MobileNetV2 model achieves the following on FST V–VI test data:
 
-| File | Description |
-|------|-------------|
-| `01-homepage.png` | Landing / home page and quick scan entry |
-| `02-scan.png` | Quick scan upload |
-| `03-scan-result.png` | Scan result with condition and urgency |
-| `04-sign-in.png`, `05-sign-up.png` | Authentication |
-| `06-dashboard-practitioner.png`, `07-dashboard-specialist.png` | Practitioner and specialist dashboards |
-| `08-create-consultation.png`, `09-consultation.png`, `10-consultation.png` | Consultations |
-| `11-available-practitioners.png` | Available practitioners |
-| `12-incoming-call.png` | Incoming teleconsultation request |
-| `13-video-call.png` | Video call (LiveKit) |
-| `14-review-queue.png`, `15-review.png`, `add-review.png` | Review queue and clinical review |
+**Key metrics** (from [notebook 04](notebooks/04_model_training.ipynb) test set):
+
+- Overall accuracy: 61.1%
+- Malignant recall: 74.2% (target ≥80%, critical for safety)
+- Urgent-case recall: 74.2% (URGENT class recall; target ≥80%)
+
+**Architecture:**
+
+- Base: MobileNetV2 (fine-tuned for FST V–VI)
+- Input: 224×224 RGB images
+- Output: 8 condition classes
+- Loss: Focal Loss (α=0.5, γ=2.0)
+
+See [notebooks/04_model_training.ipynb](notebooks/04_model_training.ipynb) for complete metrics.
+
+---
+
+## Designs and Mockups
+
+Application interfaces and flows: [mockups](mockups) (repo) · [Mockups folder (Google Drive)](https://drive.google.com/drive/folders/1JGEwMA1RhtprV71o3nOYwx1QVg4Lt5Vg)
+
+| Mockup                                                                                                                                                                   | Description                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| [01-homepage.png](mockups/01-homepage.png)                                                                                                                               | Landing / home page and quick scan entry |
+| [02-scan.png](mockups/02-scan.png)                                                                                                                                       | Quick scan upload                        |
+| [03-scan-result.png](mockups/03-scan-result.png)                                                                                                                         | Scan result with condition and urgency   |
+| [04-sign-in.png](mockups/04-sign-in.png), [05-sign-up.png](mockups/05-sign-up.png)                                                                                       | Authentication                           |
+| [06-dashboard-practitioner.png](mockups/06-dashboard-practitioner.png), [07-dashboard-specialist.png](mockups/07-dashboard-specialist.png)                               | Practitioner and specialist dashboards   |
+| [08-create-consultation.png](mockups/08-create-consultation.png), [09-consultation.png](mockups/09-consultation.png), [10-consultation.png](mockups/10-consultation.png) | Consultations                            |
+| [11-available-practitioners.png](mockups/11-available-practitioners.png)                                                                                                 | Available practitioners                  |
+| [12-incoming-call.png](mockups/12-incoming-call.png)                                                                                                                     | Incoming teleconsultation request        |
+| [13-video-call.png](mockups/13-video-call.png)                                                                                                                           | Video call (LiveKit)                     |
+| [14-review-queue.png](mockups/14-review-queue.png), [15-review.png](mockups/15-review.png), [add-review.png](mockups/add-review.png)                                     | Review queue and clinical review         |
 
 **Home**
 
-![Home](screenshots/01-homepage.png)
+![Home](mockups/01-homepage.png)
 
 **Scan result**
 
-![Scan result](screenshots/03-scan-result.png)
+![Scan result](mockups/03-scan-result.png)
 
 **Video call (teleconsultation)**
 
-![Video call](screenshots/13-video-call.png)
+![Video call](mockups/13-video-call.png)
 
 **Review queue**
 
-![Review queue](screenshots/14-review-queue.png)
+![Review queue](mockups/14-review-queue.png)
 
 **Video demo (5–10 minutes):** A walkthrough of the application and its functionalities is available here:
 
@@ -196,43 +220,22 @@ The video focuses on demonstrating app functionality rather than extended resear
 
 ---
 
-## Deployment Plan
+## Deployment
 
-### Frontend (Vercel)
+DermoAI is already deployed: [Frontend](https://dermo.vercel.app/) · [Backend API](https://dermoai-24lz.onrender.com) · [API docs (Swagger)](https://dermoai-24lz.onrender.com/docs). To replicate:
 
-1. Connect the GitHub repository [reponseashimwe/dermoai](https://github.com/reponseashimwe/dermoai) to Vercel.
-2. Set the **Root Directory** to `frontend`.
-3. Configure environment variables in Vercel:
-   - `NEXT_PUBLIC_API_URL` = `https://dermoai-24lz.onrender.com` (or your backend URL)
-   - `NEXT_PUBLIC_LIVEKIT_URL` = your LiveKit WebSocket URL (e.g. `wss://your-project.livekit.cloud`)
-4. Build command: `npm run build`. Output: default Next.js (no override needed).
-5. Deploy; the live frontend is [https://dermo.vercel.app/](https://dermo.vercel.app/).
+**Frontend (Vercel)**
 
-### Backend (Render)
+- Connect repo; root directory `frontend`
+- Set env from `frontend/.env.example`
+- Build: `npm run build`
 
-1. Create a **Web Service** on Render linked to the same GitHub repo.
-2. Set **Root Directory** to `backend` (if applicable).
-3. Build: `pip install -r requirements.txt` (or leave empty if Render infers from root).
-4. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-5. Add a **PostgreSQL** database on Render and use its URL in `DATABASE_URL`.
-6. Set environment variables in the Render dashboard (see `backend/.env.example` for the full list):
-   - `DATABASE_URL` (from Render PostgreSQL; use `postgresql+asyncpg://...` format)
-   - `SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`
-   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-   - `CORS_ORIGINS` = `["https://dermo.vercel.app"]`
-   - `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` (required for teleconsultation; use your LiveKit Cloud URL)
-   - Optional: `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_NAME` to seed an admin on first deploy
-7. The backend is deployed at [https://dermoai-24lz.onrender.com](https://dermoai-24lz.onrender.com).
+**Backend (Render)**
 
-### Model artifact
-
-The backend needs `models/final/best_model.keras` and `models/final/class_names.json` at runtime. Options:
-
-- Commit the model artifacts to the repo (if size allows), or
-- Build them in a CI step and attach as build artifacts, or
-- Store in cloud storage and download at container startup.
-
-Ensure the Render service has access to these files (or the path configured in the app) so `/api/triage/scan` and consultation image uploads work.
+- Create Web Service; root `backend`
+- Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Add PostgreSQL; set env from `backend/.env.example`
+- Provide `models/final/` (best model + class names) for triage/scan
 
 ---
 
@@ -262,7 +265,7 @@ dermoai/
 ├── data/             # raw/ (download output), processed/, augmented/
 ├── results/          # EDA, classification, augmentation outputs (from notebooks)
 ├── models/final/     # best_model.keras, class_names.json (from notebook 04)
-├── screenshots/      # App interface screenshots
+├── mockups/          # App interface mockups / screenshots
 └── docs/             # PROJECT_REPORT.md (detailed documentation)
 ```
 
