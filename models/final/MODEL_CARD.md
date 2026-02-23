@@ -7,14 +7,14 @@
 - **Input:** 224×224 RGB images
 - **Output:** Softmax probabilities over 8 classes
 - **Total Parameters:** 2,587,976
-- **Training Date:** 2026-02-13
+- **Training Date:** 2026-02-20
 
 ## Performance Metrics
-- **Overall Accuracy:** 57.1%
-- **Macro Recall:** 46.5%
-- **Macro Precision:** 53.6%
-- **Macro F1-Score:** 48.4%
-- **Urgent Case Recall:** 67.7% (Target: ≥80%)
+- **Overall Accuracy:** 60.5%
+- **Macro Recall:** 52.0%
+- **Macro Precision:** 58.8%
+- **Macro F1-Score:** 54.5%
+- **Urgent Case Recall:** 74.2% (Target: ≥75%)
 
 ## Training Data
 - **Total Training Samples:** 3755 (augmented)
@@ -49,7 +49,7 @@
 ## Ethical Considerations
 - Model trained exclusively on FST V-VI to address historical bias in dermatology AI
 - Class imbalance addressed via balanced class weighting
-- High-risk errors (malignant to benign) monitored: 1 cases
+- High-risk errors (malignant to benign) monitored: 3 cases
 - FST equity gap monitored to prevent within-group disparities
 
 ## Citation

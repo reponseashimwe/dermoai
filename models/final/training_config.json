@@ -15,7 +15,7 @@
     "phase1_epochs": 30,
     "phase2_epochs": 15,
     "initial_lr": 5e-05,
-    "finetune_lr": 1e-06,
+    "finetune_lr": 5e-06,
     "use_class_weights": true
   },
   "callbacks": {
