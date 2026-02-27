@@ -1,21 +1,28 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
+from app.models.appointment_request import AppointmentRequest
 from app.schemas.consultation import (
     ConsultationCreate,
     ConsultationImagesConsentUpdate,
     ConsultationRead,
     ConsultationUpdate,
 )
-from app.services import consultation_service, image_service
+from app.services import consultation_service, image_service, consent_service
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
+
+
+class ConsentPinVerify(BaseModel):
+    pin: str
 
 
 @router.post("/", response_model=ConsultationRead, status_code=201)
@@ -34,7 +41,25 @@ async def list_consultations(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    return await consultation_service.list_consultations(db, current_user=current_user)
+    consultations = await consultation_service.list_consultations(
+        db, current_user=current_user
+    )
+    # Consultation IDs that have at least one appointment request
+    result = await db.execute(
+        select(AppointmentRequest.consultation_id).where(
+            AppointmentRequest.consultation_id.isnot(None)
+        ).distinct()
+    )
+    ids_with_appointments = {row[0] for row in result.all()}
+    return [
+        ConsultationRead(
+            **{
+                **ConsultationRead.model_validate(c).model_dump(),
+                "has_appointments": c.consultation_id in ids_with_appointments,
+            }
+        )
+        for c in consultations
+    ]
 
 
 @router.get("/{consultation_id}", response_model=ConsultationRead)
@@ -75,3 +100,43 @@ async def set_consultation_images_consent(
         consultation_id, data.consent_to_reuse, db
     )
     return {"updated": count}
+
+
+@router.post("/{consultation_id}/request-consent-pin")
+async def request_consent_pin(
+    consultation_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Generate and send a consent PIN to the patient's phone number."""
+    # Verify consultation exists and user has access
+    await consultation_service.get_consultation(
+        consultation_id, db, current_user=current_user
+    )
+    
+    try:
+        result = await consent_service.request_consent_pin(consultation_id, db)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{consultation_id}/verify-consent-pin")
+async def verify_consent_pin(
+    consultation_id: UUID,
+    data: ConsentPinVerify,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Verify a consent PIN and grant consent for all images in the consultation."""
+    # Verify consultation exists and user has access
+    await consultation_service.get_consultation(
+        consultation_id, db, current_user=current_user
+    )
+    
+    result = await consent_service.verify_consent_pin(consultation_id, data.pin, db)
+    
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
+    
+    return result

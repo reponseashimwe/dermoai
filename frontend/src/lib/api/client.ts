@@ -11,6 +11,9 @@ export const api = axios.create({
   timeout: 30000,
 });
 
+/** Alias for api (axios instance) for consumers that use apiClient. */
+export const apiClient = api;
+
 // ── Request interceptor — attach Bearer token ───────────────────────────────
 api.interceptors.request.use((config) => {
   // Skip auth for requests explicitly marked

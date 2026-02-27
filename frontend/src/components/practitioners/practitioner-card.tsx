@@ -1,36 +1,57 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ApprovalStatusBadge } from "./approval-status-badge";
-import { Stethoscope } from "lucide-react";
-import type { Practitioner } from "@/types/api";
+import type { Practitioner, PractitionerAvailable } from "@/types/api";
 
 interface PractitionerCardProps {
-  practitioner: Practitioner;
+  practitioner: Practitioner | PractitionerAvailable;
   actions?: React.ReactNode;
+}
+
+function hasNameEmail(
+  p: Practitioner | PractitionerAvailable
+): p is PractitionerAvailable {
+  return "name" in p && "email" in p;
 }
 
 export function PractitionerCard({
   practitioner,
   actions,
 }: PractitionerCardProps) {
+  const name =
+    hasNameEmail(practitioner) && practitioner.name
+      ? practitioner.name
+      : null;
+  const email =
+    hasNameEmail(practitioner) && practitioner.email
+      ? practitioner.email
+      : null;
+  const displayName = name || `Practitioner #${practitioner.practitioner_id.slice(0, 8)}`;
+
   return (
     <Card>
-      <CardContent className="flex items-center gap-4 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100">
-          <Stethoscope className="h-5 w-5 text-primary-700" />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-slate-900">
-              Practitioner #{practitioner.practitioner_id.slice(0, 8)}
-            </p>
-            <Badge variant="info">{practitioner.practitioner_type}</Badge>
+      <CardContent className="flex flex-wrap items-center gap-3 py-3 px-4 sm:flex-nowrap sm:gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-3 sm:flex-initial sm:flex-1">
+          <Avatar
+            name={displayName}
+            size="sm"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-slate-900">{displayName}</p>
+            {email ? (
+              <p className="truncate text-xs text-slate-500">{email}</p>
+            ) : (
+              practitioner.expertise && (
+                <p className="truncate text-xs text-slate-500">
+                  {practitioner.expertise}
+                </p>
+              )
+            )}
           </div>
-          {practitioner.expertise && (
-            <p className="text-sm text-slate-500">{practitioner.expertise}</p>
-          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
+          <Badge variant="info">{practitioner.practitioner_type}</Badge>
           <ApprovalStatusBadge status={practitioner.approval_status} />
           {actions}
         </div>

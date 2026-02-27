@@ -14,6 +14,14 @@ from app.schemas.practitioner import (
     PractitionerStatusUpdate,
     PractitionerUpdate,
 )
+
+
+def _practitioner_with_user(p) -> PractitionerAvailableRead:
+    return PractitionerAvailableRead(
+        **PractitionerRead.model_validate(p).model_dump(),
+        name=getattr(p.user, "name", "") or "",
+        email=getattr(p.user, "email", "") or "",
+    )
 from app.services import practitioner_service
 
 router = APIRouter(prefix="/api/practitioners", tags=["practitioners"])
@@ -33,14 +41,7 @@ async def list_available_practitioners(
         online_only=online_only,
         exclude_user_id=current_user.user_id,
     )
-    return [
-        PractitionerAvailableRead(
-            **PractitionerRead.model_validate(p).model_dump(),
-            name=p.user.name,
-            email=p.user.email,
-        )
-        for p in practitioners
-    ]
+    return [_practitioner_with_user(p) for p in practitioners]
 
 
 @router.put("/me/status", response_model=PractitionerRead)
@@ -53,20 +54,22 @@ async def update_my_status(
     return await practitioner_service.update_my_status(current_user.user_id, data, db)
 
 
-@router.get("/", response_model=list[PractitionerRead])
+@router.get("/", response_model=list[PractitionerAvailableRead])
 async def list_practitioners(
     _user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    return await practitioner_service.list_practitioners(db)
+    practitioners = await practitioner_service.list_practitioners(db)
+    return [_practitioner_with_user(p) for p in practitioners]
 
 
-@router.get("/pending", response_model=list[PractitionerRead])
+@router.get("/pending", response_model=list[PractitionerAvailableRead])
 async def list_pending_practitioners(
     _admin: Annotated[User, Depends(require_role("ADMIN"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    return await practitioner_service.list_pending(db)
+    practitioners = await practitioner_service.list_pending(db)
+    return [_practitioner_with_user(p) for p in practitioners]
 
 
 @router.get("/{practitioner_id}", response_model=PractitionerRead)

@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, type DragEvent } from "react";
 import { Upload, Camera, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CameraCaptureModal } from "./camera-capture-modal";
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
@@ -25,6 +26,7 @@ export function ImageDropzone({
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const validateAndSelect = useCallback(
     (file: File) => {
@@ -142,15 +144,7 @@ export function ImageDropzone({
             className="h-8 text-xs sm:h-9"
             onClick={(e) => {
               e.stopPropagation();
-              const cameraInput = document.createElement("input");
-              cameraInput.type = "file";
-              cameraInput.accept = "image/*";
-              cameraInput.capture = "environment";
-              cameraInput.onchange = (ev) => {
-                const f = (ev.target as HTMLInputElement).files?.[0];
-                if (f) validateAndSelect(f);
-              };
-              cameraInput.click();
+              setCameraOpen(true);
             }}
           >
             <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -168,6 +162,12 @@ export function ImageDropzone({
           const file = e.target.files?.[0];
           if (file) validateAndSelect(file);
         }}
+      />
+
+      <CameraCaptureModal
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={(file) => validateAndSelect(file)}
       />
 
       {error && <p className="text-center text-sm text-red-600">{error}</p>}

@@ -8,6 +8,8 @@ class PatientCreate(BaseModel):
     name: str
     phone_number: str | None = None
     user_id: uuid.UUID | None = None
+    district: str | None = None
+    province: str | None = None
 
 
 class PatientRead(BaseModel):
@@ -15,6 +17,8 @@ class PatientRead(BaseModel):
     user_id: uuid.UUID | None = None
     name: str
     phone_number: str | None = None
+    district: str | None = None
+    province: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -23,6 +27,8 @@ class PatientRead(BaseModel):
 class PatientUpdate(BaseModel):
     name: str | None = None
     phone_number: str | None = None
+    district: str | None = None
+    province: str | None = None
 
 
 class LinkPatientRequest(BaseModel):

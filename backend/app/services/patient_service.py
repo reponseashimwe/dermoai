@@ -14,6 +14,8 @@ async def create_patient(data: PatientCreate, db: AsyncSession) -> Patient:
         name=data.name,
         phone_number=data.phone_number,
         user_id=data.user_id,
+        district=data.district,
+        province=data.province,
     )
     db.add(patient)
     await db.commit()

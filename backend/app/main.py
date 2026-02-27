@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.migrate import run_migrations
 from app.core.seed import run_seed
 from app.routers import (
+    appointments,
     auth,
     clinical_reviews,
     conditions,
@@ -83,6 +84,7 @@ def create_app() -> FastAPI:
     application.include_router(stats.router)
     application.include_router(conditions.router)
     application.include_router(teleconsultations.router)
+    application.include_router(appointments.router)
     application.include_router(websocket.router)
 
     @application.get("/health")

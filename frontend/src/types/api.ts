@@ -47,6 +47,8 @@ export interface Patient {
   user_id: string | null;
   name: string;
   phone_number: string | null;
+  district: string | null;
+  province: string | null;
   created_at: string;
 }
 
@@ -54,11 +56,15 @@ export interface PatientCreate {
   name: string;
   phone_number?: string;
   user_id?: string;
+  district?: string;
+  province?: string;
 }
 
 export interface PatientUpdate {
   name?: string;
   phone_number?: string;
+  district?: string;
+  province?: string;
 }
 
 // Consultation
@@ -70,7 +76,12 @@ export interface Consultation {
   final_confidence: number | null;
   urgency: string | null;
   status: "OPEN" | "IN_REVIEW" | "CLOSED";
+  disposition: string | null;
+  referral_note: string | null;
+  got_treatment: boolean | null;
+  outcome_verified: boolean | null;
   created_at: string;
+  has_appointments?: boolean;
 }
 
 export interface ConsultationCreate {
@@ -79,6 +90,10 @@ export interface ConsultationCreate {
 
 export interface ConsultationUpdate {
   status?: string;
+  disposition?: string;
+  referral_note?: string;
+  got_treatment?: boolean;
+  outcome_verified?: boolean;
 }
 
 // Image
@@ -183,6 +198,31 @@ export interface RecentActivityItem {
   at: string;
 }
 
+export interface DispositionStats {
+  treated_locally: number;
+  telemedicine_only: number;
+  referred_to_clinic: number;
+  not_set: number;
+}
+
+export interface LocationStats {
+  district: string;
+  count: number;
+}
+
+export interface ConsentStats {
+  consented: number;
+  not_consented: number;
+  total: number;
+}
+
+export interface OutcomeByDisposition {
+  disposition: string;
+  total: number;
+  verified: number;
+  got_treatment: number;
+}
+
 export interface AdminStats {
   total_users: number;
   total_practitioners: number;
@@ -190,9 +230,36 @@ export interface AdminStats {
   total_consultations: number;
   total_images: number;
   total_patients: number;
+  quick_scan_count: number;
   pending_approvals: number;
   urgent_cases: number;
   recent_activity: RecentActivityItem[];
+  disposition_stats: DispositionStats;
+  location_stats: LocationStats[];
+  consent_stats: ConsentStats;
+  outcome_by_disposition: OutcomeByDisposition[];
+  model_stats: ModelPerformanceStats;
+}
+
+export interface ConfidenceTrendPoint {
+  week: string;
+  avg_confidence: number;
+  count: number;
+}
+
+export interface ConfidenceDistribution {
+  low: number;
+  medium: number;
+  good: number;
+  high: number;
+}
+
+export interface ModelPerformanceStats {
+  total_predictions: number;
+  avg_confidence: number;
+  confidence_trend: ConfidenceTrendPoint[];
+  low_confidence_count: number;
+  confidence_distribution: ConfidenceDistribution;
 }
 
 export interface PractitionerStats {

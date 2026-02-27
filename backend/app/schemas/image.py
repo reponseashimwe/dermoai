@@ -54,3 +54,7 @@ class ImageListResponse(BaseModel):
 
 class ImageReviewUpdate(BaseModel):
     reviewed_label: str
+
+
+class ImageConsentUpdate(BaseModel):
+    consent_to_reuse: bool

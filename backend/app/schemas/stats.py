@@ -11,6 +11,52 @@ class RecentActivityItem(BaseModel):
     at: datetime
 
 
+class DispositionStats(BaseModel):
+    treated_locally: int
+    telemedicine_only: int
+    referred_to_clinic: int
+    not_set: int
+
+
+class LocationStats(BaseModel):
+    district: str
+    count: int
+
+
+class ConsentStats(BaseModel):
+    consented: int
+    not_consented: int
+    total: int
+
+
+class OutcomeByDisposition(BaseModel):
+    disposition: str
+    total: int
+    verified: int
+    got_treatment: int
+
+
+class ConfidenceTrendPoint(BaseModel):
+    week: str
+    avg_confidence: float
+    count: int
+
+
+class ConfidenceDistribution(BaseModel):
+    low: int  # < 0.4
+    medium: int  # 0.4-0.6
+    good: int  # 0.6-0.8
+    high: int  # > 0.8
+
+
+class ModelPerformanceStats(BaseModel):
+    total_predictions: int
+    avg_confidence: float
+    confidence_trend: list[ConfidenceTrendPoint]
+    low_confidence_count: int
+    confidence_distribution: ConfidenceDistribution
+
+
 class AdminStatsResponse(BaseModel):
     total_users: int
     total_practitioners: int
@@ -18,9 +64,15 @@ class AdminStatsResponse(BaseModel):
     total_consultations: int
     total_images: int
     total_patients: int
+    quick_scan_count: int
     pending_approvals: int
     urgent_cases: int
     recent_activity: list[RecentActivityItem] = []
+    disposition_stats: DispositionStats
+    location_stats: list[LocationStats]
+    consent_stats: ConsentStats
+    outcome_by_disposition: list[OutcomeByDisposition]
+    model_stats: ModelPerformanceStats
 
 
 class PractitionerStatsResponse(BaseModel):

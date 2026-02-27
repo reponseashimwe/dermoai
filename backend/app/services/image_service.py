@@ -5,6 +5,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.consultation import Consultation
 from app.models.image import Image
 from app.services import cloudinary_service, consultation_service, ml_service, notification_service
 
@@ -132,6 +133,32 @@ async def list_for_consultation(
         .order_by(Image.uploaded_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def update_image_consent(
+    image_id: UUID, consent: bool, user_id: UUID, db: AsyncSession
+) -> Image:
+    """Update consent for a single image. Only owner can modify."""
+    result = await db.execute(select(Image).where(Image.image_id == image_id))
+    image = result.scalar_one_or_none()
+    if not image:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
+        )
+    if image.source == "QUICK_SCAN" and image.uploaded_by != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
+    if image.consultation_id:
+        consultation = await db.get(Consultation, image.consultation_id)
+        if consultation and consultation.created_by != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+            )
+    image.consent_to_reuse = consent
+    await db.commit()
+    await db.refresh(image)
+    return image
 
 
 async def set_consultation_images_consent(

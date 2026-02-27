@@ -16,13 +16,22 @@ class ConsultationRead(BaseModel):
     final_confidence: float | None = None
     urgency: str | None = None
     status: str
+    disposition: str | None = None
+    referral_note: str | None = None
+    got_treatment: bool | None = None
+    outcome_verified: bool | None = None
     created_at: datetime
+    has_appointments: bool = False
 
     model_config = {"from_attributes": True}
 
 
 class ConsultationUpdate(BaseModel):
     status: str | None = None
+    disposition: str | None = None
+    referral_note: str | None = None
+    got_treatment: bool | None = None
+    outcome_verified: bool | None = None
 
 
 class ConsultationImagesConsentUpdate(BaseModel):
