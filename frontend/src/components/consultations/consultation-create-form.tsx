@@ -24,9 +24,7 @@ export function ConsultationCreateForm() {
   const router = useRouter();
   const { toast } = useToast();
 
-  async function handleCreateForSelf() {
-    const patient = myPatient ?? selectedPatient;
-    if (!patient) return;
+  async function createConsultationAndRedirect(patient: Patient) {
     try {
       const consultation = await createConsultation.mutateAsync({
         patient_id: patient.patient_id,
@@ -40,6 +38,12 @@ export function ConsultationCreateForm() {
         toast("Failed to create consultation", "error");
       }
     }
+  }
+
+  async function handleCreateForSelf() {
+    const patient = myPatient ?? selectedPatient;
+    if (!patient) return;
+    await createConsultationAndRedirect(patient);
   }
 
   async function handleCreateConsultationWithProfile() {
@@ -143,6 +147,7 @@ export function ConsultationCreateForm() {
         <PatientSelect
           onSelect={setSelectedPatient}
           selectedId={selectedPatient?.patient_id}
+          onCreateAndStartConsultation={createConsultationAndRedirect}
         />
 
         {selectedPatient && (

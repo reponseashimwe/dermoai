@@ -104,6 +104,16 @@ export async function updateImageReview(
   });
 }
 
+export async function updateImageConsent(
+  imageId: string,
+  consent: boolean
+): Promise<Image> {
+  return fetchClient<Image>(`/api/images/${imageId}/consent`, {
+    method: "PATCH",
+    body: JSON.stringify({ consent_to_reuse: consent }),
+  });
+}
+
 export async function deleteImage(imageId: string): Promise<void> {
   return fetchClient<void>(`/api/images/${imageId}`, { method: "DELETE" });
 }

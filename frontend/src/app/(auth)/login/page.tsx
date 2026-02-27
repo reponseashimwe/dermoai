@@ -11,6 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import { isApiError } from "@/lib/api/errors";
+import {
+  saveQuickScanToConsultation,
+  PENDING_QUICK_SCAN_IMAGE_ID_KEY,
+} from "@/hooks/use-save-quick-scan-to-consultation";
 
 const loginSchema = z.object({
 	email: z.string().email("Enter a valid email"),
@@ -37,6 +41,21 @@ export default function LoginPage() {
 		setError(null);
 		try {
 			await login(data.email, data.password);
+
+			const pendingImageId =
+				typeof window !== "undefined"
+					? sessionStorage.getItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY)
+					: null;
+			if (pendingImageId) {
+				try {
+					const consultation = await saveQuickScanToConsultation(pendingImageId);
+					sessionStorage.removeItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY);
+					router.push(`/consultations/${consultation.consultation_id}`);
+					return;
+				} catch {
+					sessionStorage.removeItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY);
+				}
+			}
 			router.push("/dashboard");
 		} catch (err) {
 			if (isApiError(err)) {

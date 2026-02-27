@@ -13,9 +13,15 @@ import type { Patient } from "@/types/api";
 interface PatientSelectProps {
   onSelect: (patient: Patient) => void;
   selectedId?: string;
+  /** When provided, the new-patient form shows "Create and start consultation" to create patient then run this (e.g. create consultation and redirect). */
+  onCreateAndStartConsultation?: (patient: Patient) => void | Promise<void>;
 }
 
-export function PatientSelect({ onSelect, selectedId }: PatientSelectProps) {
+export function PatientSelect({
+  onSelect,
+  selectedId,
+  onCreateAndStartConsultation,
+}: PatientSelectProps) {
   const { data: patients, isLoading } = usePatients();
   const createPatient = useCreatePatient();
   const [search, setSearch] = useState("");
@@ -37,6 +43,19 @@ export function PatientSelect({ onSelect, selectedId }: PatientSelectProps) {
     setShowCreate(false);
     setNewName("");
     setNewPhone("");
+  }
+
+  async function handleCreateAndStartConsultation() {
+    if (!newName.trim()) return;
+    const patient = await createPatient.mutateAsync({
+      name: newName.trim(),
+      phone_number: newPhone.trim() || undefined,
+    });
+    onSelect(patient);
+    setShowCreate(false);
+    setNewName("");
+    setNewPhone("");
+    await onCreateAndStartConsultation?.(patient);
   }
 
   return (
@@ -106,21 +125,54 @@ export function PatientSelect({ onSelect, selectedId }: PatientSelectProps) {
               value={newPhone}
               onChange={(e) => setNewPhone(e.target.value)}
             />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                loading={createPatient.isPending}
-                onClick={handleCreate}
-              >
-                Create
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowCreate(false)}
-              >
-                Cancel
-              </Button>
+            <div className="flex flex-col gap-2">
+              {onCreateAndStartConsultation ? (
+                <>
+                  <Button
+                    size="sm"
+                    loading={createPatient.isPending}
+                    onClick={handleCreateAndStartConsultation}
+                    className="w-full"
+                  >
+                    Create and start consultation
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      loading={createPatient.isPending}
+                      onClick={handleCreate}
+                      className="flex-1"
+                    >
+                      Create only
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowCreate(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    loading={createPatient.isPending}
+                    onClick={handleCreate}
+                  >
+                    Create
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowCreate(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

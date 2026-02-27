@@ -7,6 +7,8 @@ from app.models.image import Image
 from app.models.clinical_review import ClinicalReview
 from app.models.notification import Notification
 from app.models.retraining_log import RetrainingLog
+from app.models.consent_pin import ConsentPin
+from app.models.appointment_request import AppointmentRequest
 
 __all__ = [
     "Base",
@@ -18,4 +20,6 @@ __all__ = [
     "ClinicalReview",
     "Notification",
     "RetrainingLog",
+    "ConsentPin",
+    "AppointmentRequest",
 ]

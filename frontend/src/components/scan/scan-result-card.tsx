@@ -8,14 +8,26 @@ import { UrgencyBadge } from "./urgency-badge";
 import { ConditionInfoPanel } from "./condition-info-panel";
 import { formatConditionName, formatConfidence } from "@/lib/utils";
 import { CONDITION_INFO } from "@/lib/constants/conditions";
-import { Video, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { QuickScanResponse } from "@/types/api";
+import type { Consultation } from "@/types/api";
 
 interface ScanResultCardProps {
   result: QuickScanResponse;
+  /** When provided, shows "Save to my consultations" and calls this on click. */
+  onSaveToConsultations?: (result: QuickScanResponse) => Promise<Consultation>;
+  onSaveSuccess?: (consultationId: string) => void;
+  onSaveError?: (error: unknown) => void;
+  isSaving?: boolean;
 }
 
-export function ScanResultCard({ result }: ScanResultCardProps) {
+export function ScanResultCard({
+  result,
+  onSaveToConsultations,
+  onSaveSuccess,
+  onSaveError,
+  isSaving = false,
+}: ScanResultCardProps) {
   const conditionInfo = CONDITION_INFO[result.predicted_condition];
   const displayName = conditionInfo?.displayName || formatConditionName(result.predicted_condition);
 
@@ -59,24 +71,35 @@ export function ScanResultCard({ result }: ScanResultCardProps) {
               Predicted: {displayName} (Confidence: {formatConfidence(result.confidence)}).
               Consult with a specialist immediately or schedule an in-person examination.
             </p>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Link href="/telemedicine">
-                <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
-                  <Video className="mr-1 h-4 w-4" />
-                  View available practitioners
-                </Button>
-              </Link>
-              <Link href="/telemedicine">
-                <Button size="sm" className="bg-red-600 hover:bg-red-700">
-                  Start telemedicine consultation
-                </Button>
-              </Link>
-              <Link href="/consultations/new">
-                <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+            <div className="pt-2">
+              {onSaveToConsultations ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-100"
+                  disabled={isSaving}
+                  loading={isSaving}
+                  onClick={async () => {
+                    try {
+                      const consultation = await onSaveToConsultations(result);
+                      onSaveSuccess?.(consultation.consultation_id);
+                    } catch (err) {
+                      onSaveError?.(err);
+                    }
+                  }}
+                >
                   <FileText className="mr-1 h-4 w-4" />
                   Save to my consultations
                 </Button>
-              </Link>
+              ) : (
+                <Link
+                  href="/consultations/new"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-300 bg-transparent px-3 text-sm font-medium text-red-700 hover:bg-red-100"
+                >
+                  <FileText className="h-4 w-4" />
+                  Save to my consultations
+                </Link>
+              )}
             </div>
           </div>
         )}

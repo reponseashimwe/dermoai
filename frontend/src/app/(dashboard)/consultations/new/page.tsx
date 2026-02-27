@@ -15,7 +15,7 @@ export default function NewConsultationPage() {
         description={
           isPatient
             ? "Create a consultation for yourself"
-            : "Create a new consultation for a patient"
+            : "Select a patient or create one, then start the consultation."
         }
       />
       <ConsultationCreateForm />

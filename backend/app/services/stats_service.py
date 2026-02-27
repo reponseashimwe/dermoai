@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import distinct, func, select
+from sqlalchemy import case, distinct, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.clinical_review import ClinicalReview
@@ -12,6 +12,13 @@ from app.models.practitioner import Practitioner
 from app.models.user import User
 from app.schemas.stats import (
     AdminStatsResponse,
+    ConsentStats,
+    ConfidenceDistribution,
+    ConfidenceTrendPoint,
+    DispositionStats,
+    LocationStats,
+    ModelPerformanceStats,
+    OutcomeByDisposition,
     PractitionerStatsResponse,
     RecentActivityItem,
     UserStatsResponse,
@@ -20,6 +27,85 @@ from app.schemas.stats import (
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+async def _calculate_model_performance_stats(db: AsyncSession) -> ModelPerformanceStats:
+    """Calculate ML model performance metrics from consultations."""
+    # Total predictions (consultations with predicted conditions)
+    result = await db.execute(
+        select(func.count())
+        .select_from(Consultation)
+        .where(Consultation.final_predicted_condition.isnot(None))
+    )
+    total_predictions = result.scalar() or 0
+
+    # Average confidence
+    result = await db.execute(
+        select(func.avg(Consultation.final_confidence))
+        .select_from(Consultation)
+        .where(Consultation.final_confidence.isnot(None))
+    )
+    avg_confidence = result.scalar() or 0.0
+
+    # Confidence trend (last 8 weeks) — use single expression for GROUP BY to avoid PostgreSQL GroupingError
+    eight_weeks_ago = _utc_now() - timedelta(weeks=8)
+    week_trunc = func.date_trunc("week", Consultation.created_at)
+    trend_result = await db.execute(
+        select(
+            week_trunc.label("week"),
+            func.avg(Consultation.final_confidence).label("avg_confidence"),
+            func.count().label("count"),
+        )
+        .where(
+            Consultation.created_at >= eight_weeks_ago,
+            Consultation.final_confidence.isnot(None),
+        )
+        .group_by(week_trunc)
+        .order_by(week_trunc)
+    )
+    confidence_trend = [
+        ConfidenceTrendPoint(
+            week=row.week.strftime("%Y-%m-%d") if row.week else "Unknown",
+            avg_confidence=float(row.avg_confidence or 0.0),
+            count=row.count,
+        )
+        for row in trend_result
+    ]
+
+    # Low confidence count (< 0.6)
+    result = await db.execute(
+        select(func.count())
+        .select_from(Consultation)
+        .where(Consultation.final_confidence < 0.6)
+    )
+    low_confidence_count = result.scalar() or 0
+
+    # Confidence distribution
+    result = await db.execute(
+        select(Consultation.final_confidence)
+        .where(Consultation.final_confidence.isnot(None))
+    )
+    confidences = [row[0] for row in result.all()]
+    
+    low = sum(1 for c in confidences if c < 0.4)
+    medium = sum(1 for c in confidences if 0.4 <= c < 0.6)
+    good = sum(1 for c in confidences if 0.6 <= c < 0.8)
+    high = sum(1 for c in confidences if c >= 0.8)
+
+    confidence_distribution = ConfidenceDistribution(
+        low=low,
+        medium=medium,
+        good=good,
+        high=high,
+    )
+
+    return ModelPerformanceStats(
+        total_predictions=total_predictions,
+        avg_confidence=float(avg_confidence),
+        confidence_trend=confidence_trend,
+        low_confidence_count=low_confidence_count,
+        confidence_distribution=confidence_distribution,
+    )
 
 
 async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
@@ -44,6 +130,11 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
 
     result = await db.execute(select(func.count()).select_from(Image))
     total_images = result.scalar() or 0
+
+    result = await db.execute(
+        select(func.count()).select_from(Image).where(Image.source == "QUICK_SCAN")
+    )
+    quick_scan_count = result.scalar() or 0
 
     result = await db.execute(select(func.count()).select_from(Patient))
     total_patients = result.scalar() or 0
@@ -85,6 +176,71 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
     recent_activity.sort(key=lambda x: x.at, reverse=True)
     recent_activity = recent_activity[:15]
 
+    # Disposition statistics
+    disp_result = await db.execute(
+        select(Consultation.disposition, func.count().label("count"))
+        .select_from(Consultation)
+        .group_by(Consultation.disposition)
+    )
+    disp_data = {row.disposition or "not_set": row.count for row in disp_result}
+    disposition_stats = DispositionStats(
+        treated_locally=disp_data.get("TREATED_LOCALLY", 0),
+        telemedicine_only=disp_data.get("TELEMEDICINE_ONLY", 0),
+        referred_to_clinic=disp_data.get("REFERRED_TO_CLINIC", 0),
+        not_set=disp_data.get("not_set", 0),
+    )
+
+    # Location statistics (top 10 districts)
+    location_result = await db.execute(
+        select(Patient.district, func.count().label("count"))
+        .where(Patient.district.isnot(None))
+        .group_by(Patient.district)
+        .order_by(func.count().desc())
+        .limit(10)
+    )
+    location_stats = [
+        LocationStats(district=row.district, count=row.count)
+        for row in location_result
+    ]
+
+    # Consent statistics
+    consent_result = await db.execute(
+        select(Image.consent_to_reuse, func.count().label("count"))
+        .select_from(Image)
+        .group_by(Image.consent_to_reuse)
+    )
+    consent_data = {row.consent_to_reuse: row.count for row in consent_result}
+    consent_total = sum(consent_data.values())
+    consent_stats = ConsentStats(
+        consented=consent_data.get(True, 0),
+        not_consented=consent_data.get(False, 0),
+        total=consent_total,
+    )
+
+    # Outcome by disposition
+    outcome_result = await db.execute(
+        select(
+            Consultation.disposition,
+            func.count().label("total"),
+            func.sum(case((Consultation.outcome_verified.is_(True), 1), else_=0)).label("verified"),
+            func.sum(case((Consultation.got_treatment.is_(True), 1), else_=0)).label("got_treatment"),
+        )
+        .where(Consultation.disposition.isnot(None))
+        .group_by(Consultation.disposition)
+    )
+    outcome_by_disposition = [
+        OutcomeByDisposition(
+            disposition=row.disposition,
+            total=row.total,
+            verified=row.verified or 0,
+            got_treatment=row.got_treatment or 0,
+        )
+        for row in outcome_result
+    ]
+
+    # Model performance stats
+    model_stats = await _calculate_model_performance_stats(db)
+
     return AdminStatsResponse(
         total_users=total_users,
         total_practitioners=total_practitioners,
@@ -92,9 +248,15 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
         total_consultations=total_consultations,
         total_images=total_images,
         total_patients=total_patients,
+        quick_scan_count=quick_scan_count,
         pending_approvals=pending_approvals,
         urgent_cases=urgent_cases,
         recent_activity=recent_activity,
+        disposition_stats=disposition_stats,
+        location_stats=location_stats,
+        consent_stats=consent_stats,
+        outcome_by_disposition=outcome_by_disposition,
+        model_stats=model_stats,
     )
 
 

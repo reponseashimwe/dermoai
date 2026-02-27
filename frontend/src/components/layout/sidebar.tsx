@@ -2,51 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-	LayoutDashboard,
-	ScanLine,
-	ClipboardList,
-	Users,
-	History,
-	ShieldCheck,
-	UserCog,
-	Database,
-	Bell,
-	CheckSquare,
-	Video,
-	Image as ImageIcon,
-} from "lucide-react";
+import { ScanLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 import { usePractitioners } from "@/hooks/use-practitioners";
+import {
+	NAV_ITEMS,
+	ADMIN_NAV_ITEMS,
+	getVisibleNavItems,
+	getVisibleAdminItems,
+	type AppRole,
+} from "@/config/roles";
 import type { User } from "@/types/api";
-
-interface SidebarItem {
-	href: string;
-	label: string;
-	icon: React.ComponentType<{ className?: string }>;
-	roles?: string[];
-	/** Show only when current user is a specialist (practitioner_type === "SPECIALIST") */
-	specialistOnly?: boolean;
-}
-
-const navItems: SidebarItem[] = [
-	{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-	{ href: "/scan-history", label: "Scans", icon: History, roles: ["USER", "PRACTITIONER", "ADMIN"] },
-	{ href: "/consultations", label: "Consults", icon: ClipboardList, roles: ["USER", "PRACTITIONER", "ADMIN"] },
-	{ href: "/patients", label: "Patients", icon: Users, roles: ["PRACTITIONER", "ADMIN"] },
-	{ href: "/review-queue", label: "Review", icon: CheckSquare, roles: ["PRACTITIONER"], specialistOnly: true },
-	{ href: "/telemedicine", label: "Call", icon: Video, roles: ["USER", "PRACTITIONER", "ADMIN"] },
-	{ href: "/notifications", label: "Alerts", icon: Bell, roles: ["USER", "PRACTITIONER", "ADMIN"] },
-];
-
-const adminItems: SidebarItem[] = [
-	{ href: "/admin", label: "Admin", icon: ShieldCheck, roles: ["ADMIN"] },
-	{ href: "/admin/images", label: "Images", icon: ImageIcon, roles: ["ADMIN"] },
-	{ href: "/admin/practitioners", label: "Doctors", icon: UserCog, roles: ["ADMIN"] },
-	{ href: "/admin/users", label: "Users", icon: Users, roles: ["ADMIN"] },
-	{ href: "/admin/retraining-logs", label: "Models", icon: Database, roles: ["ADMIN"] },
-];
 
 export function Sidebar({ user }: { user: User | null }) {
 	const pathname = usePathname();
@@ -54,12 +21,8 @@ export function Sidebar({ user }: { user: User | null }) {
 	const currentPractitioner = practitioners?.find((p) => p.user_id === user?.user_id);
 	const isSpecialist = currentPractitioner?.practitioner_type === "SPECIALIST";
 
-	const visibleNav = navItems.filter((item) => {
-		if (item.roles && user && !item.roles.includes(user.role)) return false;
-		if (item.specialistOnly && !isSpecialist) return false;
-		return true;
-	});
-	const visibleAdmin = adminItems.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
+	const visibleNav = getVisibleNavItems(user?.role as AppRole | undefined, !!isSpecialist);
+	const visibleAdmin = getVisibleAdminItems(user?.role as AppRole | undefined);
 
 	return (
 		<aside className='fixed left-0 top-0 z-30 hidden h-screen w-[80px] flex-col border-r border-slate-200 bg-white md:flex'>

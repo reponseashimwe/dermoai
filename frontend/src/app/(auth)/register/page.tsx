@@ -11,6 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import { isApiError } from "@/lib/api/errors";
+import {
+  saveQuickScanToConsultation,
+  PENDING_QUICK_SCAN_IMAGE_ID_KEY,
+} from "@/hooks/use-save-quick-scan-to-consultation";
 
 const registerSchema = z
 	.object({
@@ -69,6 +73,23 @@ export default function RegisterPage() {
 				practitioner_type: data.role === "PRACTITIONER" ? data.practitioner_type : undefined,
 				expertise: data.role === "PRACTITIONER" ? data.expertise : undefined,
 			});
+
+			const pendingImageId =
+				typeof window !== "undefined"
+					? sessionStorage.getItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY)
+					: null;
+			if (pendingImageId && data.role === "USER") {
+				try {
+					const consultation = await saveQuickScanToConsultation(pendingImageId);
+					sessionStorage.removeItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY);
+					router.push(`/consultations/${consultation.consultation_id}`);
+					return;
+				} catch {
+					sessionStorage.removeItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY);
+				}
+			} else if (pendingImageId) {
+				sessionStorage.removeItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY);
+			}
 			router.push("/dashboard");
 		} catch (err) {
 			if (isApiError(err)) {

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ConsultationStatusBadge } from "./consultation-status-badge";
 import { UrgencyBadge } from "@/components/scan/urgency-badge";
 import { formatConditionName, formatConfidence, formatDate } from "@/lib/utils";
-import { FileText } from "lucide-react";
+import { FileText, Calendar } from "lucide-react";
 import type { Consultation } from "@/types/api";
 
 interface ConsultationCardProps {
@@ -37,6 +37,12 @@ export function ConsultationCard({ consultation }: ConsultationCardProps) {
                   size="sm"
                   className="shrink-0"
                 />
+              )}
+              {consultation.has_appointments && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                  <Calendar className="h-3 w-3" />
+                  Has appointment
+                </span>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500">

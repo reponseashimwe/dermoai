@@ -9,8 +9,10 @@ import {
   uploadToConsultation,
   attachToConsultation,
   updateImageReview,
+  updateImageConsent,
   deleteImage,
 } from "@/lib/api/images";
+import { useToast } from "@/components/ui/toast";
 import type {
   ListUnreviewedParams,
   ListReviewedParams,
@@ -72,6 +74,29 @@ export function useUpdateImageReview() {
       queryClient.invalidateQueries({ queryKey: ["images", "unreviewed"] });
       queryClient.invalidateQueries({ queryKey: ["images", "reviewed"] });
       queryClient.invalidateQueries({ queryKey: ["consultation-images"] });
+    },
+  });
+}
+
+export function useUpdateImageConsent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: ({
+      imageId,
+      consent,
+    }: {
+      imageId: string;
+      consent: boolean;
+    }) => updateImageConsent(imageId, consent),
+    onSuccess: (_, { imageId }) => {
+      queryClient.invalidateQueries({ queryKey: ["consultation-images"] });
+      queryClient.invalidateQueries({ queryKey: ["scan-history"] });
+      queryClient.invalidateQueries({ queryKey: ["images", imageId] });
+      toast("Consent updated", "success");
+    },
+    onError: () => {
+      toast("Failed to update consent", "error");
     },
   });
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useUsers, useDeactivateUser } from "@/hooks/use-users";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,15 +34,12 @@ export function UserTable() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
+    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
       <table className="w-full text-sm">
-        <thead className="bg-slate-50">
+        <thead className="border-b border-slate-200 bg-white">
           <tr>
             <th className="px-4 py-3 text-left font-medium text-slate-600">
-              Name
-            </th>
-            <th className="px-4 py-3 text-left font-medium text-slate-600">
-              Email
+              User
             </th>
             <th className="px-4 py-3 text-left font-medium text-slate-600">
               Role
@@ -57,13 +55,18 @@ export function UserTable() {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-200">
+        <tbody className="divide-y divide-slate-200 bg-white">
           {users?.map((user) => (
-            <tr key={user.user_id} className="hover:bg-slate-50">
-              <td className="px-4 py-3 font-medium text-slate-900">
-                {user.name}
+            <tr key={user.user_id} className="hover:bg-slate-50/80">
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <Avatar name={user.name} size="sm" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-900 truncate">{user.name}</p>
+                    <p className="text-slate-500 truncate text-xs">{user.email}</p>
+                  </div>
+                </div>
               </td>
-              <td className="px-4 py-3 text-slate-600">{user.email}</td>
               <td className="px-4 py-3">
                 <Badge
                   variant={

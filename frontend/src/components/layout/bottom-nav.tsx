@@ -2,20 +2,39 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, ScanLine, Bell, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { usePractitioners } from "@/hooks/use-practitioners";
+import { getVisibleNavItems, type AppRole } from "@/config/roles";
 
-/** 5 items for all users: 2 left, Scans (primary) in middle, 2 right */
-const items = [
-	{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-	{ href: "/consultations", label: "Consults", icon: ClipboardList },
-	{ href: "/scan-history", label: "Scans", icon: ScanLine, primary: true },
-	{ href: "/review-queue", label: "Review", icon: CheckSquare },
-	{ href: "/notifications", label: "Alerts", icon: Bell },
-];
+/** Build bottom nav from role config. Scans is primary (middle). */
+function getBottomNavItems(role: AppRole | undefined, isSpecialist: boolean) {
+	const visible = getVisibleNavItems(role, isSpecialist);
+	const primaryHref = "/scan-history";
+	const allowedHrefs = ["/dashboard", "/consultations", "/scan-history", "/telemedicine", "/review-queue", "/notifications", "/schedules", "/appointments"];
+	const filtered = visible.filter((item) => allowedHrefs.includes(item.href)).slice(0, 5);
+	const scanIndex = filtered.findIndex((item) => item.href === primaryHref);
+	const sorted =
+		scanIndex >= 0 && filtered.length >= 3
+			? [
+					...filtered.filter((_, i) => i !== scanIndex).slice(0, 2),
+					filtered[scanIndex],
+					...filtered.filter((_, i) => i !== scanIndex).slice(2),
+				]
+			: filtered;
+	return sorted.map((item) => ({
+		...item,
+		primary: item.href === primaryHref,
+	}));
+}
 
 export function BottomNav() {
 	const pathname = usePathname();
+	const { user } = useAuth();
+	const { data: practitioners } = usePractitioners();
+	const currentPractitioner = user ? practitioners?.find((p) => p.user_id === user.user_id) : undefined;
+	const isSpecialist = currentPractitioner?.practitioner_type === "SPECIALIST";
+	const items = getBottomNavItems(user?.role as AppRole | undefined, !!isSpecialist);
 
 	return (
 		<nav className='fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden'>

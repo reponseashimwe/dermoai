@@ -60,7 +60,7 @@ export function PendingPractitionerList({ limit }: PendingPractitionerListProps 
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {list.map((p) => (
         <PractitionerCard
           key={p.practitioner_id}

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,6 +26,10 @@ class Consultation(Base):
     final_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     urgency: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="OPEN")
+    disposition: Mapped[str | None] = mapped_column(String, nullable=True)
+    referral_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    got_treatment: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    outcome_verified: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

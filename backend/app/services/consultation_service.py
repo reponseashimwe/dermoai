@@ -104,4 +104,17 @@ async def update_ml_results(consultation_id: UUID, db: AsyncSession) -> Consulta
 
     await db.commit()
     await db.refresh(consultation)
+
+    if consultation.urgency == "URGENT" and consultation.final_predicted_condition:
+        try:
+            from app.services import sms_service
+
+            await sms_service.send_urgent_alert(
+                consultation_id,
+                consultation.final_predicted_condition,
+                db,
+            )
+        except Exception as e:
+            print(f"SMS notification failed: {e}")
+
     return consultation

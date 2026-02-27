@@ -9,7 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.models.teleconsultation import Teleconsultation
 from app.schemas.teleconsultation import TeleconsultationAccept, TeleconsultationCreate
-from app.services import livekit_service, practitioner_service, websocket_service
+from app.services import (
+    livekit_service,
+    practitioner_service,
+    websocket_service,
+    appointment_service,
+    consultation_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +54,12 @@ async def create_teleconsultation(
     db.add(teleconsultation)
     await db.commit()
     await db.refresh(teleconsultation)
+
+    # Create LiveKit room so requester can join immediately (e.g. from appointment Call button)
+    try:
+        await livekit_service.create_room(room_name)
+    except Exception as e:
+        logger.warning("LiveKit create_room on new teleconsultation failed (room may exist): %s", e)
 
     # Notify specialists via WebSocket (non-fatal: don't fail the request if notify fails)
     try:
@@ -93,8 +105,11 @@ async def accept_teleconsultation(
             detail="Teleconsultation already accepted or completed",
         )
     
-    # Create LiveKit room
-    await livekit_service.create_room(teleconsultation.livekit_room_name)
+    # Create LiveKit room (may already exist if created when request was made)
+    try:
+        await livekit_service.create_room(teleconsultation.livekit_room_name)
+    except Exception as e:
+        logger.warning("LiveKit create_room on accept (may already exist): %s", e)
     
     # Update teleconsultation
     teleconsultation.specialist_id = data.specialist_id
@@ -215,3 +230,61 @@ async def list_active_for_specialist(
         )
     )
     return list(result.scalars().all())
+
+
+async def get_or_create_teleconsultation_for_appointment(
+    request_id: uuid.UUID,
+    current_user: User,
+    db: AsyncSession,
+) -> Teleconsultation:
+    """Get existing or create new teleconsultation for an appointment. Used when user clicks Call from appointment."""
+    appointment = await appointment_service.get_appointment_request(request_id, db)
+    if not appointment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found",
+        )
+    if not appointment.consultation_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Appointment is not linked to a consultation",
+        )
+
+    # Access: requester, specialist for this appointment, or user with access to the consultation
+    is_requester = appointment.requested_by_user_id == current_user.user_id
+    if current_user.role == "PRACTITIONER":
+        practitioner = await practitioner_service.get_by_user_id(current_user.user_id, db)
+        is_specialist = practitioner and appointment.specialist_id == practitioner.practitioner_id
+    else:
+        is_specialist = False
+    if not is_requester and not is_specialist:
+        await consultation_service.get_consultation(
+            appointment.consultation_id, db, current_user=current_user
+        )
+
+    # Find existing ACTIVE or PENDING teleconsultation for this consultation (and specialist if set)
+    q = select(Teleconsultation).where(
+        Teleconsultation.consultation_id == appointment.consultation_id,
+        Teleconsultation.status.in_(["PENDING", "ACTIVE"]),
+    )
+    if appointment.specialist_id:
+        q = q.where(Teleconsultation.specialist_id == appointment.specialist_id)
+    q = q.order_by(Teleconsultation.created_at.desc()).limit(1)
+    result = await db.execute(q)
+    existing = result.scalar_one_or_none()
+    if existing:
+        return existing
+
+    # Patients must have an assigned specialist to start a call from an appointment
+    if current_user.role == "USER" and not appointment.specialist_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This appointment has no assigned specialist; use the Call page to choose a practitioner.",
+        )
+
+    # Create new teleconsultation (room is created inside create_teleconsultation)
+    data = TeleconsultationCreate(
+        consultation_id=appointment.consultation_id,
+        specialist_id=appointment.specialist_id,
+    )
+    return await create_teleconsultation(current_user, data, db)

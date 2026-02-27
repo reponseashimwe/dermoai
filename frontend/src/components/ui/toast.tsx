@@ -7,10 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { X, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type ToastVariant = "success" | "error" | "info";
+type ToastVariant = "success" | "error" | "info" | "warning";
 
 interface Toast {
   id: string;
@@ -34,12 +34,14 @@ const iconMap = {
   success: CheckCircle2,
   error: AlertCircle,
   info: Info,
+  warning: AlertTriangle,
 };
 
 const styleMap = {
   success: "border-green-200 bg-green-50 text-green-800",
   error: "border-red-200 bg-red-50 text-red-800",
   info: "border-blue-200 bg-blue-50 text-blue-800",
+  warning: "border-amber-200 bg-amber-50 text-amber-800",
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {

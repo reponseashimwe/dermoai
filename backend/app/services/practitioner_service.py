@@ -33,9 +33,11 @@ get_by_user_id = get_practitioner_by_user_id
 
 async def list_practitioners(db: AsyncSession) -> list[Practitioner]:
     result = await db.execute(
-        select(Practitioner).order_by(Practitioner.created_at.desc())
+        select(Practitioner)
+        .options(selectinload(Practitioner.user))
+        .order_by(Practitioner.created_at.desc())
     )
-    return list(result.scalars().all())
+    return list(result.unique().scalars().all())
 
 
 async def update_practitioner(
@@ -51,9 +53,11 @@ async def update_practitioner(
 
 async def list_pending(db: AsyncSession) -> list[Practitioner]:
     result = await db.execute(
-        select(Practitioner).where(Practitioner.approval_status == "PENDING")
+        select(Practitioner)
+        .options(selectinload(Practitioner.user))
+        .where(Practitioner.approval_status == "PENDING")
     )
-    return list(result.scalars().all())
+    return list(result.unique().scalars().all())
 
 
 async def approve_or_reject(

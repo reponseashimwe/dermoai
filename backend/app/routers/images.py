@@ -10,6 +10,7 @@ from app.core.deps import get_current_user, require_role
 from app.models.user import User
 from app.schemas.image import (
     AttachImageRequest,
+    ImageConsentUpdate,
     ImageListResponse,
     ImageRead,
     ImageReviewUpdate,
@@ -121,6 +122,19 @@ async def update_image_review(
     """Set reviewed_label for an image (specialist review queue)."""
     return await image_service.update_reviewed_label(
         image_id, data.reviewed_label, db
+    )
+
+
+@router.patch("/{image_id}/consent", response_model=ImageRead)
+async def update_image_consent(
+    image_id: UUID,
+    data: ImageConsentUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Update consent_to_reuse for a single image. Only image owner can modify."""
+    return await image_service.update_image_consent(
+        image_id, data.consent_to_reuse, current_user.user_id, db
     )
 
 

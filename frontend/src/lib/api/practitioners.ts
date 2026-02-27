@@ -31,8 +31,8 @@ export async function updateMyStatus(
   });
 }
 
-export async function listPractitioners(): Promise<Practitioner[]> {
-  return fetchClient<Practitioner[]>("/api/practitioners/");
+export async function listPractitioners(): Promise<PractitionerAvailable[]> {
+  return fetchClient<PractitionerAvailable[]>("/api/practitioners/");
 }
 
 export async function getPractitioner(
@@ -51,8 +51,8 @@ export async function updatePractitioner(
   });
 }
 
-export async function listPendingPractitioners(): Promise<Practitioner[]> {
-  return fetchClient<Practitioner[]>("/api/practitioners/pending");
+export async function listPendingPractitioners(): Promise<PractitionerAvailable[]> {
+  return fetchClient<PractitionerAvailable[]>("/api/practitioners/pending");
 }
 
 export async function approveOrReject(
