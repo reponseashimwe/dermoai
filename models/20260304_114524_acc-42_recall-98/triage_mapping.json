@@ -1,0 +1,8 @@
+{
+  "lupus_erythematosus": "REFER",
+  "neurofibromatosis": "MANAGE LOCALLY",
+  "pityriasis_rubra_pilaris": "REFER",
+  "psoriasis": "MANAGE LOCALLY",
+  "scabies": "MANAGE LOCALLY",
+  "UNCERTAIN": "REFER"
+}

@@ -1,92 +1,83 @@
 {
   "metadata": {
-    "date_created": "2026-02-09T12:20:53.011437",
+    "date_created": "2026-03-04T09:20:38.859169",
     "random_seed": 42,
     "split_ratios": {
-      "train": 0.7,
-      "val": 0.15,
-      "test": 0.15
+      "train": 0.6,
+      "val": 0.2,
+      "test": 0.2
     },
     "image_size": [
       224,
       224
     ],
-    "total_original_images": 2155,
-    "total_final_classes": 8
+    "total_original_images": 448,
+    "total_final_classes": 5
   },
   "split_statistics": {
     "train": {
-      "total_images": 1507,
+      "total_images": 268,
       "per_class": {
-        "genetic_neurocutaneous": 172,
-        "pigmentary": 42,
-        "eczematous_dermatitis": 666,
-        "malignant": 144,
-        "benign_neoplastic": 141,
-        "papulosquamous": 148,
-        "autoimmune": 143,
-        "parasitic": 51
+        "scabies": 43,
+        "neurofibromatosis": 45,
+        "pityriasis_rubra_pilaris": 76,
+        "lupus_erythematosus": 53,
+        "psoriasis": 51
       }
     },
     "val": {
-      "total_images": 324,
+      "total_images": 90,
       "per_class": {
-        "genetic_neurocutaneous": 36,
-        "pigmentary": 9,
-        "eczematous_dermatitis": 143,
-        "malignant": 31,
-        "benign_neoplastic": 31,
-        "papulosquamous": 32,
-        "autoimmune": 31,
-        "parasitic": 11
+        "scabies": 15,
+        "neurofibromatosis": 14,
+        "pityriasis_rubra_pilaris": 26,
+        "lupus_erythematosus": 18,
+        "psoriasis": 17
       }
     },
     "test": {
-      "total_images": 324,
+      "total_images": 90,
       "per_class": {
-        "genetic_neurocutaneous": 36,
-        "pigmentary": 9,
-        "eczematous_dermatitis": 143,
-        "malignant": 31,
-        "benign_neoplastic": 31,
-        "papulosquamous": 32,
-        "autoimmune": 31,
-        "parasitic": 11
+        "scabies": 15,
+        "neurofibromatosis": 15,
+        "pityriasis_rubra_pilaris": 25,
+        "lupus_erythematosus": 18,
+        "psoriasis": 17
       }
     },
     "augmented": {
-      "total_images": 3147,
+      "total_images": 1250,
       "per_class": {
-        "genetic_neurocutaneous": 430,
-        "pigmentary": 126,
-        "eczematous_dermatitis": 999,
-        "malignant": 360,
-        "benign_neoplastic": 352,
-        "papulosquamous": 370,
-        "autoimmune": 357,
-        "parasitic": 153
+        "scabies": 250,
+        "neurofibromatosis": 250,
+        "pityriasis_rubra_pilaris": 250,
+        "lupus_erythematosus": 250,
+        "psoriasis": 250
       }
     }
   },
   "augmentation_policy": {
-    "purpose": "Regularization, not class balancing",
+    "purpose": "Viability \u2014 reach minimum 250 images per class for MobileNetV2 fine-tuning",
     "scope": "Training set only",
-    "max_factor": 3.0,
+    "target_per_class": 250,
+    "factor_range": "3.29x\u20135.81x",
     "transforms": [
-      "HorizontalFlip",
-      "VerticalFlip",
-      "Rotate (\u00b115\u00b0)",
-      "RandomBrightnessContrast (\u00b10.1)"
+      "HorizontalFlip (p=0.5)",
+      "VerticalFlip (p=0.5)",
+      "Rotate \u00b145\u00b0 (p=0.7)",
+      "ShiftScaleRotate \u00b110% shift/scale \u00b145\u00b0 (p=0.5)",
+      "RandomResizedCrop 85-100% (p=0.3)",
+      "RandomBrightnessContrast \u00b115% (p=0.7)",
+      "HueSaturationValue hue\u00b120\u00b0 sat\u00b120% val\u00b115% (p=0.5)",
+      "GaussianBlur 3-5px (p=0.2)",
+      "GaussNoise var 5-20 (p=0.2)"
     ],
     "factors": {
-      "eczematous_dermatitis": 1.5,
-      "genetic_neurocutaneous": 2.5,
-      "papulosquamous": 2.5,
-      "malignant": 2.5,
-      "autoimmune": 2.5,
-      "benign_neoplastic": 2.5,
-      "parasitic": 3.0,
-      "pigmentary": 3.0
+      "lupus_erythematosus": 4.72,
+      "neurofibromatosis": 5.56,
+      "pityriasis_rubra_pilaris": 3.29,
+      "psoriasis": 4.9,
+      "scabies": 5.81
     }
   },
   "data_leakage_check": {

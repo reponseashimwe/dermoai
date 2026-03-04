@@ -19,3 +19,6 @@ torchvision>=0.15.0
 
 albumentations
 opencv-python-headless
+
+# TensorFlow / Keras training
+tensorflow>=2.19.0
