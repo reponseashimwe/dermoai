@@ -1,0 +1,151 @@
+{
+  "model": {
+    "name": "DermoAI_MobileNetV2_v2",
+    "architecture": "MobileNetV2",
+    "input_shape": [
+      224,
+      224,
+      3
+    ],
+    "num_classes": 5,
+    "total_parameters": 2619461,
+    "trainable_parameters": 1567557
+  },
+  "training": {
+    "strategy": "two_phase",
+    "phase1_epochs": 50,
+    "phase2_epochs": 40,
+    "total_epochs": 90,
+    "focal_loss": {
+      "gamma": 2.0,
+      "alpha": 0.25
+    },
+    "batch_size": 16,
+    "initial_lr": 0.0003,
+    "finetune_lr": 5e-05,
+    "class_weights_phase1": {
+      "lupus_erythematosus": 3.0,
+      "neurofibromatosis": 2.0,
+      "pityriasis_rubra_pilaris": 1.5,
+      "psoriasis": 1.5,
+      "scabies": 2.5
+    },
+    "class_weights_phase2": {
+      "lupus_erythematosus": 4.0,
+      "neurofibromatosis": 2.0,
+      "pityriasis_rubra_pilaris": 4.0,
+      "psoriasis": 2.0,
+      "scabies": 3.0
+    }
+  },
+  "dataset": {
+    "train_samples": 1250,
+    "val_samples": 90,
+    "test_samples": 90,
+    "train_distribution": {
+      "lupus_erythematosus": 250,
+      "neurofibromatosis": 250,
+      "pityriasis_rubra_pilaris": 250,
+      "psoriasis": 250,
+      "scabies": 250
+    },
+    "balanced": true
+  },
+  "performance": {
+    "overall": {
+      "accuracy": 0.4222222222222222,
+      "macro_recall": 0.41861437908496735,
+      "macro_precision": 0.43625222816399284,
+      "macro_f1": 0.41959116152664533
+    },
+    "per_class": {
+      "lupus_erythematosus": {
+        "recall": 0.4444444444444444,
+        "precision": 0.3333333333333333,
+        "f1": 0.38095238095238093,
+        "support": 18
+      },
+      "neurofibromatosis": {
+        "recall": 0.7333333333333333,
+        "precision": 0.6875,
+        "f1": 0.7096774193548387,
+        "support": 15
+      },
+      "pityriasis_rubra_pilaris": {
+        "recall": 0.48,
+        "precision": 0.7058823529411765,
+        "f1": 0.5714285714285714,
+        "support": 25
+      },
+      "psoriasis": {
+        "recall": 0.23529411764705882,
+        "precision": 0.18181818181818182,
+        "f1": 0.20512820512820512,
+        "support": 17
+      },
+      "scabies": {
+        "recall": 0.2,
+        "precision": 0.2727272727272727,
+        "f1": 0.23076923076923078,
+        "support": 15
+      }
+    },
+    "refer": {
+      "combined_recall": 0.9767441860465116,
+      "target": 0.75,
+      "meets_target": true,
+      "by_class": {
+        "lupus_erythematosus": 0.8333333333333334,
+        "pityriasis_rubra_pilaris": 0.76
+      }
+    },
+    "critical_errors": {
+      "total": 1,
+      "by_class": {
+        "lupus_erythematosus": 1,
+        "pityriasis_rubra_pilaris": 0
+      },
+      "threshold": 3,
+      "acceptable": true
+    },
+    "fst_equity": {
+      "recall_gap": null,
+      "threshold": 0.1,
+      "meets_target": null
+    }
+  },
+  "triage": {
+    "confidence_threshold": 0.45,
+    "refer_override_threshold": 0.35,
+    "low_confidence_routed": 73,
+    "refer_override_count": 1,
+    "mapping": {
+      "lupus_erythematosus": "REFER",
+      "neurofibromatosis": "MANAGE LOCALLY",
+      "pityriasis_rubra_pilaris": "REFER",
+      "psoriasis": "MANAGE LOCALLY",
+      "scabies": "MANAGE LOCALLY",
+      "UNCERTAIN": "REFER"
+    }
+  },
+  "success_criteria": {
+    "1. Overall accuracy \u226570%": false,
+    "2. Overall accuracy \u226580% (stretch target)": false,
+    "3. All classes recall \u226550%": false,
+    "4. REFER recall \u226575%": true,
+    "5. Critical errors (REFER\u2192MANAGE LOCALLY) \u22643": true,
+    "6. FST equity gap <10%": null
+  },
+  "artifacts": {
+    "model_path": "../models/dermoai_final_model.keras",
+    "class_names_path": "../models/class_names.json",
+    "triage_mapping_path": "../models/triage_mapping.json",
+    "config_path": "../models/training_config.json",
+    "model_card_path": "../models/MODEL_CARD.md"
+  },
+  "metadata": {
+    "timestamp": "2026-03-04T11:33:02.635754",
+    "tensorflow_version": "2.20.0",
+    "random_seed": 42
+  }
+}
