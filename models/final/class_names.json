@@ -1,10 +1,7 @@
 [
-  "autoimmune",
-  "benign_neoplastic",
-  "eczematous_dermatitis",
-  "genetic_neurocutaneous",
-  "malignant",
-  "papulosquamous",
-  "parasitic",
-  "pigmentary"
+  "lupus_erythematosus",
+  "neurofibromatosis",
+  "pityriasis_rubra_pilaris",
+  "psoriasis",
+  "scabies"
 ]

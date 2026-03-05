@@ -1,0 +1,9 @@
+condition,total_raw,train_raw,val_raw,test_raw,augmented_train,triage,table,reason
+lupus erythematosus,89,53,18,18,250.0,REFER,final_5,
+neurofibromatosis,74,44,15,15,250.0,MANAGE LOCALLY,final_5,
+pityriasis rubra pilaris,127,76,25,26,250.0,REFER,final_5,
+psoriasis,85,51,17,17,250.0,MANAGE LOCALLY,final_5,
+scabies,73,44,15,14,250.0,MANAGE LOCALLY,final_5,
+lichen planus,116,70,23,23,,,dropped,Empirical testing showed this class degraded recall across others due to visual overlap with psoriasis and lupus on FST V–VI images.
+squamous cell carcinoma,63,38,13,12,,,dropped,Too few malignant samples to train a safe cancer detector; a poorly calibrated model is riskier than no detector.
+vitiligo,60,36,12,12,,,dropped,Below the independent-class data threshold and not prioritized after Rwanda-specific burden review.
