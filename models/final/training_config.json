@@ -1,38 +1,43 @@
 {
   "model": {
-    "architecture": "MobileNetV2",
+    "architecture": "EfficientNetB0",
     "input_shape": [
       224,
       224,
       3
     ],
-    "num_classes": 8,
+    "num_classes": 5,
     "weights": "imagenet",
-    "dropout_rate": 0.55
+    "dropout_rate": 0.3
   },
   "training": {
-    "batch_size": 32,
-    "phase1_epochs": 30,
-    "phase2_epochs": 15,
-    "initial_lr": 5e-05,
-    "finetune_lr": 1e-06,
+    "batch_size": 16,
+    "phase1_epochs": 50,
+    "phase2_epochs": 40,
+    "initial_lr": 0.0003,
+    "finetune_lr": 5e-05,
+    "steps_per_epoch": 79,
     "use_class_weights": true
   },
   "callbacks": {
-    "early_stopping_patience": 7,
-    "reduce_lr_patience": 3,
+    "early_stopping_patience": 20,
+    "reduce_lr_patience": 7,
     "reduce_lr_factor": 0.5,
     "min_lr": 1e-07
   },
   "evaluation": {
-    "urgent_classes": [
-      "malignant"
+    "refer_classes": [
+      "lupus_erythematosus",
+      "pityriasis_rubra_pilaris"
     ],
-    "benign_classes": [
-      "benign_neoplastic"
+    "manage_locally_classes": [
+      "neurofibromatosis",
+      "psoriasis",
+      "scabies"
     ],
+    "confidence_threshold": 0.45,
+    "refer_recall_target": 0.75,
     "min_recall_threshold": 0.5,
-    "urgent_recall_target": 0.8,
-    "fst_equity_gap_threshold": 0.1
+    "fst_equity_gap_threshold": 0.15
   }
 }

@@ -52,10 +52,5 @@
     "max_samples_per_category": 1502,
     "imbalance_ratio": "88.4:1",
     "categories_needing_augmentation": 7
-  },
-  "training_strategy": {
-    "label_column": "nine_partition_label",
-    "num_classes": 9,
-    "approach": "9-category pathology classification + rule-based urgency mapping"
   }
 }
