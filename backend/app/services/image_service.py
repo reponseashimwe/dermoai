@@ -15,9 +15,29 @@ async def quick_scan(
     db: AsyncSession,
     user_id: UUID | None = None,
     consent_to_reuse: bool = False,
+    include_gradcam: bool = True,
 ) -> dict:
+    """
+    Quick scan with instant ML prediction and optional GradCAM explainability.
+
+    Args:
+        file: Uploaded image file.
+        db: Database session.
+        user_id: Optional user ID (if authenticated).
+        consent_to_reuse: Whether user consents to retraining.
+        include_gradcam: Whether to generate GradCAM visualization (default True).
+
+    Returns:
+        Dict with prediction, confidence, urgency, GradCAM, and metadata.
+    """
     upload_result = await cloudinary_service.upload_image(file)
-    prediction = ml_service.predict_with_details(upload_result["url"])
+
+    # Use GradCAM-enabled prediction if requested
+    if include_gradcam:
+        prediction = ml_service.predict_with_gradcam(upload_result["url"])
+    else:
+        prediction = ml_service.predict_with_details(upload_result["url"])
+
     condition = prediction["predicted_condition"]
     confidence = prediction["confidence"]
     urgency = prediction["urgency"]
@@ -45,6 +65,12 @@ async def quick_scan(
         "confidence": confidence,
         "urgency": urgency,
         "consent_to_reuse": image.consent_to_reuse,
+        "all_probabilities": prediction.get("all_probabilities"),
+        "model_version": prediction.get("model_version"),
+        "model_date": prediction.get("model_date"),
+        "triage_stage": prediction.get("triage_stage"),
+        "gradcam_base64": prediction.get("gradcam_base64"),
+        "gradcam_metrics": prediction.get("gradcam_metrics"),
     }
 
 
@@ -53,12 +79,32 @@ async def upload_to_consultation(
     consultation_id: UUID,
     user_id: UUID,
     db: AsyncSession,
+    include_gradcam: bool = True,
 ) -> Image:
+    """
+    Upload image to consultation with ML prediction and GradCAM explainability.
+
+    Args:
+        file: Uploaded image file.
+        consultation_id: Consultation to attach image to.
+        user_id: User uploading the image.
+        db: Database session.
+        include_gradcam: Whether to generate GradCAM visualization (default True).
+
+    Returns:
+        Image object with predictions.
+    """
     # Verify consultation exists
     await consultation_service.get_consultation(consultation_id, db)
 
     upload_result = await cloudinary_service.upload_image(file)
-    prediction = ml_service.predict_with_details(upload_result["url"])
+
+    # Use GradCAM-enabled prediction if requested
+    if include_gradcam:
+        prediction = ml_service.predict_with_gradcam(upload_result["url"])
+    else:
+        prediction = ml_service.predict_with_details(upload_result["url"])
+
     condition = prediction["predicted_condition"]
     confidence = prediction["confidence"]
 
@@ -76,6 +122,14 @@ async def upload_to_consultation(
     db.add(image)
     await db.commit()
     await db.refresh(image)
+
+    # Store GradCAM and metadata as transient attributes for response
+    # (Not persisted to DB, but available in response)
+    image.all_probabilities = prediction.get("all_probabilities")
+    image.model_version = prediction.get("model_version")
+    image.triage_stage = prediction.get("triage_stage")
+    image.gradcam_base64 = prediction.get("gradcam_base64")
+    image.gradcam_metrics = prediction.get("gradcam_metrics")
 
     # Re-aggregate consultation ML results
     consultation = await consultation_service.update_ml_results(consultation_id, db)
@@ -121,6 +175,41 @@ async def get_image(image_id: UUID, db: AsyncSession) -> Image:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
         )
+    return image
+
+
+async def get_image_with_gradcam(
+    image_id: UUID, db: AsyncSession, include_gradcam: bool = True
+) -> Image:
+    """
+    Get image and optionally generate GradCAM on-the-fly for review/admin viewing.
+
+    Args:
+        image_id: Image ID to retrieve.
+        db: Database session.
+        include_gradcam: Whether to generate GradCAM (default True).
+
+    Returns:
+        Image object with transient GradCAM attributes attached.
+    """
+    image = await get_image(image_id, db)
+
+    if include_gradcam and image.predicted_condition:
+        try:
+            # Generate GradCAM on-the-fly
+            prediction = ml_service.predict_with_gradcam(image.image_url)
+
+            # Attach as transient attributes (not persisted)
+            image.all_probabilities = prediction.get("all_probabilities")
+            image.model_version = prediction.get("model_version")
+            image.triage_stage = prediction.get("triage_stage")
+            image.gradcam_base64 = prediction.get("gradcam_base64")
+            image.gradcam_metrics = prediction.get("gradcam_metrics")
+        except Exception:
+            # If GradCAM fails, return image without it
+            image.gradcam_base64 = None
+            image.gradcam_metrics = None
+
     return image
 
 

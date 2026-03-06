@@ -6,21 +6,20 @@ from app.models.condition import Condition
 from app.schemas.condition import ConditionCreate
 
 
-# 8 predefined conditions from ml_service.py
+# 5 actual conditions from trained model (models/final/class_names.json)
+# Model Version 2.0, Date: 2026-03-05
+# Trained exclusively on Fitzpatrick Skin Types V-VI
 PREDEFINED_CONDITIONS = [
-    {"name": "autoimmune", "category": "URGENT"},
-    {"name": "benign_neoplastic", "category": "NON_URGENT"},
-    {"name": "eczematous_dermatitis", "category": "NON_URGENT"},
-    {"name": "genetic_neurocutaneous", "category": "NON_URGENT"},
-    {"name": "malignant", "category": "URGENT"},
-    {"name": "papulosquamous", "category": "NON_URGENT"},
-    {"name": "parasitic", "category": "NON_URGENT"},
-    {"name": "pigmentary", "category": "NON_URGENT"},
+    {"name": "lupus_erythematosus", "category": "REFER"},
+    {"name": "neurofibromatosis", "category": "MANAGE LOCALLY"},
+    {"name": "pityriasis_rubra_pilaris", "category": "REFER"},
+    {"name": "psoriasis", "category": "MANAGE LOCALLY"},
+    {"name": "scabies", "category": "MANAGE LOCALLY"},
 ]
 
 
 async def seed_predefined_conditions(db: AsyncSession) -> None:
-    """Seed the 8 predefined ML conditions if they don't exist."""
+    """Seed the 5 predefined ML conditions if they don't exist."""
     for cond_data in PREDEFINED_CONDITIONS:
         result = await db.execute(
             select(Condition).where(Condition.condition_name == cond_data["name"])

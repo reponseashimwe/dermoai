@@ -19,6 +19,11 @@ class ImageRead(BaseModel):
     source: str
     allowed_review: bool
     consent_to_reuse: bool
+    all_probabilities: dict[str, float] | None = None
+    model_version: str | None = None
+    triage_stage: str | None = None
+    gradcam_base64: str | None = None
+    gradcam_metrics: dict | None = None
 
     model_config = {"from_attributes": True}
 
@@ -28,6 +33,11 @@ class ImageUploadResponse(BaseModel):
     image_url: str
     predicted_condition: str | None = None
     confidence: float | None = None
+    all_probabilities: dict[str, float] | None = None
+    model_version: str | None = None
+    triage_stage: str | None = None
+    gradcam_base64: str | None = None
+    gradcam_metrics: dict | None = None
 
     model_config = {"from_attributes": True}
 
@@ -39,6 +49,12 @@ class QuickScanResponse(BaseModel):
     confidence: float
     urgency: str
     consent_to_reuse: bool
+    all_probabilities: dict[str, float] | None = None
+    model_version: str | None = None
+    model_date: str | None = None
+    triage_stage: str | None = None
+    gradcam_base64: str | None = None
+    gradcam_metrics: dict | None = None
 
     model_config = {"from_attributes": True}
 
