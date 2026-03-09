@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { useUnreviewedImages, useReviewedImages, useUpdateImageReview } from "@/
 import { useConditions } from "@/hooks/use-conditions";
 import { useToast } from "@/components/ui/toast";
 import { formatConfidence } from "@/lib/utils";
-import { CheckSquare, Stethoscope } from "lucide-react";
+import { fetchClient } from "@/lib/api/client";
+import { CheckSquare, Stethoscope, Eye, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Image as ImageType } from "@/types/api";
 
@@ -95,6 +96,9 @@ export default function ReviewQueuePage() {
 	const [skip, setSkip] = useState(0);
 	const [reviewedSkip, setReviewedSkip] = useState(0);
 	const [reviewing, setReviewing] = useState<ImageType | null>(null);
+	const [reviewingWithGradCAM, setReviewingWithGradCAM] = useState<ImageType | null>(null);
+	const [loadingGradCAM, setLoadingGradCAM] = useState(false);
+	const [showGradCAM, setShowGradCAM] = useState(true);
 	const [selectedConditionId, setSelectedConditionId] = useState("");
 	const { data, isLoading } = useUnreviewedImages({
 		skip: tab === "pending" ? skip : 0,
@@ -107,6 +111,24 @@ export default function ReviewQueuePage() {
 	const { data: conditions } = useConditions();
 	const updateReview = useUpdateImageReview();
 	const { toast } = useToast();
+
+	// Fetch image with GradCAM when modal opens
+	useEffect(() => {
+		if (reviewing) {
+			setLoadingGradCAM(true);
+			fetchClient.get<ImageType>(`/api/images/${reviewing.image_id}?include_gradcam=true`)
+				.then((res) => {
+					setReviewingWithGradCAM(res.data);
+					setLoadingGradCAM(false);
+				})
+				.catch(() => {
+					setReviewingWithGradCAM(reviewing);
+					setLoadingGradCAM(false);
+				});
+		} else {
+			setReviewingWithGradCAM(null);
+		}
+	}, [reviewing]);
 
 	const items = data?.items ?? [];
 	const total = data?.total ?? 0;
@@ -125,12 +147,16 @@ export default function ReviewQueuePage() {
 				onSuccess: () => {
 					toast("Review submitted", "success");
 					setReviewing(null);
+					setReviewingWithGradCAM(null);
 					setSelectedConditionId("");
+					setShowGradCAM(true);
 				},
 				onError: () => toast("Failed to submit review", "error"),
 			},
 		);
 	}
+
+	const hasGradCAM = !!reviewingWithGradCAM?.gradcam_base64;
 
 	return (
 		<div className='space-y-6'>
@@ -264,37 +290,127 @@ export default function ReviewQueuePage() {
 				open={reviewing != null}
 				onClose={() => {
 					setReviewing(null);
+					setReviewingWithGradCAM(null);
 					setSelectedConditionId("");
+					setShowGradCAM(true);
 				}}
-				title='Set review label'
+				title='Review Image with AI Explainability'
 			>
 				{reviewing && (
 					<div className='space-y-4'>
+						{/* GradCAM Toggle */}
+						{!loadingGradCAM && hasGradCAM && (
+							<div className='flex gap-2'>
+								<Button
+									size='sm'
+									variant={!showGradCAM ? "default" : "outline"}
+									onClick={() => setShowGradCAM(false)}
+									className='flex-1'
+								>
+									<Eye className='mr-1.5 h-4 w-4' />
+									Original
+								</Button>
+								<Button
+									size='sm'
+									variant={showGradCAM ? "default" : "outline"}
+									onClick={() => setShowGradCAM(true)}
+									className='flex-1'
+								>
+									<Sparkles className='mr-1.5 h-4 w-4' />
+									Explainability
+								</Button>
+							</div>
+						)}
+
+						{/* Image Display */}
 						<div className='relative aspect-video w-full overflow-hidden rounded-lg bg-slate-100'>
-							<Image
-								src={reviewing.image_url}
-								alt='Review'
-								fill
-								className='object-contain'
+							{loadingGradCAM ? (
+								<div className='flex items-center justify-center h-full'>
+									<p className='text-sm text-slate-500'>Loading explainability...</p>
+								</div>
+							) : (
+								<>
+									<Image
+										src={
+											showGradCAM && hasGradCAM
+												? reviewingWithGradCAM?.gradcam_base64 || reviewing.image_url
+												: reviewing.image_url
+										}
+										alt='Review'
+										fill
+										className='object-contain'
+									/>
+									{showGradCAM && hasGradCAM && (
+										<div className='absolute top-2 right-2 rounded bg-black/70 px-2 py-1 text-xs text-white'>
+											Red = High Importance
+										</div>
+									)}
+								</>
+							)}
+						</div>
+
+						{/* AI Prediction Info */}
+						<div className='rounded-lg bg-slate-50 p-3 space-y-1'>
+							<p className='text-xs font-semibold text-slate-700'>AI Prediction</p>
+							<p className='text-sm text-slate-600'>
+								<span className='font-medium'>Condition:</span>{" "}
+								{reviewing.predicted_condition ? reviewing.predicted_condition.replace(/_/g, " ") : "—"}
+							</p>
+							<p className='text-sm text-slate-600'>
+								<span className='font-medium'>Confidence:</span>{" "}
+								{reviewing.confidence != null ? formatConfidence(reviewing.confidence) : "—"}
+							</p>
+							{reviewingWithGradCAM?.triage_stage && (
+								<p className='text-xs text-slate-500 mt-1'>
+									{reviewingWithGradCAM.triage_stage.replace(/_/g, " ").toLowerCase()}
+								</p>
+							)}
+						</div>
+
+						{/* GradCAM Metrics */}
+						{showGradCAM && reviewingWithGradCAM?.gradcam_metrics && (
+							<details className='rounded-lg bg-slate-50 p-3 text-sm'>
+								<summary className='cursor-pointer font-semibold text-slate-700 text-xs'>
+									Explainability Metrics
+								</summary>
+								<div className='mt-2 space-y-1 text-xs text-slate-600'>
+									<p>
+										Peak Location: ({reviewingWithGradCAM.gradcam_metrics.peak_activation_location.x},{" "}
+										{reviewingWithGradCAM.gradcam_metrics.peak_activation_location.y})
+									</p>
+									<p>
+										Peak Intensity:{" "}
+										{(reviewingWithGradCAM.gradcam_metrics.peak_intensity * 100).toFixed(1)}%
+									</p>
+									<p>
+										Mean Activation:{" "}
+										{(reviewingWithGradCAM.gradcam_metrics.mean_activation * 100).toFixed(1)}%
+									</p>
+								</div>
+							</details>
+						)}
+
+						{/* Your Classification */}
+						<div>
+							<label className='block text-sm font-medium text-slate-700 mb-2'>
+								Your classification
+							</label>
+							<ConditionSelect
+								value={selectedConditionId}
+								onChange={setSelectedConditionId}
+								allowCustom={true}
 							/>
 						</div>
-						<p className='text-sm text-slate-600'>
-							AI prediction:{" "}
-							{reviewing.predicted_condition ? reviewing.predicted_condition.replace(/_/g, " ") : "—"} (
-							{reviewing.confidence != null ? formatConfidence(reviewing.confidence) : "—"})
-						</p>
-						<label className='block text-sm font-medium text-slate-700'>Your classification</label>
-						<ConditionSelect
-							value={selectedConditionId}
-							onChange={setSelectedConditionId}
-							allowCustom={true}
-						/>
+
+						{/* Actions */}
 						<div className='flex justify-end gap-2'>
 							<Button
 								variant='outline'
 								onClick={() => {
 									setReviewing(null);
+									setReviewingWithGradCAM(null);
 									setSelectedConditionId("");
+									setShowGradCAM(true);
 								}}
 							>
 								Cancel

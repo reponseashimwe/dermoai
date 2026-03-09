@@ -1,0 +1,6 @@
+condition,Avg Confidence,Std Confidence,Accuracy,Avg Peak Intensity,Avg Mean Activation,Avg Activation Area
+lupus_erythematosus,0.7861,0.0539,1.0,0.9962,0.432,0.3812
+neurofibromatosis,0.7682,0.046,1.0,0.9944,0.4203,0.4219
+pityriasis_rubra_pilaris,0.8589,0.0352,1.0,0.9958,0.5653,0.625
+psoriasis,0.6719,0.0266,1.0,0.997,0.4207,0.3452
+scabies,0.838,0.0394,1.0,0.997,0.3983,0.3734

@@ -112,6 +112,11 @@ export interface Image {
   source: string;
   allowed_review: boolean;
   consent_to_reuse: boolean;
+  all_probabilities?: Record<string, number>;
+  model_version?: string;
+  triage_stage?: string;
+  gradcam_base64?: string;
+  gradcam_metrics?: GradCAMMetrics;
 }
 
 export interface ImageUploadResponse {
@@ -119,6 +124,23 @@ export interface ImageUploadResponse {
   image_url: string;
   predicted_condition: string | null;
   confidence: number | null;
+  all_probabilities?: Record<string, number>;
+  model_version?: string;
+  triage_stage?: string;
+  gradcam_base64?: string;
+  gradcam_metrics?: GradCAMMetrics;
+}
+
+export interface GradCAMMetrics {
+  peak_activation_location: {
+    x: number;
+    y: number;
+    normalized_x: number;
+    normalized_y: number;
+  };
+  peak_intensity: number;
+  mean_activation: number;
+  activation_area: number;
 }
 
 export interface QuickScanResponse {
@@ -126,8 +148,14 @@ export interface QuickScanResponse {
   image_url: string;
   predicted_condition: string;
   confidence: number;
-  urgency: "URGENT" | "NON_URGENT";
+  urgency: "URGENT" | "NON_URGENT" | "REFER" | "MANAGE LOCALLY";
   consent_to_reuse: boolean;
+  all_probabilities?: Record<string, number>;
+  model_version?: string;
+  model_date?: string;
+  triage_stage?: "STAGE_1_LOW_CONFIDENCE" | "STAGE_2_REFER_OVERRIDE" | "NORMAL_PREDICTION";
+  gradcam_base64?: string;
+  gradcam_metrics?: GradCAMMetrics;
 }
 
 export interface AttachImageRequest {

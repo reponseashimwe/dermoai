@@ -18,16 +18,25 @@ async def quick_scan(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
     consent_to_reuse: bool = False,
+    include_gradcam: bool = True,
 ):
-    """Upload an image for instant ML prediction.
+    """Upload an image for instant ML prediction with GradCAM explainability.
 
     Works without authentication. If a Bearer token is provided,
     the image is linked to the authenticated user.
-    Set consent_to_reuse=true to allow the image to be used for future model retraining.
+
+    Args:
+        file: Image file to scan.
+        consent_to_reuse: Allow image to be used for future model retraining.
+        include_gradcam: Generate GradCAM visualization (default True).
+
+    Returns:
+        Prediction with confidence, urgency, GradCAM overlay, and model metadata.
     """
     user_id = current_user.user_id if current_user else None
     return await image_service.quick_scan(
-        file, db, user_id=user_id, consent_to_reuse=consent_to_reuse
+        file, db, user_id=user_id, consent_to_reuse=consent_to_reuse,
+        include_gradcam=include_gradcam
     )
 
 

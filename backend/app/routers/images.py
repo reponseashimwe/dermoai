@@ -27,9 +27,11 @@ async def upload_to_consultation(
     consultation_id: UUID,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    include_gradcam: bool = Query(True, description="Generate GradCAM visualization"),
 ):
+    """Upload image to consultation with ML prediction and GradCAM explainability."""
     image = await image_service.upload_to_consultation(
-        file, consultation_id, current_user.user_id, db
+        file, consultation_id, current_user.user_id, db, include_gradcam=include_gradcam
     )
     return image
 
@@ -108,8 +110,12 @@ async def get_image(
     image_id: UUID,
     _user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    include_gradcam: bool = Query(True, description="Generate GradCAM visualization"),
 ):
-    return await image_service.get_image(image_id, db)
+    """Get image details with optional GradCAM explainability (for review/admin viewing)."""
+    return await image_service.get_image_with_gradcam(
+        image_id, db, include_gradcam=include_gradcam
+    )
 
 
 @router.patch("/{image_id}", response_model=ImageRead)
