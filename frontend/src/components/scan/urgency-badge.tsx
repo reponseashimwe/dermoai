@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
-import { URGENCY_INFO } from "@/lib/constants/urgency";
+import { URGENCY_INFO, URGENCY_FALLBACK, type UrgencyLevel } from "@/lib/constants/urgency";
 
 interface UrgencyBadgeProps {
-  urgency: "URGENT" | "NON_URGENT";
+  urgency: UrgencyLevel | string;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -18,7 +18,7 @@ export function UrgencyBadge({
   size = "md",
   className,
 }: UrgencyBadgeProps) {
-  const info = URGENCY_INFO[urgency];
+  const info = urgency in URGENCY_INFO ? URGENCY_INFO[urgency as UrgencyLevel] : URGENCY_FALLBACK;
   const Icon = info.icon;
 
   return (

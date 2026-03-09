@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Calendar, Clock, Video, Trash2 } from "lucide-react";
+import { Calendar, Video, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -74,72 +74,76 @@ export default function SchedulesPage() {
           }}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
           {list.map((apt) => (
-            <Card key={apt.request_id}>
-              <CardContent className="py-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                      <Clock className="h-5 w-5 text-slate-600" />
+            <Card key={apt.request_id} className="overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex gap-4 min-w-0">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-50">
+                      <Calendar className="h-6 w-6 text-primary-600" />
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-900">
-                        {formatDate(apt.proposed_datetime)}
-                      </p>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-lg font-semibold text-slate-900">
+                          {formatDate(apt.proposed_datetime)}
+                        </p>
+                        <span
+                          className={cn(
+                            "inline-flex shrink-0 items-center rounded-lg px-2.5 py-0.5 text-xs font-medium",
+                            apt.status === "APPROVED" && "bg-green-100 text-green-800",
+                            apt.status === "PENDING" && "bg-amber-100 text-amber-800",
+                            apt.status === "REJECTED" && "bg-red-100 text-red-800",
+                            apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800"
+                          )}
+                        >
+                          {apt.status}
+                        </span>
+                      </div>
                       {apt.specialist_name && (
-                        <p className="text-sm text-slate-600">{apt.specialist_name}</p>
+                        <p className="mt-1 font-medium text-slate-800">{apt.specialist_name}</p>
                       )}
+                      <p className="text-sm text-slate-500">
+                        Specialist: Dermatology
+                      </p>
                       {apt.notes && (
-                        <p className="text-sm text-slate-500">{apt.notes}</p>
+                        <p className="mt-1 text-sm text-slate-500">{apt.notes}</p>
+                      )}
+                      {apt.consultation_id && (
+                        <p className="mt-2">
+                          <Link
+                            href={`/consultations/${apt.consultation_id}`}
+                            className="text-sm font-medium text-primary-600 hover:underline"
+                          >
+                            View
+                          </Link>
+                        </p>
                       )}
                     </div>
                   </div>
-                  <span
-                    className={cn(
-                      "inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-                      apt.status === "APPROVED" && "bg-green-100 text-green-800",
-                      apt.status === "PENDING" && "bg-amber-100 text-amber-800",
-                      apt.status === "REJECTED" && "bg-red-100 text-red-800",
-                      apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800"
-                    )}
-                  >
-                    {apt.status}
-                  </span>
-                </div>
-                {apt.consultation_id && (
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/consultations/${apt.consultation_id}`}
-                        className="text-sm font-medium text-primary-600 hover:underline"
-                      >
-                        View consultation →
-                      </Link>
-                      {user?.user_id === apt.requested_by_user_id && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-9 w-9 shrink-0 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => setDeleteTargetId(apt.request_id)}
-                          title="Delete appointment"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="h-9 w-9 shrink-0 p-0"
                       onClick={() => handleAppointmentCall(apt.request_id)}
                       loading={startCall.isPending}
-                      title="Video call"
+                      title="Join call"
                     >
-                      <Video className="h-4 w-4" />
+                      <Video className="h-4 w-4 mr-1.5" />
+                      Join
                     </Button>
+                    {user?.user_id === apt.requested_by_user_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                        onClick={() => setDeleteTargetId(apt.request_id)}
+                        title="Delete appointment"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))}

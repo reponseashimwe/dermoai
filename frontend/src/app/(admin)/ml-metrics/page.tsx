@@ -41,8 +41,7 @@ export default function MLMetricsPage() {
   const { data: metrics, isLoading } = useQuery<MLMetrics>({
     queryKey: ["ml-metrics"],
     queryFn: async () => {
-      const res = await fetchClient.get<MLMetrics>("/api/stats/ml-metrics");
-      return res.data;
+      return fetchClient<MLMetrics>("/api/stats/ml-metrics");
     },
   });
 
@@ -190,7 +189,7 @@ export default function MLMetricsPage() {
                         </span>
                         <Badge
                           variant={
-                            triageDecision === "REFER" ? "error" : "success"
+                            triageDecision === "REFER" ? "urgent" : "safe"
                           }
                           className="text-xs"
                         >

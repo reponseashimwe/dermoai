@@ -10,13 +10,15 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.models.appointment_request import AppointmentRequest
+from app.models.teleconsultation import Teleconsultation
 from app.schemas.consultation import (
     ConsultationCreate,
     ConsultationImagesConsentUpdate,
     ConsultationRead,
     ConsultationUpdate,
 )
-from app.services import consultation_service, image_service, consent_service
+from app.schemas.teleconsultation import TeleconsultationRead
+from app.services import consultation_service, image_service, consent_service, teleconsultation_service
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
 
@@ -51,11 +53,18 @@ async def list_consultations(
         ).distinct()
     )
     ids_with_appointments = {row[0] for row in result.all()}
+    tc_result = await db.execute(
+        select(Teleconsultation.consultation_id).where(
+            Teleconsultation.consultation_id.isnot(None)
+        ).distinct()
+    )
+    ids_with_teleconsultation = {row[0] for row in tc_result.all()}
     return [
         ConsultationRead(
             **{
                 **ConsultationRead.model_validate(c).model_dump(),
                 "has_appointments": c.consultation_id in ids_with_appointments,
+                "has_teleconsultation": c.consultation_id in ids_with_teleconsultation,
             }
         )
         for c in consultations
@@ -68,9 +77,58 @@ async def get_consultation(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    return await consultation_service.get_consultation(
+    consultation = await consultation_service.get_consultation(
         consultation_id, db, current_user=current_user
     )
+    has_appointments = False
+    has_teleconsultation = False
+    try:
+        apt_result = await db.execute(
+            select(AppointmentRequest.request_id).where(
+                AppointmentRequest.consultation_id == consultation_id
+            ).limit(1)
+        )
+        has_appointments = apt_result.scalar_one_or_none() is not None
+    except Exception:
+        pass
+    try:
+        tc_result = await db.execute(
+            select(Teleconsultation.teleconsultation_id).where(
+                Teleconsultation.consultation_id == consultation_id
+            ).limit(1)
+        )
+        has_teleconsultation = tc_result.scalar_one_or_none() is not None
+    except Exception:
+        pass
+    return ConsultationRead(
+        consultation_id=consultation.consultation_id,
+        patient_id=consultation.patient_id,
+        created_by=consultation.created_by,
+        final_predicted_condition=consultation.final_predicted_condition,
+        final_confidence=consultation.final_confidence,
+        urgency=consultation.urgency,
+        status=consultation.status,
+        disposition=consultation.disposition,
+        referral_note=consultation.referral_note,
+        got_treatment=consultation.got_treatment,
+        outcome_verified=consultation.outcome_verified,
+        created_at=consultation.created_at,
+        has_appointments=has_appointments,
+        has_teleconsultation=has_teleconsultation,
+    )
+
+
+@router.get("/{consultation_id}/teleconsultations", response_model=list[TeleconsultationRead])
+async def list_consultation_teleconsultations(
+    consultation_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """List teleconsultations for this consultation. Access follows consultation access."""
+    await consultation_service.get_consultation(
+        consultation_id, db, current_user=current_user
+    )
+    return await teleconsultation_service.list_by_consultation(consultation_id, db)
 
 
 @router.put("/{consultation_id}", response_model=ConsultationRead)
@@ -92,10 +150,15 @@ async def set_consultation_images_consent(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Set consent_to_reuse for all images in this consultation (on/off for review queue)."""
-    await consultation_service.get_consultation(
+    """Set consent_to_reuse for all images in this consultation. Only the patient (consultation creator) can change it."""
+    consultation = await consultation_service.get_consultation(
         consultation_id, db, current_user=current_user
     )
+    if consultation.created_by != current_user.user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the patient can update consent for this consultation.",
+        )
     count = await image_service.set_consultation_images_consent(
         consultation_id, data.consent_to_reuse, db
     )
@@ -140,3 +203,39 @@ async def verify_consent_pin(
         raise HTTPException(status_code=400, detail=result["message"])
     
     return result
+
+
+@router.post("/{consultation_id}/close", response_model=ConsultationRead)
+async def close_consultation(
+    consultation_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Mark consultation as closed so it no longer appears on dashboard or in notifications."""
+    consultation = await consultation_service.get_consultation(
+        consultation_id, db, current_user=current_user
+    )
+    return await consultation_service.update_consultation(
+        consultation_id,
+        ConsultationUpdate(status="CLOSED"),
+        db,
+        current_user=current_user,
+    )
+
+
+@router.post("/{consultation_id}/reopen", response_model=ConsultationRead)
+async def reopen_consultation(
+    consultation_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Reopen a closed consultation."""
+    consultation = await consultation_service.get_consultation(
+        consultation_id, db, current_user=current_user
+    )
+    return await consultation_service.update_consultation(
+        consultation_id,
+        ConsultationUpdate(status="OPEN"),
+        db,
+        current_user=current_user,
+    )

@@ -25,7 +25,7 @@ export function ImageCard({ image, variant = "card", className }: ImageCardProps
         <div
           onClick={() => setDetailModalOpen(true)}
           className={cn(
-            "group flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2 cursor-pointer hover:bg-slate-50 transition-colors",
+            "group flex items-center gap-3 rounded-md bg-white p-2 cursor-pointer hover:bg-slate-50 transition-colors",
             className
           )}
         >

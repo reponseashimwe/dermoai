@@ -25,7 +25,7 @@ export function UrgentConsultationBanner({ consultationId }: UrgentConsultationB
 				<div className='flex items-start gap-3'>
 					<AlertTriangle className='h-5 w-5 shrink-0 text-red-600' />
 					<div>
-						<p className='font-semibold text-red-800'>Urgent: Immediate attention recommended</p>
+						<p className='font-semibold text-amber-800'>Refer: Specialist attention recommended</p>
 						<p className='text-sm text-red-700'>
 							Connect with a specialist for timely assessment.{" "}
 							{onlineCount > 0

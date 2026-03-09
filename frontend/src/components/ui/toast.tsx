@@ -37,11 +37,11 @@ const iconMap = {
   warning: AlertTriangle,
 };
 
-const styleMap = {
-  success: "border-green-200 bg-green-50 text-green-800",
-  error: "border-red-200 bg-red-50 text-red-800",
-  info: "border-blue-200 bg-blue-50 text-blue-800",
-  warning: "border-amber-200 bg-amber-50 text-amber-800",
+const iconBgMap = {
+  success: "bg-green-100 text-green-600",
+  error: "bg-red-100 text-red-600",
+  info: "bg-blue-100 text-blue-600",
+  warning: "bg-amber-100 text-amber-600",
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -68,18 +68,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={t.id}
-              className={cn(
-                "flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg animate-in slide-in-from-right",
-                styleMap[t.variant]
-              )}
+              className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-lg animate-in slide-in-from-right"
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              <p className="text-sm">{t.message}</p>
+              <div
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                  iconBgMap[t.variant]
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </div>
+              <p className="min-w-0 flex-1 text-sm font-medium text-slate-800">
+                {t.message}
+              </p>
               <button
                 onClick={() => removeToast(t.id)}
-                className="ml-2 shrink-0 rounded p-0.5 hover:bg-black/5"
+                className="shrink-0 rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                aria-label="Dismiss"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           );

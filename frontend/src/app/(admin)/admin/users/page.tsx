@@ -7,8 +7,8 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="User Management"
-        description="View and manage all registered users"
+        title="Users"
+        description="View and manage patients (non-practitioner users)"
       />
       <UserTable />
     </div>

@@ -60,7 +60,7 @@ def generate_gradcam(
     from keras.applications.efficientnet import preprocess_input as eff_preprocess
     img_orig = np.array(image.resize((224, 224)))           # uint8 [0, 255] for overlay
     img_array = eff_preprocess(img_orig.astype(np.float32)) # [-1, 1] for model
-    img_array = np.expand_dims(img_array, axis=0)
+    img_array = _tf.cast(np.expand_dims(img_array, axis=0), _tf.float32)  # tf.Tensor required for GradientTape.watch()
 
     # KERAS 3 FIX: Build grad model from backbone to avoid KeyError with nested tensors
     # This is the same workaround used in the notebook (06_gradcam_visualization.ipynb)

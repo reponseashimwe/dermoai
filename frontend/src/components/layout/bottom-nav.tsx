@@ -37,7 +37,7 @@ export function BottomNav() {
 	const items = getBottomNavItems(user?.role as AppRole | undefined, !!isSpecialist);
 
 	return (
-		<nav className='fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden'>
+		<nav className='fixed inset-x-0 bottom-0 z-30 border-t border-primary-700 bg-primary-600 pb-[env(safe-area-inset-bottom)] md:hidden'>
 			<div className='flex h-14 items-center justify-around'>
 				{items.map((item) => {
 					const active =
@@ -48,7 +48,7 @@ export function BottomNav() {
 							<Link
 								key={item.href}
 								href={item.href}
-								className='flex -mt-10 flex-col items-center justify-center gap-0.5 rounded-full bg-primary-500 px-4 py-2.5 text-white shadow-lg min-h-[2.75rem]'
+								className='flex -mt-10 flex-col items-center justify-center gap-0.5 rounded-full bg-primary-600 px-4 py-2.5 text-white shadow-xl shadow-black/30 min-h-[2.75rem] ring-2 ring-white/30'
 							>
 								<item.icon className='h-5 w-5' />
 								<span className='text-[10px] font-medium'>{item.label}</span>
@@ -62,7 +62,7 @@ export function BottomNav() {
 							href={item.href}
 							className={cn(
 								"flex flex-col items-center gap-0.5 text-[10px] font-medium transition-colors",
-								active ? "text-primary-500" : "text-slate-400",
+								active ? "text-white" : "text-primary-100",
 							)}
 						>
 							<item.icon className='h-5 w-5' />

@@ -3,13 +3,14 @@ import type { QuickScanResponse, Image } from "@/types/api";
 
 export async function triageScan(
   file: File,
-  consentToReuse: boolean
+  consentToReuse: boolean,
+  includeGradCAM = true
 ): Promise<QuickScanResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
   return fetchClient<QuickScanResponse>(
-    `/api/triage/scan?consent_to_reuse=${consentToReuse}`,
+    `/api/triage/scan?consent_to_reuse=${consentToReuse}&include_gradcam=${includeGradCAM}`,
     {
       method: "POST",
       body: formData,

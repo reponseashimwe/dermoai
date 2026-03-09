@@ -23,12 +23,22 @@ export function UserTable() {
     }
   }
 
+  const patientUsers = users?.filter((u) => u.role === "USER") ?? [];
+
   if (isLoading) {
     return (
       <div className="space-y-2">
         {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-12 w-full" />
         ))}
+      </div>
+    );
+  }
+
+  if (patientUsers.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white py-12 text-center text-sm text-slate-500">
+        No patient users found.
       </div>
     );
   }
@@ -42,9 +52,6 @@ export function UserTable() {
               User
             </th>
             <th className="px-4 py-3 text-left font-medium text-slate-600">
-              Role
-            </th>
-            <th className="px-4 py-3 text-left font-medium text-slate-600">
               Status
             </th>
             <th className="px-4 py-3 text-left font-medium text-slate-600">
@@ -56,7 +63,7 @@ export function UserTable() {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
-          {users?.map((user) => (
+          {patientUsers.map((user) => (
             <tr key={user.user_id} className="hover:bg-slate-50/80">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
@@ -66,19 +73,6 @@ export function UserTable() {
                     <p className="text-slate-500 truncate text-xs">{user.email}</p>
                   </div>
                 </div>
-              </td>
-              <td className="px-4 py-3">
-                <Badge
-                  variant={
-                    user.role === "ADMIN"
-                      ? "info"
-                      : user.role === "PRACTITIONER"
-                      ? "warning"
-                      : "default"
-                  }
-                >
-                  {user.role}
-                </Badge>
               </td>
               <td className="px-4 py-3">
                 <Badge variant={user.is_active ? "safe" : "urgent"}>

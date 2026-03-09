@@ -46,3 +46,27 @@ export async function setConsultationImagesConsent(
     }
   );
 }
+
+export async function closeConsultation(
+  consultationId: string
+): Promise<Consultation> {
+  return fetchClient<Consultation>(
+    `/api/consultations/${consultationId}/close`,
+    { method: "POST" }
+  );
+}
+
+export async function reopenConsultation(
+  consultationId: string
+): Promise<Consultation> {
+  return fetchClient<Consultation>(
+    `/api/consultations/${consultationId}/reopen`,
+    { method: "POST" }
+  );
+}
+
+export async function listConsultationTeleconsultations(consultationId: string) {
+  return fetchClient<{ teleconsultation_id: string; status: string; started_at: string | null; ended_at: string | null; duration_seconds: number | null; created_at: string }[]>(
+    `/api/consultations/${consultationId}/teleconsultations`
+  );
+}

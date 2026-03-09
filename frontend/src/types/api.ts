@@ -82,6 +82,7 @@ export interface Consultation {
   outcome_verified: boolean | null;
   created_at: string;
   has_appointments?: boolean;
+  has_teleconsultation?: boolean;
 }
 
 export interface ConsultationCreate {
@@ -148,7 +149,7 @@ export interface QuickScanResponse {
   image_url: string;
   predicted_condition: string;
   confidence: number;
-  urgency: "URGENT" | "NON_URGENT" | "REFER" | "MANAGE LOCALLY";
+  urgency: "REFER" | "MANAGE LOCALLY";
   consent_to_reuse: boolean;
   all_probabilities?: Record<string, number>;
   model_version?: string;
@@ -183,6 +184,13 @@ export interface ClinicalReview {
 export interface ClinicalReviewCreate {
   consultation_id: string;
   diagnosis: string;
+  treatment_plan?: string;
+  notes?: string;
+  is_final?: boolean;
+}
+
+export interface ClinicalReviewUpdate {
+  diagnosis?: string;
   treatment_plan?: string;
   notes?: string;
   is_final?: boolean;
@@ -267,6 +275,8 @@ export interface AdminStats {
   consent_stats: ConsentStats;
   outcome_by_disposition: OutcomeByDisposition[];
   model_stats: ModelPerformanceStats;
+  telemed_stats: TelemedStats;
+  top_conditions: TopCondition[];
 }
 
 export interface ConfidenceTrendPoint {
@@ -288,6 +298,23 @@ export interface ModelPerformanceStats {
   confidence_trend: ConfidenceTrendPoint[];
   low_confidence_count: number;
   confidence_distribution: ConfidenceDistribution;
+}
+
+export interface TelemedStatusBreakdown {
+  completed: number;
+  pending: number;
+  active: number;
+}
+
+export interface TelemedStats {
+  teleconsultations_total: number;
+  appointments_total: number;
+  status: TelemedStatusBreakdown;
+}
+
+export interface TopCondition {
+  name: string;
+  count: number;
 }
 
 export interface PractitionerStats {

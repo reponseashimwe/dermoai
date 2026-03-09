@@ -79,7 +79,7 @@ async def get_incoming_requests(
                 AppointmentRequest.specialist_id == practitioner_id,
                 AppointmentRequest.specialist_id.is_(None),
             ),
-            AppointmentRequest.status == "PENDING",
+            AppointmentRequest.status.in_(["PENDING", "RESCHEDULED"]),
         )
         .order_by(AppointmentRequest.created_at.desc())
     )
@@ -142,7 +142,7 @@ async def update_appointment_request(
 
 
 async def get_pending_count(practitioner_id: UUID, db: AsyncSession) -> int:
-    """Get count of pending appointment requests for a specialist."""
+    """Get count of pending/rescheduled appointment requests for a specialist."""
     result = await db.execute(
         select(AppointmentRequest)
         .where(
@@ -150,7 +150,7 @@ async def get_pending_count(practitioner_id: UUID, db: AsyncSession) -> int:
                 AppointmentRequest.specialist_id == practitioner_id,
                 AppointmentRequest.specialist_id.is_(None),
             ),
-            AppointmentRequest.status == "PENDING",
+            AppointmentRequest.status.in_(["PENDING", "RESCHEDULED"]),
         )
     )
     return len(result.scalars().all())

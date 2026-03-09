@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
 	LiveKitRoom,
 	RoomAudioRenderer,
@@ -12,8 +13,8 @@ import {
 import { Track } from "livekit-client";
 import { useEndTeleconsultation, useLiveKitToken } from "@/hooks/use-teleconsultations";
 import { Button } from "@/components/ui/button";
-import { PhoneOff, User } from "lucide-react";
-import { useCallback } from "react";
+import { PhoneOff, User, Monitor, MessageSquare, MoreHorizontal, ChevronLeft } from "lucide-react";
+import { useCallback, useState } from "react";
 
 interface CallInterfaceProps {
 	teleconsultationId: string;
@@ -24,13 +25,30 @@ function VideoCallInner({ onEndCall }: { onEndCall: () => void }) {
 	const participants = useParticipants();
 	const cameraTracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare]);
 	const remoteTracks = cameraTracks.filter((ref) => ref.participant.isLocal === false);
-	const localTrack = cameraTracks.find((ref) => ref.participant.isLocal === true);
+	const localTrack = cameraTracks.find((ref) => ref.participant.isLocal === true && ref.source === Track.Source.Camera);
 	const primaryRemote = remoteTracks[0];
 	const remoteParticipant = participants.find((p) => !p.isLocal);
+	const [showChat, setShowChat] = useState(false);
 
 	return (
 		<div className="relative flex h-full w-full min-h-0 flex-col bg-slate-900">
-			{/* Main area: remote video (or placeholder) — full width/height, no margin */}
+			{/* Top bar with back button */}
+			<div className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 py-3">
+				<div className="flex items-center gap-3">
+					<Link
+						href="/telemedicine"
+						className="flex items-center gap-1.5 rounded-lg bg-black/50 px-3 py-2 text-sm font-medium text-white hover:bg-black/70 transition-colors"
+					>
+						<ChevronLeft className="h-4 w-4" />
+						Leave
+					</Link>
+					<div className="rounded-lg bg-black/50 px-3 py-1.5 text-sm font-medium text-white">
+						{participants.length} in call
+					</div>
+				</div>
+			</div>
+
+			{/* Main area: remote video (or placeholder) */}
 			<div className="relative min-h-0 flex-1 flex items-center justify-center bg-slate-800 overflow-hidden">
 				{primaryRemote ? (
 					<VideoTrack
@@ -53,7 +71,7 @@ function VideoCallInner({ onEndCall }: { onEndCall: () => void }) {
 
 			{/* Floating local video */}
 			{localTrack && (
-				<div className="absolute bottom-24 right-4 z-10 w-40 overflow-hidden rounded-xl border-2 border-white/30 bg-slate-800 shadow-xl md:w-52">
+				<div className="absolute bottom-28 right-4 z-10 w-40 overflow-hidden rounded-xl border-2 border-white/30 bg-slate-800 shadow-xl md:w-52">
 					<div className="absolute left-0 top-0 z-10 px-2 py-1 text-xs font-medium text-white/90 truncate max-w-full bg-black/40 rounded-tr">
 						You
 					</div>
@@ -65,29 +83,58 @@ function VideoCallInner({ onEndCall }: { onEndCall: () => void }) {
 				</div>
 			)}
 
-			{/* Control bar: icons centered inside circular wrappers */}
-			<div className="flex shrink-0 items-center justify-center gap-4 border-t border-slate-700/50 bg-slate-900/95 px-4 py-4">
-				<TrackToggle
-					source={Track.Source.Microphone}
-					className="grid h-14 w-14 place-items-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_svg]:h-6 [&_svg]:w-6 [&_svg]:shrink-0"
-				/>
-				<TrackToggle
-					source={Track.Source.Camera}
-					className="grid h-14 w-14 place-items-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_svg]:h-6 [&_svg]:w-6 [&_svg]:shrink-0"
-				/>
-				<Button
-					size="lg"
-					variant="destructive"
-					className="grid h-14 w-14 min-w-14 place-items-center rounded-full p-0"
-					onClick={onEndCall}
-				>
-					<PhoneOff className="h-6 w-6 shrink-0" aria-hidden />
-				</Button>
-			</div>
-
-			{/* Participant count */}
-			<div className="absolute left-4 top-4 z-10 rounded-lg bg-black/50 px-3 py-1.5 text-sm font-medium text-white">
-				{participants.length} in call
+			{/* Control bar: centered controls */}
+			<div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center py-6">
+				<div className="flex items-center gap-3 rounded-2xl bg-slate-900/90 backdrop-blur-sm px-6 py-3 shadow-2xl">
+					{/* Mic toggle */}
+					<TrackToggle
+						source={Track.Source.Microphone}
+						className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 transition-colors [&_svg]:h-5 [&_svg]:w-5"
+					/>
+					{/* Camera toggle */}
+					<TrackToggle
+						source={Track.Source.Camera}
+						className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 transition-colors [&_svg]:h-5 [&_svg]:w-5"
+					/>
+					{/* Screen share toggle */}
+					<TrackToggle
+						source={Track.Source.ScreenShare}
+						className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 transition-colors data-[lk-enabled=true]:bg-primary-600 data-[lk-enabled=true]:border-primary-500 [&_svg]:h-5 [&_svg]:w-5"
+					>
+						<Monitor className="h-5 w-5" />
+					</TrackToggle>
+					{/* Chat button */}
+					<button
+						onClick={() => setShowChat(!showChat)}
+						className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-colors ${
+							showChat
+								? "border-primary-500 bg-primary-600 text-white"
+								: "border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
+						}`}
+						title="Chat"
+					>
+						<MessageSquare className="h-5 w-5" />
+					</button>
+					{/* More options */}
+					<button
+						className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 transition-colors"
+						title="More options"
+					>
+						<MoreHorizontal className="h-5 w-5" />
+					</button>
+					{/* Divider */}
+					<div className="mx-2 h-8 w-px bg-slate-600" />
+					{/* End call */}
+					<Button
+						size="lg"
+						variant="destructive"
+						className="flex h-12 w-12 items-center justify-center rounded-full p-0"
+						onClick={onEndCall}
+						title="End call"
+					>
+						<PhoneOff className="h-5 w-5" aria-hidden />
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

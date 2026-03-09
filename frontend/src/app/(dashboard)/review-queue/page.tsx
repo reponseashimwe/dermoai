@@ -1,31 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Modal } from "@/components/ui/modal";
 import { ConditionSelect } from "@/components/clinical-review/condition-select";
 import { Badge } from "@/components/ui/badge";
+import { ImageDetailModal } from "@/components/images/image-detail-modal";
+import { Pagination } from "@/components/ui/pagination";
 import { useUnreviewedImages, useReviewedImages, useUpdateImageReview } from "@/hooks/use-images";
 import { useConditions } from "@/hooks/use-conditions";
 import { useToast } from "@/components/ui/toast";
-import { formatConfidence } from "@/lib/utils";
-import { fetchClient } from "@/lib/api/client";
-import { CheckSquare, Stethoscope, Eye, Sparkles } from "lucide-react";
+import { formatConfidence, formatDate } from "@/lib/utils";
+import { CheckCircle, CheckSquare, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Image as ImageType } from "@/types/api";
 
 const PAGE_SIZE = 12;
 type Tab = "pending" | "reviewed";
 
-function PendingReviewCard({ image, onReview }: { image: ImageType; onReview: (img: ImageType) => void }) {
+function PendingReviewCard({ image, onClick }: { image: ImageType; onClick: () => void }) {
+	const urgency = (image.confidence ?? 0) < 0.45 ? "REFER" : "MANAGE LOCALLY";
 	return (
-		<Card className='overflow-hidden'>
+		<Card
+			className='cursor-pointer overflow-hidden transition-shadow hover:shadow-md'
+			onClick={onClick}
+		>
 			<CardContent className='p-0'>
-				<div className='relative h-24 w-full overflow-hidden bg-slate-100'>
+				<div className='relative h-[140px] w-full overflow-hidden bg-slate-100'>
 					<Image
 						src={image.image_url}
 						alt='Skin condition'
@@ -34,34 +38,42 @@ function PendingReviewCard({ image, onReview }: { image: ImageType; onReview: (i
 						sizes='(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw'
 					/>
 				</div>
-				<div className='flex items-center justify-between gap-1.5 p-2'>
-					<div className='min-w-0 flex-1'>
-						<p className='truncate text-xs font-medium text-slate-900'>
-							{image.predicted_condition ? image.predicted_condition.replace(/_/g, " ") : "—"}
-						</p>
-						{image.confidence != null && (
-							<p className='truncate text-[10px] text-slate-500'>{formatConfidence(image.confidence)}</p>
-						)}
-					</div>
-					<Button
-						size='sm'
-						className='h-7 px-2 text-xs shrink-0'
-						onClick={() => onReview(image)}
-						aria-label='Review image'
-					>
-						<CheckSquare className='h-3 w-3' />
-					</Button>
+				<div className='p-3'>
+					<p className='truncate text-sm font-medium text-slate-900'>
+						{image.predicted_condition ? image.predicted_condition.replace(/_/g, " ") : "—"}
+					</p>
+					<p className='text-xs text-slate-500'>{formatDate(image.uploaded_at)}</p>
+					{image.confidence != null && (
+						<div className='mt-2 flex items-center gap-2'>
+							<div className='h-1.5 w-14 overflow-hidden rounded-full bg-slate-200'>
+								<div
+									className={cn(
+										"h-full rounded-full transition-[width]",
+										urgency === "REFER" ? "bg-amber-500" : "bg-primary-500"
+									)}
+									style={{ width: `${Math.round(image.confidence * 100)}%` }}
+								/>
+							</div>
+							<span className='text-xs font-medium tabular-nums text-slate-600'>
+								{formatConfidence(image.confidence)}
+							</span>
+						</div>
+					)}
 				</div>
 			</CardContent>
 		</Card>
 	);
 }
 
-function ReviewedCard({ image }: { image: ImageType }) {
+function ReviewedCard({ image, onClick }: { image: ImageType; onClick: () => void }) {
+	const urgency = (image.confidence ?? 0) < 0.45 ? "REFER" : "MANAGE LOCALLY";
 	return (
-		<Card className='overflow-hidden'>
+		<Card
+			className='cursor-pointer overflow-hidden transition-shadow hover:shadow-md'
+			onClick={onClick}
+		>
 			<CardContent className='p-0'>
-				<div className='relative h-24 w-full overflow-hidden bg-slate-100'>
+				<div className='relative h-[140px] w-full overflow-hidden bg-slate-100'>
 					<Image
 						src={image.image_url}
 						alt='Skin condition'
@@ -69,22 +81,44 @@ function ReviewedCard({ image }: { image: ImageType }) {
 						className='object-cover'
 						sizes='(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw'
 					/>
-					<div className='absolute right-1 top-1'>
+					<div className='absolute left-2 top-2'>
 						<Badge
 							variant={image.reviewed_as_final ? "safe" : "info"}
-							className='text-[10px]'
+							className='text-xs'
 						>
-							{image.reviewed_as_final ? "Final (Specialist)" : "Doctor"}
+							{image.reviewed_as_final ? "Final" : "Doctor"}
 						</Badge>
 					</div>
 				</div>
-				<div className='space-y-1 p-2'>
-					<p className='text-xs font-medium text-slate-700'>Reviewed condition</p>
-					<p className='truncate text-xs font-medium text-slate-900'>{image.reviewed_label ?? "—"}</p>
-					<p className='truncate text-[10px] text-slate-500'>
+				<div className='p-3'>
+					{image.reviewed_label && (
+						<div className='flex items-center gap-1.5'>
+							<CheckCircle className='h-4 w-4 shrink-0 text-primary-600' aria-hidden />
+							<p className='truncate text-sm font-bold text-slate-900'>
+								{image.reviewed_label.replace(/_/g, " ")}
+							</p>
+						</div>
+					)}
+					<p className='text-xs text-slate-500 mt-0.5'>
 						AI: {image.predicted_condition ? image.predicted_condition.replace(/_/g, " ") : "—"}
-						{image.confidence != null && ` (${formatConfidence(image.confidence)})`}
 					</p>
+					<p className='text-xs text-slate-500'>{formatDate(image.uploaded_at)}</p>
+					{image.confidence != null && (
+						<div className='mt-2 flex items-center gap-2'>
+							<div className='h-1.5 w-14 overflow-hidden rounded-full bg-slate-200'>
+								<div
+									className={cn(
+										"h-full rounded-full transition-[width]",
+										urgency === "REFER" ? "bg-amber-500" : "bg-primary-500"
+									)}
+									style={{ width: `${Math.round(image.confidence * 100)}%` }}
+								/>
+							</div>
+							<span className='text-xs font-medium tabular-nums text-slate-600'>
+								{formatConfidence(image.confidence)}
+							</span>
+						</div>
+					)}
 				</div>
 			</CardContent>
 		</Card>
@@ -95,10 +129,8 @@ export default function ReviewQueuePage() {
 	const [tab, setTab] = useState<Tab>("pending");
 	const [skip, setSkip] = useState(0);
 	const [reviewedSkip, setReviewedSkip] = useState(0);
-	const [reviewing, setReviewing] = useState<ImageType | null>(null);
-	const [reviewingWithGradCAM, setReviewingWithGradCAM] = useState<ImageType | null>(null);
-	const [loadingGradCAM, setLoadingGradCAM] = useState(false);
-	const [showGradCAM, setShowGradCAM] = useState(true);
+	const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+	const [reviewMode, setReviewMode] = useState(false);
 	const [selectedConditionId, setSelectedConditionId] = useState("");
 	const { data, isLoading } = useUnreviewedImages({
 		skip: tab === "pending" ? skip : 0,
@@ -112,51 +144,34 @@ export default function ReviewQueuePage() {
 	const updateReview = useUpdateImageReview();
 	const { toast } = useToast();
 
-	// Fetch image with GradCAM when modal opens
-	useEffect(() => {
-		if (reviewing) {
-			setLoadingGradCAM(true);
-			fetchClient.get<ImageType>(`/api/images/${reviewing.image_id}?include_gradcam=true`)
-				.then((res) => {
-					setReviewingWithGradCAM(res.data);
-					setLoadingGradCAM(false);
-				})
-				.catch(() => {
-					setReviewingWithGradCAM(reviewing);
-					setLoadingGradCAM(false);
-				});
-		} else {
-			setReviewingWithGradCAM(null);
-		}
-	}, [reviewing]);
-
 	const items = data?.items ?? [];
 	const total = data?.total ?? 0;
-	const hasMore = skip + items.length < total;
 	const reviewedItems = reviewedData?.items ?? [];
 	const reviewedTotal = reviewedData?.total ?? 0;
-	const reviewedHasMore = reviewedSkip + reviewedItems.length < reviewedTotal;
 
 	function handleSubmitReview() {
-		if (!reviewing || !selectedConditionId) return;
+		if (!selectedImageId || !selectedConditionId) return;
 		const condition = conditions?.find((c) => c.condition_id === selectedConditionId);
 		const reviewedLabel = condition?.condition_name ?? selectedConditionId;
 		updateReview.mutate(
-			{ imageId: reviewing.image_id, reviewedLabel },
+			{ imageId: selectedImageId, reviewedLabel },
 			{
 				onSuccess: () => {
 					toast("Review submitted", "success");
-					setReviewing(null);
-					setReviewingWithGradCAM(null);
+					setSelectedImageId(null);
+					setReviewMode(false);
 					setSelectedConditionId("");
-					setShowGradCAM(true);
 				},
 				onError: () => toast("Failed to submit review", "error"),
 			},
 		);
 	}
 
-	const hasGradCAM = !!reviewingWithGradCAM?.gradcam_base64;
+	function closeModal() {
+		setSelectedImageId(null);
+		setReviewMode(false);
+		setSelectedConditionId("");
+	}
 
 	return (
 		<div className='space-y-6'>
@@ -204,7 +219,7 @@ export default function ReviewQueuePage() {
 			{tab === "pending" && (
 				<>
 					{isLoading ? (
-						<div className='grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
+						<div className='grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
 							{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
 								<Skeleton
 									key={i}
@@ -221,25 +236,26 @@ export default function ReviewQueuePage() {
 						</div>
 					) : (
 						<>
-							<div className='grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
+							<div className='grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
 								{items.map((img) => (
 									<PendingReviewCard
 										key={img.image_id}
 										image={img}
-										onReview={setReviewing}
+										onClick={() => {
+											setSelectedImageId(img.image_id);
+											setReviewMode(true);
+											setSelectedConditionId("");
+										}}
 									/>
 								))}
 							</div>
-							{hasMore && (
-								<div className='flex justify-center'>
-									<Button
-										variant='outline'
-										onClick={() => setSkip((s) => s + PAGE_SIZE)}
-									>
-										Load more
-									</Button>
-								</div>
-							)}
+							<Pagination
+								skip={skip}
+								pageSize={PAGE_SIZE}
+								total={total}
+								onPageChange={setSkip}
+								className='mt-6'
+							/>
 						</>
 					)}
 				</>
@@ -248,7 +264,7 @@ export default function ReviewQueuePage() {
 			{tab === "reviewed" && (
 				<>
 					{reviewedLoading ? (
-						<div className='grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
+						<div className='grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
 							{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
 								<Skeleton
 									key={i}
@@ -263,169 +279,61 @@ export default function ReviewQueuePage() {
 						</div>
 					) : (
 						<>
-							<div className='grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
+							<div className='grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
 								{reviewedItems.map((img) => (
 									<ReviewedCard
 										key={img.image_id}
 										image={img}
+										onClick={() => {
+											setSelectedImageId(img.image_id);
+											setReviewMode(false);
+										}}
 									/>
 								))}
 							</div>
-							{reviewedHasMore && (
-								<div className='flex justify-center'>
-									<Button
-										variant='outline'
-										onClick={() => setReviewedSkip((s) => s + PAGE_SIZE)}
-									>
-										Load more
-									</Button>
-								</div>
-							)}
+							<Pagination
+								skip={reviewedSkip}
+								pageSize={PAGE_SIZE}
+								total={reviewedTotal}
+								onPageChange={setReviewedSkip}
+								className='mt-6'
+							/>
 						</>
 					)}
 				</>
 			)}
 
-			<Modal
-				open={reviewing != null}
-				onClose={() => {
-					setReviewing(null);
-					setReviewingWithGradCAM(null);
-					setSelectedConditionId("");
-					setShowGradCAM(true);
-				}}
-				title='Review Image with AI Explainability'
-			>
-				{reviewing && (
-					<div className='space-y-4'>
-						{/* GradCAM Toggle */}
-						{!loadingGradCAM && hasGradCAM && (
-							<div className='flex gap-2'>
-								<Button
-									size='sm'
-									variant={!showGradCAM ? "default" : "outline"}
-									onClick={() => setShowGradCAM(false)}
-									className='flex-1'
-								>
-									<Eye className='mr-1.5 h-4 w-4' />
-									Original
-								</Button>
-								<Button
-									size='sm'
-									variant={showGradCAM ? "default" : "outline"}
-									onClick={() => setShowGradCAM(true)}
-									className='flex-1'
-								>
-									<Sparkles className='mr-1.5 h-4 w-4' />
-									Explainability
-								</Button>
-							</div>
-						)}
-
-						{/* Image Display */}
-						<div className='relative aspect-video w-full overflow-hidden rounded-lg bg-slate-100'>
-							{loadingGradCAM ? (
-								<div className='flex items-center justify-center h-full'>
-									<p className='text-sm text-slate-500'>Loading explainability...</p>
-								</div>
-							) : (
-								<>
-									<Image
-										src={
-											showGradCAM && hasGradCAM
-												? reviewingWithGradCAM?.gradcam_base64 || reviewing.image_url
-												: reviewing.image_url
-										}
-										alt='Review'
-										fill
-										className='object-contain'
-									/>
-									{showGradCAM && hasGradCAM && (
-										<div className='absolute top-2 right-2 rounded bg-black/70 px-2 py-1 text-xs text-white'>
-											Red = High Importance
-										</div>
-									)}
-								</>
-							)}
-						</div>
-
-						{/* AI Prediction Info */}
-						<div className='rounded-lg bg-slate-50 p-3 space-y-1'>
-							<p className='text-xs font-semibold text-slate-700'>AI Prediction</p>
-							<p className='text-sm text-slate-600'>
-								<span className='font-medium'>Condition:</span>{" "}
-								{reviewing.predicted_condition ? reviewing.predicted_condition.replace(/_/g, " ") : "—"}
-							</p>
-							<p className='text-sm text-slate-600'>
-								<span className='font-medium'>Confidence:</span>{" "}
-								{reviewing.confidence != null ? formatConfidence(reviewing.confidence) : "—"}
-							</p>
-							{reviewingWithGradCAM?.triage_stage && (
-								<p className='text-xs text-slate-500 mt-1'>
-									{reviewingWithGradCAM.triage_stage.replace(/_/g, " ").toLowerCase()}
-								</p>
-							)}
-						</div>
-
-						{/* GradCAM Metrics */}
-						{showGradCAM && reviewingWithGradCAM?.gradcam_metrics && (
-							<details className='rounded-lg bg-slate-50 p-3 text-sm'>
-								<summary className='cursor-pointer font-semibold text-slate-700 text-xs'>
-									Explainability Metrics
-								</summary>
-								<div className='mt-2 space-y-1 text-xs text-slate-600'>
-									<p>
-										Peak Location: ({reviewingWithGradCAM.gradcam_metrics.peak_activation_location.x},{" "}
-										{reviewingWithGradCAM.gradcam_metrics.peak_activation_location.y})
-									</p>
-									<p>
-										Peak Intensity:{" "}
-										{(reviewingWithGradCAM.gradcam_metrics.peak_intensity * 100).toFixed(1)}%
-									</p>
-									<p>
-										Mean Activation:{" "}
-										{(reviewingWithGradCAM.gradcam_metrics.mean_activation * 100).toFixed(1)}%
-									</p>
-								</div>
-							</details>
-						)}
-
-						{/* Your Classification */}
-						<div>
-							<label className='block text-sm font-medium text-slate-700 mb-2'>
-								Your classification
-							</label>
+			<ImageDetailModal
+				imageId={selectedImageId}
+				open={selectedImageId !== null}
+				onClose={closeModal}
+				hideActions
+				hideConditionInfo={reviewMode}
+				reviewMode={reviewMode}
+				footer={
+					reviewMode ? (
+						<div className='space-y-4'>
 							<ConditionSelect
 								value={selectedConditionId}
 								onChange={setSelectedConditionId}
 								allowCustom={true}
 							/>
+							<div className='flex justify-end gap-2'>
+								<Button variant='outline' onClick={closeModal}>
+									Cancel
+								</Button>
+								<Button
+									onClick={handleSubmitReview}
+									disabled={!selectedConditionId}
+									loading={updateReview.isPending}
+								>
+									Submit review
+								</Button>
+							</div>
 						</div>
-
-						{/* Actions */}
-						<div className='flex justify-end gap-2'>
-							<Button
-								variant='outline'
-								onClick={() => {
-									setReviewing(null);
-									setReviewingWithGradCAM(null);
-									setSelectedConditionId("");
-									setShowGradCAM(true);
-								}}
-							>
-								Cancel
-							</Button>
-							<Button
-								onClick={handleSubmitReview}
-								disabled={!selectedConditionId}
-								loading={updateReview.isPending}
-							>
-								Submit
-							</Button>
-						</div>
-					</div>
-				)}
-			</Modal>
+					) : undefined
+				}
+			/>
 		</div>
 	);
 }

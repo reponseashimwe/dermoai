@@ -12,12 +12,15 @@ interface ImageUploadZoneProps {
   consultationId: string;
   className?: string;
   compact?: boolean;
+  /** Called with the image_id of the last uploaded image when upload(s) complete successfully. */
+  onUploadSuccess?: (imageId: string) => void;
 }
 
 export function ImageUploadZone({
   consultationId,
   className,
   compact,
+  onUploadSuccess,
 }: ImageUploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -27,11 +30,14 @@ export function ImageUploadZone({
   async function handleFiles(files: FileList | null) {
     if (!files?.length) return;
     setUploading(true);
+    let lastImageId: string | undefined;
     try {
       for (const file of Array.from(files)) {
-        await upload.mutateAsync({ file, consultationId });
+        const res = await upload.mutateAsync({ file, consultationId });
+        lastImageId = res.image_id;
       }
       toast(`${files.length} image(s) uploaded`, "success");
+      if (lastImageId && onUploadSuccess) onUploadSuccess(lastImageId);
     } catch (err) {
       if (isApiError(err)) {
         toast(err.detail, "error");

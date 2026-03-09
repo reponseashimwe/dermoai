@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 interface ProgressBarProps {
   value: number; // 0-1
-  urgency?: "URGENT" | "NON_URGENT";
+  urgency?: "REFER" | "MANAGE LOCALLY" | string;
   className?: string;
   showLabel?: boolean;
 }
@@ -14,10 +14,9 @@ export function ProgressBar({
   showLabel = true,
 }: ProgressBarProps) {
   const percentage = Math.round(value * 100);
-  const barColor =
-    urgency === "URGENT"
-      ? "bg-red-500"
-      : urgency === "NON_URGENT"
+  const barColor = urgency === "REFER"
+    ? "bg-amber-500"
+    : urgency === "MANAGE LOCALLY"
       ? "bg-green-500"
       : "bg-primary-600";
 

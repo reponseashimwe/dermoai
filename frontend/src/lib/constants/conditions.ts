@@ -4,89 +4,51 @@ export interface ConditionInfo {
   recommendedAction: string;
 }
 
+/**
+ * Model conditions (Fitzpatrick V–VI, 5 classes). Matches backend class_names.json.
+ * Copy balances clarity for users with useful detail for practitioners.
+ */
 export const CONDITION_INFO: Record<string, ConditionInfo> = {
-  acne: {
-    displayName: "Acne",
+  lupus_erythematosus: {
+    displayName: "Lupus Erythematosus",
     description:
-      "A common skin condition where hair follicles become clogged with oil and dead skin cells, causing pimples, blackheads, or whiteheads.",
+      "An autoimmune condition that can affect the skin (cutaneous lupus), causing rashes, photosensitivity, and lesions such as discoid or malar rash. Often needs specialist input for diagnosis and treatment.",
     recommendedAction:
-      "Maintain good skin hygiene. Over-the-counter treatments may help. See a dermatologist for severe or persistent acne.",
+      "Specialist evaluation (dermatology or rheumatology) is usually recommended. Sun protection and topical or systemic treatment may be needed. Please see a healthcare provider for a full assessment.",
   },
-  eczema: {
-    displayName: "Eczema (Dermatitis)",
+  neurofibromatosis: {
+    displayName: "Neurofibromatosis",
     description:
-      "A condition that causes skin to become inflamed, itchy, cracked, and rough. It can appear as red or dark patches on the skin.",
+      "A genetic disorder that can cause benign neurofibromas on or under the skin and café-au-lait spots. Many patients are managed with monitoring; referral for uncertain diagnosis, change in lesions, or genetic counselling when appropriate.",
     recommendedAction:
-      "Keep skin moisturized. Avoid irritants and triggers. Consult a healthcare provider for prescription treatments if needed.",
+      "Can often be monitored by a primary or local provider. Consider referral if diagnosis is uncertain, lesions change, or for genetic counselling. Regular follow-up is recommended.",
+  },
+  pityriasis_rubra_pilaris: {
+    displayName: "Pityriasis Rubra Pilaris",
+    description:
+      "A rare skin disorder with orange-red scaling, palmoplantar keratoderma, and follicular papules; can be mistaken for psoriasis. Usually benefits from dermatology confirmation and treatment planning.",
+    recommendedAction:
+      "Specialist evaluation is recommended. A dermatologist can confirm the diagnosis and advise on treatment (e.g. topical agents, retinoids, or systemic therapy depending on type and extent).",
   },
   psoriasis: {
     displayName: "Psoriasis",
     description:
-      "An autoimmune condition that causes rapid skin cell buildup, resulting in scaling and thick, silvery patches on the skin.",
+      "An autoimmune condition causing scaling and thick, silvery or red plaques, commonly on elbows, knees, and scalp. Severity varies; mild disease is often managed in primary care; moderate–severe or joint involvement may need specialist care.",
     recommendedAction:
-      "Consult a dermatologist for proper management. Topical treatments, phototherapy, or systemic medications may be recommended.",
+      "Mild cases can often be managed locally (topical steroids, emollients). Consider referral for widespread disease, joint involvement, or inadequate response; phototherapy or systemic agents may be needed.",
   },
-  melanoma: {
-    displayName: "Melanoma",
+  scabies: {
+    displayName: "Scabies",
     description:
-      "A serious type of skin cancer that develops in the cells that give skin its color. Early detection is critical for treatment.",
+      "Contagious infestation (Sarcoptes scabiei) causing intense itch and burrows, often in finger webs, wrists, and flexures. Treatable with topical permethrin or oral ivermectin; contacts and bedding should be addressed.",
     recommendedAction:
-      "URGENT: Seek immediate medical attention. Early detection and treatment are essential. Do not delay consultation.",
-  },
-  basal_cell_carcinoma: {
-    displayName: "Basal Cell Carcinoma",
-    description:
-      "The most common type of skin cancer. It usually appears as a slightly transparent bump on sun-exposed skin.",
-    recommendedAction:
-      "URGENT: Consult a dermatologist promptly for biopsy and treatment. Treatment is usually highly effective when caught early.",
-  },
-  squamous_cell_carcinoma: {
-    displayName: "Squamous Cell Carcinoma",
-    description:
-      "A common form of skin cancer that develops in the squamous cells of the outer layer of the skin.",
-    recommendedAction:
-      "URGENT: Seek medical evaluation promptly. Treatment options include surgical removal and other procedures.",
-  },
-  fungal_infection: {
-    displayName: "Fungal Infection",
-    description:
-      "A skin infection caused by fungi, which can cause itching, redness, and scaling. Common types include ringworm and athlete's foot.",
-    recommendedAction:
-      "Antifungal medications (topical or oral) are usually effective. Keep the affected area clean and dry. See a provider if it persists.",
-  },
-  benign_lesion: {
-    displayName: "Benign Lesion",
-    description:
-      "A non-cancerous growth or mark on the skin. Common types include moles, skin tags, and seborrheic keratoses.",
-    recommendedAction:
-      "Generally no treatment needed. Monitor for any changes in size, shape, or color. Consult a doctor if changes occur.",
-  },
-  viral_infection: {
-    displayName: "Viral Infection",
-    description:
-      "A skin condition caused by a virus, such as warts, herpes simplex, or molluscum contagiosum.",
-    recommendedAction:
-      "Many viral skin infections resolve on their own. Consult a healthcare provider for treatment options if symptomatic.",
-  },
-  allergic_reaction: {
-    displayName: "Allergic Reaction",
-    description:
-      "A skin response to an allergen, causing redness, itching, swelling, or hives. Can range from mild to severe.",
-    recommendedAction:
-      "Identify and avoid the trigger. Antihistamines may provide relief. Seek emergency care if there is difficulty breathing or swelling.",
-  },
-  pigmentation_disorder: {
-    displayName: "Pigmentation Disorder",
-    description:
-      "Conditions that affect skin color, including vitiligo and melasma. These cause lighter or darker patches on the skin.",
-    recommendedAction:
-      "Consult a dermatologist for evaluation. Treatment options vary depending on the specific condition and its severity.",
+      "Usually managed locally with prescription treatment (e.g. permethrin or ivermectin); treat close contacts and wash bedding. Refer if diagnosis uncertain, treatment failure, or crusted scabies suspected.",
   },
   other: {
     displayName: "Other / Unclassified",
     description:
-      "The condition could not be confidently classified into a specific category. Further clinical evaluation is recommended.",
+      "The image could not be confidently matched to a specific condition. Further clinical evaluation is recommended.",
     recommendedAction:
-      "Please consult a healthcare provider for proper evaluation and diagnosis.",
+      "Please see a healthcare provider for evaluation and diagnosis.",
   },
 };

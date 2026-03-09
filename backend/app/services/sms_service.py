@@ -78,7 +78,7 @@ async def send_urgent_alert(
         return {"status": "no_recipients"}
 
     message = (
-        f"DermoAI URGENT: New {condition} case requires specialist review. "
+        f"DermoAI REFER: New {condition} case requires specialist review. "
         f"Consultation ID: {str(consultation_id)[:8]}. Please log in to review."
     )
 

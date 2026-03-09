@@ -198,6 +198,19 @@ async def get_teleconsultation(
     return teleconsultation
 
 
+async def list_by_consultation(
+    consultation_id: uuid.UUID,
+    db: AsyncSession,
+) -> list[Teleconsultation]:
+    """List all teleconsultations for a consultation (any status)."""
+    result = await db.execute(
+        select(Teleconsultation)
+        .where(Teleconsultation.consultation_id == consultation_id)
+        .order_by(Teleconsultation.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
 async def list_pending_for_specialist(
     specialist_id: uuid.UUID,
     db: AsyncSession,

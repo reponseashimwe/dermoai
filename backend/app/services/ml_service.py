@@ -272,6 +272,8 @@ def predict_with_gradcam(image_url: str, layer_name: str = "top_conv") -> dict:
         prediction_details["gradcam_base64"] = gradcam_data["gradcam_base64"]
         prediction_details["gradcam_metrics"] = gradcam_data["gradcam_metrics"]
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception("GradCAM failed for %s: %s", image_url[:80] if image_url else image_url, e)
         # If GradCAM fails, still return prediction (graceful degradation)
         prediction_details["gradcam_base64"] = None
         prediction_details["gradcam_metrics"] = None

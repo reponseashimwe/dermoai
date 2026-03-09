@@ -13,7 +13,7 @@ const BINS = [
   { key: "low" as const, label: "Low (<40%)", color: "bg-red-500" },
   { key: "medium" as const, label: "Medium (40-60%)", color: "bg-amber-500" },
   { key: "good" as const, label: "Good (60-80%)", color: "bg-blue-500" },
-  { key: "high" as const, label: "High (>80%)", color: "bg-green-500" },
+  { key: "high" as const, label: "High (>80%)", color: "bg-primary-500" },
 ];
 
 export function ConfidenceDistributionChart({ data, embedded = false }: ConfidenceDistributionChartProps) {

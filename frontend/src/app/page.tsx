@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Logo } from "@/components/layout/logo";
-import { ScanUploadForm } from "@/components/scan/scan-upload-form";
+import { ScanUploadForm, type ScanUploadFormHandle } from "@/components/scan/scan-upload-form";
+import { ImageDetailContent } from "@/components/images/image-detail-content";
 import { Avatar } from "@/components/ui/avatar";
-import { Shield, Zap, Stethoscope, ArrowRight } from "lucide-react";
+import { Shield, Zap, Stethoscope, ArrowRight, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useSaveQuickScanToConsultation } from "@/hooks/use-save-quick-scan-to-consultation";
+import { useToast } from "@/components/ui/toast";
+import { isApiError } from "@/lib/api/errors";
+import type { QuickScanResponse } from "@/types/api";
 
 const features = [
 	{
@@ -32,15 +37,96 @@ const features = [
 export default function HomePage() {
 	const { user, isLoading } = useAuth();
 	const router = useRouter();
+	const { toast } = useToast();
+	const [scanResult, setScanResult] = useState<QuickScanResponse | null>(null);
+	const scanFormRef = useRef<ScanUploadFormHandle>(null);
+	const resultSectionRef = useRef<HTMLDivElement>(null);
+	const saveToConsultation = useSaveQuickScanToConsultation();
 
+	// Redirect logged-in users to dashboard only when they have no scan result (so they can complete a quick scan first)
 	useEffect(() => {
-		if (!isLoading && user) {
+		if (!isLoading && user && !scanResult) {
 			router.replace("/dashboard");
 		}
-	}, [isLoading, user, router]);
+	}, [isLoading, user, scanResult, router]);
 
-	if (!isLoading && user) {
+	function handleScanAgain() {
+		setScanResult(null);
+		scanFormRef.current?.reset();
+		if (typeof window !== "undefined") {
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+	}
+
+	async function handleCreateConsultation() {
+		if (!scanResult) return;
+		if (!user) {
+			router.push("/login");
+			toast("Sign in to create a consultation from this scan.", "info");
+			return;
+		}
+		try {
+			const consultation = await saveToConsultation.mutateAsync({
+				imageId: scanResult.image_id,
+			});
+			router.push(`/consultations/${consultation.consultation_id}`);
+			toast("Consultation created. Your scan has been saved.", "success");
+		} catch (err) {
+			toast(
+				isApiError(err) ? err.detail : "Failed to create consultation. Please try again.",
+				"error"
+			);
+		}
+	}
+
+	if (!isLoading && user && !scanResult) {
 		return null;
+	}
+
+	// When we have a result, show only the result (no hero) — one viewport, scroll inside content
+	if (scanResult) {
+		return (
+			<div className='flex h-screen flex-col bg-white'>
+				<header className='flex shrink-0 items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8'>
+					<Logo size='sm' />
+					<div className='flex flex-wrap items-center justify-end gap-2'>
+						<Button
+							size='sm'
+							onClick={handleCreateConsultation}
+							disabled={saveToConsultation.isPending}
+							loading={saveToConsultation.isPending}
+						>
+							Create consultation
+						</Button>
+						<Button variant='outline' size='sm' onClick={handleScanAgain}>
+							<Scan className='mr-2 h-4 w-4' />
+							Scan again
+						</Button>
+					</div>
+				</header>
+				<div
+					ref={resultSectionRef}
+					className='min-h-0 flex-1 overflow-y-auto'
+				>
+					<div className='mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10'>
+						<ImageDetailContent image={scanResult} />
+						<div className='mt-8 flex flex-wrap justify-center gap-3 pb-8'>
+							<Button
+								onClick={handleCreateConsultation}
+								disabled={saveToConsultation.isPending}
+								loading={saveToConsultation.isPending}
+							>
+								Create consultation
+							</Button>
+							<Button variant='outline' onClick={handleScanAgain} className='min-w-[180px]'>
+								<Scan className='mr-2 h-4 w-4' />
+								Scan again
+							</Button>
+						</div>
+					</div>
+				</div>
+			</div>
+		);
 	}
 
 	return (
@@ -65,55 +151,64 @@ export default function HomePage() {
 					<div className='flex min-h-0 flex-1 flex-col items-center justify-center'>
 						<div className='mb-4 text-center'>
 							<h1 className='text-2xl font-bold text-slate-900'>
-								AI Skin <span className='text-primary-500'>Triage</span>
+								AI Skin Triage <span className='text-primary-600'>for Everyone.</span>
 							</h1>
-							<p className='mt-1 text-sm text-slate-500'>Upload an image for instant analysis</p>
+							<p className='mt-1 text-sm text-slate-500'>
+								Instant dermatological analysis powered by deep learning — optimised for darker skin tones
+								and low-resource clinics.
+							</p>
 						</div>
 						<div className='w-full max-w-md'>
-							<h2 className='mb-5 text-center text-base font-semibold text-slate-800'>Quick Skin Scan</h2>
-							<ScanUploadForm />
-							<p className='mt-4 text-center text-xs text-slate-400'>
-								No account required. Results are for educational purposes only.
+							<h2 className='mb-1 text-center text-base font-semibold text-slate-900'>Quick Skin Scan</h2>
+							<p className='mb-4 text-center text-xs font-medium text-emerald-700'>
+								Free · No login required
+							</p>
+							<ScanUploadForm
+								ref={scanFormRef}
+								resultDisplay="fullPage"
+								onResultReady={setScanResult}
+								onScanAgain={handleScanAgain}
+							/>
+							<p className='mt-4 text-center text-xs text-slate-500'>
+								No account required. Results support triage only — for diagnosis or treatment, connect
+								with a clinician via teleconsultation inside DermoAI.
 							</p>
 						</div>
 					</div>
 				</main>
 			</div>
 
-			{/* Desktop: relative wrapper + absolute full-viewport backgrounds (left gray, right white), content in max-w-7xl above */}
+			{/* Desktop: hero + form only (no result section; result replaces whole page) */}
 			<div className='relative hidden min-h-screen w-full lg:block'>
-				{/* Absolute backgrounds — full viewport, behind content */}
 				<div
 					className='absolute inset-0 z-0 flex flex-row pointer-events-none'
 					aria-hidden
 				>
-					<div className='absolute left-0 top-0 h-full w-1/2 bg-slate-50' />
+					<div className='absolute left-0 top-0 h-full w-1/2 bg-slate-100' />
 					<div
-						className='absolute right-0 top-0 h-full w-1/2'
-						style={{ backgroundColor: "#ffffff" }}
+						className='absolute right-0 top-0 h-full w-1/2 bg-white'
 					/>
 				</div>
-				{/* Content layer — max-w-7xl only affects this, backgrounds already full bleed */}
 				<div className='relative z-10 flex min-h-screen justify-center'>
 					<div className='flex w-full max-w-7xl flex-row'>
-						{/* Left column — no bg here, absolute handles it */}
 						<div className='flex w-1/2 flex-col'>
 							<header className='flex min-h-[72px] shrink-0 items-center px-6 py-5 lg:min-h-[80px] lg:px-8 lg:py-6'>
 								<Logo size='sm' />
 							</header>
 							<div className='flex flex-1 flex-col justify-center overflow-auto px-6 pr-12 lg:px-8 lg:pr-16'>
 								<div>
-									<span className='inline-block rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-600'>
-										Made for Africa
+									<span className='inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700'>
+										<span className='h-1.5 w-1.5 rounded-full bg-primary-500' />
+										Made for Africa · Fitzpatrick V–VI
 									</span>
 									<h1 className='mt-4 text-4xl font-bold leading-tight text-slate-900 xl:text-5xl'>
 										AI Skin Triage
 										<br />
-										<span className='text-primary-500'>for Everyone</span>
+										<span className='text-primary-600'>for Everyone.</span>
 									</h1>
 									<p className='mt-4 max-w-md text-slate-500'>
-										Get instant dermatological analysis powered by AI — optimized for darker skin
-										tones, designed for resource-limited settings.
+										Instant dermatological analysis powered by deep learning — optimised for darker
+										skin tones and built for resource-limited clinics across Sub-Saharan Africa.
 									</p>
 								</div>
 								<div className='mt-10 space-y-4'>
@@ -148,19 +243,13 @@ export default function HomePage() {
 							</div>
 						</div>
 
-						{/* Right column — no bg here, absolute handles it */}
 						<div className='flex w-1/2 flex-col'>
 							<header className='flex min-h-[72px] shrink-0 items-center justify-end px-6 py-5 lg:min-h-[80px] lg:px-8 lg:py-6'>
 								<div className='flex items-center gap-4'>
 									{!isLoading && !user && (
 										<>
 											<Link href='/login'>
-												<Button
-													variant='ghost'
-													size='sm'
-												>
-													Sign in
-												</Button>
+												<Button variant='ghost' size='sm'>Sign in</Button>
 											</Link>
 											<Link href='/register'>
 												<Button size='sm'>Get Started</Button>
@@ -172,15 +261,8 @@ export default function HomePage() {
 											<Link href='/consultations'>
 												<Button size='sm'>Dashboard</Button>
 											</Link>
-											<Link
-												href='/profile'
-												className='flex items-center'
-												aria-label='Profile'
-											>
-												<Avatar
-													name={user.name}
-													size='md'
-												/>
+											<Link href='/profile' className='flex items-center' aria-label='Profile'>
+												<Avatar name={user.name} size='md' />
 											</Link>
 										</>
 									)}
@@ -188,10 +270,17 @@ export default function HomePage() {
 							</header>
 							<div className='flex flex-1 flex-col items-center justify-center overflow-auto pl-12 lg:pl-16'>
 								<div className='w-full max-w-md px-6 lg:px-8'>
-									<h2 className='mb-5 text-base font-semibold text-slate-800'>Quick Skin Scan</h2>
-									<ScanUploadForm />
-									<p className='mt-4 text-xs text-slate-400'>
-										No account required. Results are for educational purposes only.
+									<h2 className='mb-1 text-base font-semibold text-slate-900'>Quick Skin Scan</h2>
+									<p className='mb-4 text-xs font-medium text-emerald-700'>Free · No login required</p>
+									<ScanUploadForm
+										ref={scanFormRef}
+										resultDisplay="fullPage"
+										onResultReady={setScanResult}
+										onScanAgain={handleScanAgain}
+									/>
+									<p className='mt-4 text-xs text-slate-500'>
+										No account required. Results support triage only — for diagnosis or treatment,
+										you can connect with a specialist through teleconsultation in DermoAI.
 									</p>
 								</div>
 							</div>

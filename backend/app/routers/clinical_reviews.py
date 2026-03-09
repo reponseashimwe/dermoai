@@ -10,7 +10,7 @@ from app.core.deps import get_current_active_practitioner, get_current_user
 from app.models.consultation import Consultation
 from app.models.practitioner import Practitioner
 from app.models.user import User
-from app.schemas.clinical_review import ClinicalReviewCreate, ClinicalReviewRead
+from app.schemas.clinical_review import ClinicalReviewCreate, ClinicalReviewRead, ClinicalReviewUpdate
 from app.services import clinical_review_service
 
 router = APIRouter(prefix="/api/clinical-reviews", tags=["clinical-reviews"])
@@ -68,3 +68,15 @@ async def get_review(
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     return await clinical_review_service.get_review(review_id, db)
+
+
+@router.put("/{review_id}", response_model=ClinicalReviewRead)
+async def update_review(
+    review_id: UUID,
+    data: ClinicalReviewUpdate,
+    practitioner: Annotated[Practitioner, Depends(get_current_active_practitioner)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    return await clinical_review_service.update_review(
+        review_id, data, practitioner.practitioner_id, db
+    )

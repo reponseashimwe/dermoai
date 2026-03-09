@@ -4,19 +4,22 @@ import { useConsultationReviews } from "@/hooks/use-clinical-reviews";
 import { ReviewCard } from "./review-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClipboardList } from "lucide-react";
+import type { ClinicalReview, Practitioner } from "@/types/api";
 
 interface ReviewListProps {
   consultationId: string;
+  currentPractitioner?: Practitioner | null;
+  onEditReview?: (review: ClinicalReview) => void;
 }
 
-export function ReviewList({ consultationId }: ReviewListProps) {
+export function ReviewList({ consultationId, currentPractitioner, onEditReview }: ReviewListProps) {
   const { data: reviews, isLoading } = useConsultationReviews(consultationId);
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {[1, 2].map((i) => (
-          <Skeleton key={i} className="h-32 w-full" />
+          <Skeleton key={i} className="h-24 w-full" />
         ))}
       </div>
     );
@@ -41,7 +44,12 @@ export function ReviewList({ consultationId }: ReviewListProps) {
   return (
     <div className="space-y-3">
       {sorted.map((review) => (
-        <ReviewCard key={review.review_id} review={review} />
+        <ReviewCard
+          key={review.review_id}
+          review={review}
+          currentPractitioner={currentPractitioner}
+          onEdit={onEditReview}
+        />
       ))}
     </div>
   );

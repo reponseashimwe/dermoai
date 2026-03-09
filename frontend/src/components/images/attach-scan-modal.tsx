@@ -16,12 +16,15 @@ interface AttachScanModalProps {
   open: boolean;
   onClose: () => void;
   consultationId: string;
+  /** Called with the attached image id when attach succeeds. Use to e.g. open image detail. */
+  onAttachSuccess?: (imageId: string) => void;
 }
 
 export function AttachScanModal({
   open,
   onClose,
   consultationId,
+  onAttachSuccess,
 }: AttachScanModalProps) {
   const { data: scans, isLoading } = useScanHistory();
   const attach = useAttachImage();
@@ -33,6 +36,7 @@ export function AttachScanModal({
     try {
       await attach.mutateAsync({ imageId: selected, consultationId });
       toast("Scan attached to consultation", "success");
+      onAttachSuccess?.(selected);
       onClose();
     } catch {
       toast("Failed to attach scan", "error");
