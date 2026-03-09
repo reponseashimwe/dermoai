@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import case, distinct, func, select
+from sqlalchemy import case, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.appointment_request import AppointmentRequest
 from app.models.clinical_review import ClinicalReview
 from app.models.consultation import Consultation
+from app.models.teleconsultation import Teleconsultation
 from app.models.image import Image
 from app.models.patient import Patient
 from app.models.practitioner import Practitioner
@@ -21,6 +23,9 @@ from app.schemas.stats import (
     OutcomeByDisposition,
     PractitionerStatsResponse,
     RecentActivityItem,
+    TelemedStats,
+    TelemedStatusBreakdown,
+    TopCondition,
     UserStatsResponse,
 )
 
@@ -30,35 +35,35 @@ def _utc_now() -> datetime:
 
 
 async def _calculate_model_performance_stats(db: AsyncSession) -> ModelPerformanceStats:
-    """Calculate ML model performance metrics from consultations."""
-    # Total predictions (consultations with predicted conditions)
+    """Calculate ML model performance metrics from analyzed images."""
+    # Total predictions (all images that have been analyzed by the model)
     result = await db.execute(
         select(func.count())
-        .select_from(Consultation)
-        .where(Consultation.final_predicted_condition.isnot(None))
+        .select_from(Image)
+        .where(Image.predicted_condition.isnot(None))
     )
     total_predictions = result.scalar() or 0
 
-    # Average confidence
+    # Average confidence (from all analyzed images)
     result = await db.execute(
-        select(func.avg(Consultation.final_confidence))
-        .select_from(Consultation)
-        .where(Consultation.final_confidence.isnot(None))
+        select(func.avg(Image.confidence))
+        .select_from(Image)
+        .where(Image.confidence.isnot(None))
     )
     avg_confidence = result.scalar() or 0.0
 
-    # Confidence trend (last 8 weeks) — use single expression for GROUP BY to avoid PostgreSQL GroupingError
+    # Confidence trend (last 8 weeks) — use images, not consultations
     eight_weeks_ago = _utc_now() - timedelta(weeks=8)
-    week_trunc = func.date_trunc("week", Consultation.created_at)
+    week_trunc = func.date_trunc("week", Image.uploaded_at)
     trend_result = await db.execute(
         select(
             week_trunc.label("week"),
-            func.avg(Consultation.final_confidence).label("avg_confidence"),
+            func.avg(Image.confidence).label("avg_confidence"),
             func.count().label("count"),
         )
         .where(
-            Consultation.created_at >= eight_weeks_ago,
-            Consultation.final_confidence.isnot(None),
+            Image.uploaded_at >= eight_weeks_ago,
+            Image.confidence.isnot(None),
         )
         .group_by(week_trunc)
         .order_by(week_trunc)
@@ -72,18 +77,18 @@ async def _calculate_model_performance_stats(db: AsyncSession) -> ModelPerforman
         for row in trend_result
     ]
 
-    # Low confidence count (< 0.6)
+    # Low confidence count (< 0.6) from all analyzed images
     result = await db.execute(
         select(func.count())
-        .select_from(Consultation)
-        .where(Consultation.final_confidence < 0.6)
+        .select_from(Image)
+        .where(Image.confidence < 0.6, Image.confidence.isnot(None))
     )
     low_confidence_count = result.scalar() or 0
 
-    # Confidence distribution
+    # Confidence distribution (from all analyzed images)
     result = await db.execute(
-        select(Consultation.final_confidence)
-        .where(Consultation.final_confidence.isnot(None))
+        select(Image.confidence)
+        .where(Image.confidence.isnot(None))
     )
     confidences = [row[0] for row in result.all()]
     
@@ -145,7 +150,7 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
     pending_approvals = result.scalar() or 0
 
     result = await db.execute(
-        select(func.count()).select_from(Consultation).where(Consultation.urgency == "URGENT")
+        select(func.count()).select_from(Consultation).where(Consultation.urgency == "REFER")
     )
     urgent_cases = result.scalar() or 0
 
@@ -183,6 +188,7 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
         .group_by(Consultation.disposition)
     )
     disp_data = {row.disposition or "not_set": row.count for row in disp_result}
+    
     disposition_stats = DispositionStats(
         treated_locally=disp_data.get("TREATED_LOCALLY", 0),
         telemedicine_only=disp_data.get("TELEMEDICINE_ONLY", 0),
@@ -241,6 +247,51 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
     # Model performance stats
     model_stats = await _calculate_model_performance_stats(db)
 
+    # Telemedicine stats: totals + status buckets
+    tc_result = await db.execute(select(func.count()).select_from(Teleconsultation))
+    teleconsultations_total = tc_result.scalar() or 0
+
+    apt_result = await db.execute(select(func.count()).select_from(AppointmentRequest))
+    appointments_total = apt_result.scalar() or 0
+
+    # Status breakdown for teleconsultations (using actual TC statuses)
+    tc_status_result = await db.execute(
+        select(Teleconsultation.status, func.count().label("count"))
+        .select_from(Teleconsultation)
+        .group_by(Teleconsultation.status)
+    )
+    tc_status_data = {row.status: row.count for row in tc_status_result}
+
+    telemed_status = TelemedStatusBreakdown(
+        completed=tc_status_data.get("COMPLETED", 0),
+        pending=tc_status_data.get("PENDING", 0),
+        active=tc_status_data.get("ACTIVE", 0),
+    )
+
+    telemed_stats = TelemedStats(
+        teleconsultations_total=teleconsultations_total,
+        appointments_total=appointments_total,
+        status=telemed_status,
+    )
+
+    # Conditions breakdown from all analyzed images (not just consultations)
+    top_conditions: list[TopCondition] = []
+    top_result = await db.execute(
+        select(Image.predicted_condition, func.count().label("count"))
+        .where(Image.predicted_condition.isnot(None))
+        .group_by(Image.predicted_condition)
+        .order_by(func.count().desc())
+    )
+    for row in top_result:
+        if not row.predicted_condition:
+            continue
+        top_conditions.append(
+            TopCondition(
+                name=row.predicted_condition,
+                count=row.count,
+            )
+        )
+
     return AdminStatsResponse(
         total_users=total_users,
         total_practitioners=total_practitioners,
@@ -257,6 +308,8 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
         consent_stats=consent_stats,
         outcome_by_disposition=outcome_by_disposition,
         model_stats=model_stats,
+        telemed_stats=telemed_stats,
+        top_conditions=top_conditions,
     )
 
 
@@ -266,17 +319,49 @@ async def get_practitioner_stats(practitioner_id: UUID, db: AsyncSession) -> Pra
     )
     my_reviews = result.scalar() or 0
 
-    # Consultations that are OPEN or IN_REVIEW (all, for "pending" workload)
-    result = await db.execute(
-        select(func.count())
-        .select_from(Consultation)
-        .where(Consultation.status.in_(["OPEN", "IN_REVIEW"]))
+    # Practitioner's user_id for "created by me"
+    pract_user_result = await db.execute(
+        select(Practitioner.user_id).where(Practitioner.practitioner_id == practitioner_id)
     )
+    pract_user_row = pract_user_result.one_or_none()
+    user_id = pract_user_row[0] if pract_user_row else None
+
+    tc_consultation_ids = (
+        select(Teleconsultation.consultation_id).where(
+            Teleconsultation.consultation_id.isnot(None),
+            or_(
+                Teleconsultation.specialist_id == practitioner_id,
+                Teleconsultation.practitioner_id == practitioner_id,
+            ),
+        )
+    )
+    apt_consultation_ids = (
+        select(AppointmentRequest.consultation_id).where(
+            AppointmentRequest.consultation_id.isnot(None),
+            AppointmentRequest.specialist_id == practitioner_id,
+        )
+    )
+
+    base_filter = Consultation.status.in_(["OPEN", "IN_REVIEW"])
+    if user_id is not None:
+        my_consultation_filter = or_(
+            Consultation.created_by == user_id,
+            Consultation.consultation_id.in_(tc_consultation_ids.scalar_subquery()),
+            Consultation.consultation_id.in_(apt_consultation_ids.scalar_subquery()),
+        )
+        base_filter = base_filter & my_consultation_filter
+    result = await db.execute(select(func.count()).select_from(Consultation).where(base_filter))
     pending_consultations = result.scalar() or 0
 
-    result = await db.execute(
-        select(func.count()).select_from(Consultation).where(Consultation.urgency == "URGENT")
-    )
+    # To Refer: my consultations with REFER urgency (any status)
+    refer_filter = Consultation.urgency == "REFER"
+    if user_id is not None:
+        refer_filter = refer_filter & or_(
+            Consultation.created_by == user_id,
+            Consultation.consultation_id.in_(tc_consultation_ids.scalar_subquery()),
+            Consultation.consultation_id.in_(apt_consultation_ids.scalar_subquery()),
+        )
+    result = await db.execute(select(func.count()).select_from(Consultation).where(refer_filter))
     urgent_cases = result.scalar() or 0
 
     # Distinct patients from consultations this practitioner has reviewed
@@ -318,7 +403,11 @@ async def get_user_stats(user_id: UUID, db: AsyncSession) -> UserStatsResponse:
     result = await db.execute(
         select(func.count())
         .select_from(Consultation)
-        .where(Consultation.created_by == user_id, Consultation.urgency == "URGENT")
+        .where(
+            Consultation.created_by == user_id,
+            Consultation.urgency == "REFER",
+            Consultation.status != "CLOSED",
+        )
     )
     urgent_alerts = result.scalar() or 0
 

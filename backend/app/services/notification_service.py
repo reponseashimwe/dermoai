@@ -66,7 +66,7 @@ async def notify_urgent_case(
             continue
 
         message = (
-            f"URGENT case detected — Consultation {consultation.consultation_id}: "
+            f"REFER case detected — Consultation {consultation.consultation_id}: "
             f"{consultation.final_predicted_condition} "
             f"(confidence: {consultation.final_confidence})"
         )

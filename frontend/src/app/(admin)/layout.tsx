@@ -15,12 +15,12 @@ export default function AdminLayout({
 
   return (
     <AuthGuard requiredRoles={["ADMIN"]}>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-neutral-100">
         <Sidebar user={user} />
 
-        <div className="md:ml-[80px]">
+        <div className="md:ml-[100px]">
           <DashboardHeader />
-          <main className="px-4 py-6 pb-20 md:px-6 md:pb-6">
+          <main className="min-h-[calc(100vh-3.5rem)] px-4 py-6 pb-20 md:px-6 md:pb-6">
             {children}
           </main>
         </div>

@@ -7,6 +7,8 @@ import {
   createConsultation,
   updateConsultation,
   setConsultationImagesConsent,
+  closeConsultation as closeConsultationApi,
+  reopenConsultation as reopenConsultationApi,
 } from "@/lib/api/consultations";
 import type { ConsultationCreate, ConsultationUpdate } from "@/types/api";
 
@@ -66,6 +68,32 @@ export function useSetConsultationImagesConsent() {
       });
       queryClient.invalidateQueries({
         queryKey: ["images", "reviewed"],
+      });
+    },
+  });
+}
+
+export function useCloseConsultation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (consultationId: string) => closeConsultationApi(consultationId),
+    onSuccess: (_, consultationId) => {
+      queryClient.invalidateQueries({ queryKey: ["consultations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["consultations", consultationId],
+      });
+    },
+  });
+}
+
+export function useReopenConsultation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (consultationId: string) => reopenConsultationApi(consultationId),
+    onSuccess: (_, consultationId) => {
+      queryClient.invalidateQueries({ queryKey: ["consultations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["consultations", consultationId],
       });
     },
   });

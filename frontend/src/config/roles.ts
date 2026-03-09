@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Users,
   History,
-  ShieldCheck,
   UserCog,
   Database,
   Bell,
@@ -25,22 +24,23 @@ export interface NavItem {
   roles?: AppRole[];
   /** Show only when practitioner_type === "SPECIALIST" */
   specialistOnly?: boolean;
+  /** Hide when practitioner_type === "SPECIALIST" */
+  specialistHide?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/scan-history", label: "Scans", icon: History, roles: ["USER", "PRACTITIONER"] },
   { href: "/consultations", label: "Consults", icon: ClipboardList, roles: ["USER", "PRACTITIONER"] },
-  { href: "/patients", label: "Patients", icon: Users, roles: ["PRACTITIONER"] },
+  { href: "/patients", label: "Patients", icon: Users, roles: ["PRACTITIONER"], specialistHide: true },
   { href: "/review-queue", label: "Review", icon: CheckSquare, roles: ["PRACTITIONER"], specialistOnly: true },
-  { href: "/appointments", label: "Appointments", icon: Calendar, roles: ["PRACTITIONER"] },
+  { href: "/appointments", label: "Schedules", icon: Calendar, roles: ["PRACTITIONER"] },
   { href: "/schedules", label: "Schedules", icon: Calendar, roles: ["USER"] },
   { href: "/telemedicine", label: "Call", icon: Video, roles: ["USER", "PRACTITIONER"] },
   { href: "/notifications", label: "Alerts", icon: Bell, roles: ["USER", "PRACTITIONER"] },
 ];
 
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  { href: "/admin", label: "Admin", icon: ShieldCheck, roles: ["ADMIN"] },
   { href: "/admin/images", label: "Images", icon: ImageIcon, roles: ["ADMIN"] },
   { href: "/admin/practitioners", label: "Doctors", icon: UserCog, roles: ["ADMIN"] },
   { href: "/admin/users", label: "Users", icon: Users, roles: ["ADMIN"] },
@@ -62,7 +62,7 @@ export const DASHBOARD_CONFIG: Record<AppRole, DashboardConfig> = {
     primaryActionIcon: ScanLine,
   },
   PRACTITIONER: {
-    description: "Your practice overview and urgent cases",
+    description: "Your practice overview and cases to refer",
     primaryActionLabel: "New Consultation",
     primaryActionHref: "/consultations/new",
     primaryActionIcon: ClipboardList,
@@ -100,6 +100,7 @@ export function getVisibleNavItems(
   return NAV_ITEMS.filter((item) => {
     if (item.roles && !item.roles.includes(role)) return false;
     if (item.specialistOnly && !isSpecialist) return false;
+    if (item.specialistHide && isSpecialist) return false;
     return true;
   });
 }

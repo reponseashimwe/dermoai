@@ -22,6 +22,7 @@ class ConsultationRead(BaseModel):
     outcome_verified: bool | None = None
     created_at: datetime
     has_appointments: bool = False
+    has_teleconsultation: bool = False
 
     model_config = {"from_attributes": True}
 

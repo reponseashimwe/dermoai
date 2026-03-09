@@ -1,8 +1,11 @@
+import logging
 from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import func, or_, select
+
+logger = logging.getLogger(__name__)
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.consultation import Consultation
@@ -134,7 +137,7 @@ async def upload_to_consultation(
     # Re-aggregate consultation ML results
     consultation = await consultation_service.update_ml_results(consultation_id, db)
 
-    if consultation.urgency == "URGENT":
+    if consultation.urgency == "REFER":
         await notification_service.notify_urgent_case(consultation, db)
 
     return image
@@ -162,7 +165,7 @@ async def attach_to_consultation(
     # Re-aggregate consultation ML results
     consultation = await consultation_service.update_ml_results(consultation_id, db)
 
-    if consultation.urgency == "URGENT":
+    if consultation.urgency == "REFER":
         await notification_service.notify_urgent_case(consultation, db)
 
     return image
@@ -196,7 +199,7 @@ async def get_image_with_gradcam(
 
     if include_gradcam and image.predicted_condition:
         try:
-            # Generate GradCAM on-the-fly
+            # Generate GradCAM on-the-fly (same as quick scan)
             prediction = ml_service.predict_with_gradcam(image.image_url)
 
             # Attach as transient attributes (not persisted)
@@ -205,8 +208,13 @@ async def get_image_with_gradcam(
             image.triage_stage = prediction.get("triage_stage")
             image.gradcam_base64 = prediction.get("gradcam_base64")
             image.gradcam_metrics = prediction.get("gradcam_metrics")
-        except Exception:
-            # If GradCAM fails, return image without it
+        except Exception as e:
+            logger.exception(
+                "GradCAM generation failed for image_id=%s url=%s: %s",
+                image_id,
+                image.image_url[:80] if image.image_url else None,
+                e,
+            )
             image.gradcam_base64 = None
             image.gradcam_metrics = None
 
@@ -227,23 +235,36 @@ async def list_for_consultation(
 async def update_image_consent(
     image_id: UUID, consent: bool, user_id: UUID, db: AsyncSession
 ) -> Image:
-    """Update consent for a single image. Only owner can modify."""
-    result = await db.execute(select(Image).where(Image.image_id == image_id))
+    """Update consent for a single image. Owner, consultation creator, or consultation patient can modify."""
+    from sqlalchemy.orm import selectinload
+
+    result = await db.execute(
+        select(Image).where(Image.image_id == image_id)
+    )
     image = result.scalar_one_or_none()
     if not image:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
         )
-    if image.source == "QUICK_SCAN" and image.uploaded_by != user_id:
+    allowed = False
+    if image.uploaded_by == user_id:
+        allowed = True
+    elif image.consultation_id:
+        consultation = await db.execute(
+            select(Consultation)
+            .options(selectinload(Consultation.patient))
+            .where(Consultation.consultation_id == image.consultation_id)
+        )
+        cons = consultation.scalar_one_or_none()
+        if cons:
+            if cons.created_by == user_id:
+                allowed = True
+            elif cons.patient and cons.patient.user_id == user_id:
+                allowed = True  # patient consenting for their own consultation
+    if not allowed:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
         )
-    if image.consultation_id:
-        consultation = await db.get(Consultation, image.consultation_id)
-        if consultation and consultation.created_by != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
-            )
     image.consent_to_reuse = consent
     await db.commit()
     await db.refresh(image)
@@ -279,14 +300,10 @@ async def list_unreviewed(
     skip: int = 0,
     limit: int = 20,
 ) -> tuple[list[Image], int]:
-    """List images eligible for review: no reviewed_label yet, and (allowed_review, or in a consultation, or consent_to_reuse)."""
+    """List images eligible for review: no reviewed_label, consented for reuse only."""
     criteria = (
         Image.reviewed_label.is_(None),
-        or_(
-            Image.allowed_review.is_(True),
-            Image.consultation_id.isnot(None),
-            Image.consent_to_reuse.is_(True),
-        ),
+        Image.consent_to_reuse.is_(True),
     )
     count_result = await db.execute(select(func.count()).select_from(Image).where(*criteria))
     total = count_result.scalar() or 0
@@ -305,13 +322,16 @@ async def list_reviewed(
     skip: int = 0,
     limit: int = 20,
 ) -> tuple[list[Image], int]:
-    """List images that have been reviewed (have reviewed_label). Paginated."""
-    criteria = Image.reviewed_label.isnot(None)
-    count_result = await db.execute(select(func.count()).select_from(Image).where(criteria))
+    """List images that have been reviewed (have reviewed_label), consented for reuse only. Paginated."""
+    criteria = (
+        Image.reviewed_label.isnot(None),
+        Image.consent_to_reuse.is_(True),
+    )
+    count_result = await db.execute(select(func.count()).select_from(Image).where(*criteria))
     total = count_result.scalar() or 0
     result = await db.execute(
         select(Image)
-        .where(criteria)
+        .where(*criteria)
         .order_by(Image.uploaded_at.desc())
         .offset(skip)
         .limit(limit)
@@ -327,8 +347,9 @@ async def list_all(
     uploaded_by: UUID | None = None,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
+    consent_to_reuse: bool | None = None,
 ) -> tuple[list[Image], int]:
-    """List all images (admin). Optional filters."""
+    """List all images (admin). Optional filters. When consent_to_reuse=True, only consented images."""
     criteria = []
     if consultation_id is not None:
         criteria.append(Image.consultation_id == consultation_id)
@@ -338,6 +359,8 @@ async def list_all(
         criteria.append(Image.uploaded_at >= date_from)
     if date_to is not None:
         criteria.append(Image.uploaded_at <= date_to)
+    if consent_to_reuse is True:
+        criteria.append(Image.consent_to_reuse.is_(True))
 
     count_query = select(func.count()).select_from(Image)
     if criteria:

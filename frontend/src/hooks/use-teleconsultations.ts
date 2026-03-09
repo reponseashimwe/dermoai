@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
+import { listConsultationTeleconsultations } from "@/lib/api/consultations";
 
 export interface Teleconsultation {
 	teleconsultation_id: string;
@@ -86,5 +87,13 @@ export function useTeleconsultation(teleconsultationId: string | null) {
 			return response.data;
 		},
 		enabled: !!teleconsultationId,
+	});
+}
+
+export function useTeleconsultationsByConsultation(consultationId: string | null) {
+	return useQuery({
+		queryKey: ["teleconsultations", "by-consultation", consultationId],
+		queryFn: () => listConsultationTeleconsultations(consultationId!),
+		enabled: !!consultationId,
 	});
 }

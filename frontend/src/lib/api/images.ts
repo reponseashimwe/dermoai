@@ -23,6 +23,7 @@ export interface ListAllImagesParams {
   uploaded_by?: string;
   date_from?: string;
   date_to?: string;
+  consent_to_reuse?: boolean;
 }
 
 export async function uploadToConsultation(
@@ -88,6 +89,7 @@ export async function listAllImages(
   if (params.uploaded_by != null) sp.set("uploaded_by", params.uploaded_by);
   if (params.date_from != null) sp.set("date_from", params.date_from);
   if (params.date_to != null) sp.set("date_to", params.date_to);
+  if (params.consent_to_reuse === true) sp.set("consent_to_reuse", "true");
   const q = sp.toString();
   return fetchClient<ImageListResponse>(
     `/api/images/all${q ? `?${q}` : ""}`

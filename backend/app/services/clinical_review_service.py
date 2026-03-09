@@ -9,7 +9,7 @@ from app.models.clinical_review import ClinicalReview
 from app.models.consultation import Consultation
 from app.models.image import Image
 from app.models.practitioner import Practitioner
-from app.schemas.clinical_review import ClinicalReviewCreate, ClinicalReviewRead
+from app.schemas.clinical_review import ClinicalReviewCreate, ClinicalReviewRead, ClinicalReviewUpdate
 
 
 async def create_review(
@@ -108,4 +108,23 @@ async def get_review(review_id: UUID, db: AsyncSession) -> ClinicalReview:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Review not found"
         )
+    return review
+
+
+async def update_review(
+    review_id: UUID,
+    data: ClinicalReviewUpdate,
+    practitioner_id: UUID,
+    db: AsyncSession,
+) -> ClinicalReview:
+    review = await get_review(review_id, db)
+    if review.practitioner_id != practitioner_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only edit your own reviews",
+        )
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(review, field, value)
+    await db.commit()
+    await db.refresh(review)
     return review

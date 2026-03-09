@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { useRouter } from "next/navigation";
 import { ImageDropzone } from "./image-dropzone";
 import { ConsentCheckbox } from "./consent-checkbox";
 import { ScanResultCard } from "./scan-result-card";
@@ -13,95 +14,147 @@ import { Scan } from "lucide-react";
 import type { QuickScanResponse } from "@/types/api";
 import type { Consultation } from "@/types/api";
 
+export interface ScanUploadFormHandle {
+	reset: () => void;
+}
+
 interface ScanUploadFormProps {
-  /** When provided, URGENT result shows "Save to my consultations" that creates a consultation and attaches the scan. */
-  onSaveToConsultations?: (result: QuickScanResponse) => Promise<Consultation>;
-  onSaveSuccess?: (consultationId: string) => void;
-  onSaveError?: (error: unknown) => void;
-  isSaving?: boolean;
+	/** When provided, REFER result shows "Save to my consultations" that creates a consultation and attaches the scan. */
+	onSaveToConsultations?: (result: QuickScanResponse) => Promise<Consultation>;
+	onSaveSuccess?: (consultationId: string) => void;
+	onSaveError?: (error: unknown) => void;
+	isSaving?: boolean;
+	/** When true, after a successful scan redirect to /result/[id]. That page requires login to view; prefer false and use resultDisplay="fullPage" for public flow. */
+	redirectToResultPage?: boolean;
+	/** "inline" = result in same column; "fullPage" = result shown below hero (full width), parent renders it via onResultReady. */
+	resultDisplay?: "inline" | "fullPage";
+	/** When resultDisplay="fullPage", parent receives the result here and renders it full-width; form does not render result. */
+	onResultReady?: (data: QuickScanResponse) => void;
+	/** When resultDisplay="fullPage", called when user clicks Scan again in form area so parent can clear its result state. */
+	onScanAgain?: () => void;
 }
 
-export function ScanUploadForm({
-  onSaveToConsultations,
-  onSaveSuccess,
-  onSaveError,
-  isSaving = false,
-}: ScanUploadFormProps = {}) {
-  const [file, setFile] = useState<File | null>(null);
-  const [consent, setConsent] = useState(false);
-  const scan = useQuickScan();
+export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormProps>(function ScanUploadForm(
+	{
+		onSaveToConsultations,
+		onSaveSuccess,
+		onSaveError,
+		isSaving = false,
+		redirectToResultPage = false,
+		resultDisplay = "inline",
+		onResultReady,
+		onScanAgain,
+	},
+	ref,
+) {
+	const [file, setFile] = useState<File | null>(null);
+	const [consent, setConsent] = useState(false);
+	const router = useRouter();
+	const scan = useQuickScan();
 
-  useEffect(() => {
-    if (scan.data && typeof window !== "undefined") {
-      sessionStorage.setItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY, scan.data.image_id);
-    }
-  }, [scan.data]);
+	useImperativeHandle(ref, () => ({
+		reset: () => {
+			setFile(null);
+			setConsent(false);
+			scan.reset();
+		},
+	}), [scan]);
 
-  async function handleSubmit() {
-    if (!file) return;
-    scan.mutate({ file, consentToReuse: consent });
-  }
+	useEffect(() => {
+		if (scan.data && typeof window !== "undefined") {
+			sessionStorage.setItem(PENDING_QUICK_SCAN_IMAGE_ID_KEY, scan.data.image_id);
+			if (redirectToResultPage) {
+				router.push(`/result/${scan.data.image_id}`);
+			}
+		}
+	}, [scan.data, redirectToResultPage, router]);
 
-  return (
-    <div className="space-y-6">
-      {!scan.data && (
-        <>
-          <ImageDropzone
-            onFileSelect={setFile}
-            selectedFile={file}
-            onClear={() => {
-              setFile(null);
-              scan.reset();
-            }}
-          />
+	// In fullPage mode, notify parent so it can render result full-width below hero
+	useEffect(() => {
+		if (scan.data && resultDisplay === "fullPage") {
+			onResultReady?.(scan.data);
+		}
+	}, [scan.data, resultDisplay, onResultReady]);
 
-          {file && (
-            <ConsentCheckbox checked={consent} onChange={setConsent} />
-          )}
+	function handleScanAgain() {
+		setFile(null);
+		setConsent(false);
+		scan.reset();
+		if (typeof window !== "undefined") {
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+		onScanAgain?.();
+	}
 
-          {scan.isError && (
-            <Alert variant="error">
-              {isApiError(scan.error)
-                ? scan.error.detail
-                : "Failed to analyze image. Please try again."}
-            </Alert>
-          )}
+	async function handleSubmit() {
+		if (!file) return;
+		scan.mutate({ file, consentToReuse: consent });
+	}
 
-          <Button
-            onClick={handleSubmit}
-            disabled={!file}
-            loading={scan.isPending}
-            className="w-full"
-            size="lg"
-          >
-            <Scan className="h-5 w-5" />
-            Analyze Skin Image
-          </Button>
-        </>
-      )}
+	return (
+		<div className='space-y-6'>
+			{!scan.data && (
+				<>
+					<ImageDropzone
+						onFileSelect={setFile}
+						selectedFile={file}
+						onClear={() => {
+							setFile(null);
+							scan.reset();
+						}}
+					/>
 
-      {scan.data && (
-        <div className="space-y-4">
-          <ScanResultCard
-            result={scan.data}
-            onSaveToConsultations={onSaveToConsultations}
-            onSaveSuccess={onSaveSuccess}
-            onSaveError={onSaveError}
-            isSaving={isSaving}
-          />
-          <Button
-            variant="outline"
-            onClick={() => {
-              setFile(null);
-              setConsent(false);
-              scan.reset();
-            }}
-            className="w-full"
-          >
-            Scan Another Image
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
+					{file && (
+						<ConsentCheckbox
+							checked={consent}
+							onChange={setConsent}
+						/>
+					)}
+
+					{scan.isError && (
+						<Alert variant='error'>
+							{isApiError(scan.error) ? scan.error.detail : "Failed to analyze image. Please try again."}
+						</Alert>
+					)}
+
+					<Button
+						onClick={handleSubmit}
+						disabled={!file}
+						loading={scan.isPending}
+						className='w-full'
+						size='lg'
+					>
+						<Scan className='h-5 w-5' />
+						Analyze Skin Image
+					</Button>
+				</>
+			)}
+
+			{scan.data && !redirectToResultPage && resultDisplay === "inline" && (
+				<div className='space-y-4'>
+					<ScanResultCard
+						result={scan.data}
+						onSaveToConsultations={onSaveToConsultations}
+						onSaveSuccess={onSaveSuccess}
+						onSaveError={onSaveError}
+						isSaving={isSaving}
+					/>
+					<Button variant='outline' onClick={handleScanAgain} className='w-full'>
+						Scan Another Image
+					</Button>
+				</div>
+			)}
+
+			{/* fullPage: result is rendered by parent below hero; show only Scan again in form column */}
+			{scan.data && !redirectToResultPage && resultDisplay === "fullPage" && (
+				<div className='space-y-3'>
+					<p className='text-sm text-slate-500'>Result shown below. Scroll down or scan another image.</p>
+					<Button variant='outline' onClick={handleScanAgain} className='w-full'>
+						<Scan className='mr-2 h-4 w-4' />
+						Scan again
+					</Button>
+				</div>
+			)}
+		</div>
+	);
+});

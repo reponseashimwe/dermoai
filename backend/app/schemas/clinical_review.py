@@ -12,6 +12,13 @@ class ClinicalReviewCreate(BaseModel):
     is_final: bool = False
 
 
+class ClinicalReviewUpdate(BaseModel):
+    diagnosis: str | None = None
+    treatment_plan: str | None = None
+    notes: str | None = None
+    is_final: bool | None = None
+
+
 class ClinicalReviewRead(BaseModel):
     review_id: uuid.UUID
     consultation_id: uuid.UUID

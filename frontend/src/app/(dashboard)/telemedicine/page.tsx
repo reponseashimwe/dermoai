@@ -15,7 +15,9 @@ import {
 	useUpcomingAppointments,
 } from "@/hooks/use-appointments";
 import { CreateAppointmentModal } from "@/components/appointments/create-appointment-modal";
+import { Avatar } from "@/components/ui/avatar";
 import { Video, Circle, Calendar, Phone } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import type { AppointmentRequest } from "@/hooks/use-appointments";
 
@@ -62,31 +64,47 @@ export default function TelemedicinePage() {
 					description='Connect with available practitioners via video call'
 				/>
 				<div className='flex flex-wrap items-center gap-2 sm:ml-auto'>
-					{nextAppointment && (
-						<div className='flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700'>
-							<span>
-								Next: <strong>{formatDate(nextAppointment.proposed_datetime)}</strong>
-							</span>
-							{nextAppointment.consultation_id && (
-								<>
-									<Link
-										href={`/consultations/${nextAppointment.consultation_id}`}
-										className='font-medium text-primary-600 hover:underline'
-									>
-										Consultation
-									</Link>
-									<Link
-										href={`/telemedicine?consultationId=${nextAppointment.consultation_id}`}
-									>
-										<Button size='sm' variant='outline'>
-											<Phone className='mr-1 h-3 w-3' />
-											Call
-										</Button>
-									</Link>
-								</>
-							)}
-						</div>
-					)}
+				{nextAppointment && nextAppointment.status === "APPROVED" && (
+					<div className='flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700'>
+						<span>
+							Next: <strong>{formatDate(nextAppointment.proposed_datetime)}</strong>
+						</span>
+						{nextAppointment.consultation_id && (
+							<>
+								<Link
+									href={`/consultations/${nextAppointment.consultation_id}`}
+									className='font-medium text-primary-600 hover:underline'
+								>
+									Consultation
+								</Link>
+								<Button
+									size='sm'
+									variant='outline'
+									loading={requestCall.isPending}
+									onClick={() => {
+										requestCall.mutate(
+											{ consultation_id: nextAppointment.consultation_id! },
+											{
+												onSuccess: (data) => {
+													router.push(`/teleconsultations/${data.teleconsultation_id}`);
+												},
+											},
+										);
+									}}
+								>
+									{requestCall.isPending ? (
+										"Connecting…"
+									) : (
+										<>
+											<Phone className='h-3 w-3' />
+											Join
+										</>
+									)}
+								</Button>
+							</>
+						)}
+					</div>
+				)}
 					<Button onClick={() => openBookModal()} size='sm'>
 						<Calendar className='mr-2 h-4 w-4' />
 						Book appointment
@@ -117,16 +135,13 @@ export default function TelemedicinePage() {
 				</CardHeader>
 				<CardContent>
 					{isLoading ? (
-						<div className='space-y-3'>
-							{[1, 2, 3].map((i) => (
-								<Skeleton
-									key={i}
-									className='h-20 w-full'
-								/>
+						<div className='grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
+							{[1, 2, 3, 4, 5, 6].map((i) => (
+								<Skeleton key={i} className='h-36 rounded-xl' />
 							))}
 						</div>
 					) : !practitioners?.length ? (
-						<div className='py-8 text-center text-slate-500'>
+						<div className='py-12 text-center text-slate-500'>
 							<Video className='mx-auto h-12 w-12 text-slate-300' />
 							<p className='mt-2 font-medium'>No practitioners available</p>
 							<p className='text-sm'>
@@ -136,75 +151,82 @@ export default function TelemedicinePage() {
 							</p>
 						</div>
 					) : (
-						<ul className='space-y-3'>
+						<div className='grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
 							{practitioners.map((p) => (
-								<li key={p.practitioner_id}>
-									<Card>
-										<CardContent className='flex flex-row items-center justify-between py-4'>
-											<div className='flex items-center gap-3'>
-												<div
-													className={`flex h-10 w-10 items-center justify-center rounded-full ${
-														p.is_online ? "bg-green-100" : "bg-slate-100"
-													}`}
-												>
-													{p.is_online ? (
-														<Circle className='h-3 w-3 fill-green-600 text-green-600' />
-													) : (
-														<Circle className='h-3 w-3 fill-slate-400 text-slate-400' />
+								<Card key={p.practitioner_id} className="overflow-hidden">
+									<CardContent className='p-5'>
+										<div className='flex gap-4'>
+											<div className="relative shrink-0">
+												<Avatar
+													name={p.name}
+													className="h-14 w-14 text-lg sm:h-20 sm:w-20 sm:text-xl"
+												/>
+												<span
+													className={cn(
+														"absolute top-0 right-0 block h-3 w-3 rounded-full border-2 border-white sm:h-4 sm:w-4",
+														p.is_online ? "bg-green-500" : "bg-slate-400"
 													)}
-												</div>
-												<div>
-													<p className='font-medium text-slate-900'>{p.name}</p>
-													<p className='text-sm text-slate-500'>
-														{p.practitioner_type === "SPECIALIST"
-															? "Specialist"
-															: "General"}{" "}
-														{p.expertise ? `· ${p.expertise}` : ""}
-													</p>
-													{!p.is_online && p.last_active && (
-														<p className='text-xs text-slate-400'>
-															Last active: {formatDate(p.last_active)}
-														</p>
-													)}
-												</div>
+													title={p.is_online ? "Online" : "Offline"}
+												/>
 											</div>
-											<div className='flex items-center gap-2'>
-												<Button
-													size='sm'
-													variant='outline'
-													onClick={() => openBookModal(p.practitioner_id)}
+											<div className='min-w-0 flex-1'>
+												<p className='font-semibold text-slate-900'>{p.name}</p>
+												<p className='text-sm text-slate-500'>
+													{p.practitioner_type === "SPECIALIST"
+														? "Specialist: Dermatology"
+														: "General Practitioner"}
+													{p.expertise ? ` · ${p.expertise}` : ""}
+												</p>
+												<span
+													className={cn(
+														"mt-2 inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-medium",
+														p.is_online
+															? "bg-green-100 text-green-800"
+															: "bg-slate-100 text-slate-600"
+													)}
 												>
-													<Calendar className='mr-1 h-4 w-4' />
-													Book
-												</Button>
-												<Button
-													size='sm'
-													disabled={!p.is_online}
-													loading={requestCall.isPending}
-													title={p.is_online ? "Call" : "Practitioner is offline"}
-													onClick={() => {
-														if (!p.is_online) return;
-														requestCall.mutate(
-															{ specialist_id: p.practitioner_id },
-															{
-																onSuccess: (data) => {
-																	router.push(
-																		`/teleconsultations/${data.teleconsultation_id}`,
-																	);
-																},
+													{p.is_online ? "Online" : "Offline"}
+												</span>
+											</div>
+										</div>
+										<div className='mt-4 flex flex-wrap gap-2'>
+											<Button
+												size='sm'
+												variant='outline'
+												onClick={() => openBookModal(p.practitioner_id)}
+											>
+												<Calendar className='mr-1.5 h-4 w-4' />
+												Book
+											</Button>
+											<Button
+												size='sm'
+												variant={p.is_online ? "outline" : "ghost"}
+												disabled={!p.is_online}
+												loading={requestCall.isPending}
+												title={p.is_online ? "Start call" : "Practitioner is offline"}
+												onClick={() => {
+													if (!p.is_online) return;
+													requestCall.mutate(
+														{ specialist_id: p.practitioner_id },
+														{
+															onSuccess: (data) => {
+																router.push(
+																	`/teleconsultations/${data.teleconsultation_id}`,
+																);
 															},
-														);
-													}}
-												>
-													<Video className='mr-1 h-4 w-4' />
-													{p.is_online ? "Call" : "Offline"}
-												</Button>
-											</div>
-										</CardContent>
-									</Card>
-								</li>
+														},
+													);
+												}}
+												className={cn(!p.is_online && "opacity-60")}
+											>
+												<Video className='mr-1.5 h-4 w-4' />
+												{p.is_online ? "Call" : "Offline"}
+											</Button>
+										</div>
+									</CardContent>
+								</Card>
 							))}
-						</ul>
+						</div>
 					)}
 				</CardContent>
 			</Card>

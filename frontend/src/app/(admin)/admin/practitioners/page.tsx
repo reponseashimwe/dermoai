@@ -22,18 +22,18 @@ export default function PractitionerApprovalsPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Practitioner Approvals"
-        description="Review and approve pending practitioner registrations"
+        title="Doctors"
+        description="Manage doctors (practitioners) and approve registrations"
       />
 
-      {/* Tabs — mobile friendly */}
-      <div className="rounded-t-xl border border-b-0 border-slate-200 bg-white px-1 pt-1">
-        <div className="flex gap-1 overflow-x-auto">
+      {/* Tabs + content — no gap between tabs and cards */}
+      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 px-1 pt-1 pb-0">
           <button
             type="button"
             onClick={() => setTab("pending")}
             className={cn(
-              "shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-2.5",
+              "shrink-0 rounded-t-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-2.5",
               tab === "pending"
                 ? "bg-primary-100 text-primary-800"
                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -45,7 +45,7 @@ export default function PractitionerApprovalsPage() {
             type="button"
             onClick={() => setTab("active")}
             className={cn(
-              "shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-2.5",
+              "shrink-0 rounded-t-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-2.5",
               tab === "active"
                 ? "bg-primary-100 text-primary-800"
                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -54,10 +54,7 @@ export default function PractitionerApprovalsPage() {
             Active {activeList.length > 0 && `(${activeList.length})`}
           </button>
         </div>
-      </div>
-
-      {/* Tab content */}
-      <div className="rounded-b-xl border border-slate-200 border-t-0 bg-white p-4 sm:p-5">
+        <div className="p-4 sm:p-5">
         {tab === "pending" && (
           <>
             {loadingPending ? (
@@ -94,6 +91,7 @@ export default function PractitionerApprovalsPage() {
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );

@@ -47,7 +47,7 @@ export function LocationChart({
             fontSize: "12px",
           }}
         />
-        <Bar dataKey="count" fill="#078ece" radius={[8, 8, 0, 0]} />
+        <Bar dataKey="count" fill="#16A34A" radius={[8, 8, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

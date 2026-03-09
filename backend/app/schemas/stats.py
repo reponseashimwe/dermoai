@@ -57,6 +57,23 @@ class ModelPerformanceStats(BaseModel):
     confidence_distribution: ConfidenceDistribution
 
 
+class TelemedStatusBreakdown(BaseModel):
+    completed: int
+    pending: int
+    active: int
+
+
+class TelemedStats(BaseModel):
+    teleconsultations_total: int
+    appointments_total: int
+    status: TelemedStatusBreakdown
+
+
+class TopCondition(BaseModel):
+    name: str
+    count: int
+
+
 class AdminStatsResponse(BaseModel):
     total_users: int
     total_practitioners: int
@@ -73,6 +90,8 @@ class AdminStatsResponse(BaseModel):
     consent_stats: ConsentStats
     outcome_by_disposition: list[OutcomeByDisposition]
     model_stats: ModelPerformanceStats
+    telemed_stats: TelemedStats
+    top_conditions: list[TopCondition] = []
 
 
 class PractitionerStatsResponse(BaseModel):

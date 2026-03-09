@@ -12,6 +12,7 @@ const alertVariants = cva(
         success: "border-green-200 bg-green-50 text-green-800",
         warning: "border-amber-200 bg-amber-50 text-amber-800",
         error: "border-red-200 bg-red-50 text-red-800",
+        neutral: "border-slate-200 bg-white text-slate-800",
       },
     },
     defaultVariants: {
@@ -29,13 +30,16 @@ const iconMap = {
 
 export interface AlertProps
   extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {}
+    VariantProps<typeof alertVariants> {
+  /** When false, only children are rendered (no built-in icon). Use for custom icon in content. */
+  showIcon?: boolean;
+}
 
-function Alert({ className, variant = "info", children, ...props }: AlertProps) {
-  const Icon = iconMap[variant || "info"];
+function Alert({ className, variant = "info", showIcon = true, children, ...props }: AlertProps) {
+  const Icon = variant === "neutral" ? null : iconMap[variant || "info"];
   return (
     <div className={cn(alertVariants({ variant }), className)} {...props}>
-      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      {showIcon && Icon && <Icon className="mt-0.5 h-4 w-4 shrink-0" />}
       <div>{children}</div>
     </div>
   );

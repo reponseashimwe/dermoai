@@ -14,7 +14,7 @@ interface QuickScanModalProps {
 
 /**
  * Modal for quick scan: upload image and see AI analysis result without leaving the page.
- * When result is URGENT, "Save to my consultations" creates a consultation and attaches the scan.
+ * When result is REFER, "Save to my consultations" creates a consultation and attaches the scan.
  */
 export function QuickScanModal({ open, onClose }: QuickScanModalProps) {
   const router = useRouter();

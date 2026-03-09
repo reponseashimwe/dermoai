@@ -13,7 +13,7 @@ import type { Patient } from "@/types/api";
 interface PatientSelectProps {
   onSelect: (patient: Patient) => void;
   selectedId?: string;
-  /** When provided, the new-patient form shows "Create and start consultation" to create patient then run this (e.g. create consultation and redirect). */
+  /** When provided, the new-patient form shows a single "Create consultation" button that creates the patient and then runs this (e.g. create consultation and redirect). */
   onCreateAndStartConsultation?: (patient: Patient) => void | Promise<void>;
 }
 
@@ -28,6 +28,8 @@ export function PatientSelect({
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newDistrict, setNewDistrict] = useState("");
+  const [newProvince, setNewProvince] = useState("");
 
   const filtered = patients?.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -38,6 +40,8 @@ export function PatientSelect({
     const patient = await createPatient.mutateAsync({
       name: newName.trim(),
       phone_number: newPhone.trim() || undefined,
+      district: newDistrict.trim() || undefined,
+      province: newProvince.trim() || undefined,
     });
     onSelect(patient);
     setShowCreate(false);
@@ -50,6 +54,8 @@ export function PatientSelect({
     const patient = await createPatient.mutateAsync({
       name: newName.trim(),
       phone_number: newPhone.trim() || undefined,
+      district: newDistrict.trim() || undefined,
+      province: newProvince.trim() || undefined,
     });
     onSelect(patient);
     setShowCreate(false);
@@ -125,36 +131,39 @@ export function PatientSelect({
               value={newPhone}
               onChange={(e) => setNewPhone(e.target.value)}
             />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input
+                label="District (optional)"
+                placeholder="e.g. Gasabo"
+                value={newDistrict}
+                onChange={(e) => setNewDistrict(e.target.value)}
+              />
+              <Input
+                label="Province (optional)"
+                placeholder="e.g. Kigali City"
+                value={newProvince}
+                onChange={(e) => setNewProvince(e.target.value)}
+              />
+            </div>
             <div className="flex flex-col gap-2">
               {onCreateAndStartConsultation ? (
-                <>
+                <div className="flex gap-2">
                   <Button
                     size="sm"
                     loading={createPatient.isPending}
                     onClick={handleCreateAndStartConsultation}
-                    className="w-full"
+                    className="flex-1"
                   >
-                    Create and start consultation
+                    Create consultation
                   </Button>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      loading={createPatient.isPending}
-                      onClick={handleCreate}
-                      className="flex-1"
-                    >
-                      Create only
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowCreate(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowCreate(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               ) : (
                 <div className="flex gap-2">
                   <Button
