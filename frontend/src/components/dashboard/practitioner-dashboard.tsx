@@ -24,7 +24,7 @@ export function PractitionerDashboard() {
 	const { data: practitioners } = usePractitioners();
 	const { data: stats, isLoading } = usePractitionerStats(true);
 	const { data: consultations } = useConsultations();
-	const { data: incomingCalls, refetch: refetchIncoming } = useIncomingTeleconsultations();
+	const { data: incomingCalls, refetch: refetchIncoming } = useIncomingTeleconsultations(true);
 	const { data: upcomingAppointments } = useUpcomingAppointments();
 	const acceptCall = useAcceptTeleconsultation();
 	const updateStatus = useUpdateMyStatus();

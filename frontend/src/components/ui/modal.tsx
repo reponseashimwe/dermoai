@@ -11,9 +11,10 @@ interface ModalProps {
   children: ReactNode;
   className?: string;
   title?: string;
+  description?: string;
 }
 
-export function Modal({ open, onClose, children, className, title }: ModalProps) {
+export function Modal({ open, onClose, children, className, title, description }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -59,11 +60,16 @@ export function Modal({ open, onClose, children, className, title }: ModalProps)
         aria-label={title}
       >
         {title && (
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+              {description && (
+                <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+              )}
+            </div>
             <button
               onClick={onClose}
-              className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             >
               <X className="h-5 w-5" />
             </button>

@@ -31,9 +31,12 @@ async def create_teleconsultation(
     practitioner_id: uuid.UUID | None = None
     requested_by_user_id: uuid.UUID = current_user.user_id
 
+    requester_speciality: str | None = None
+
     if current_user.role == "PRACTITIONER":
         practitioner = await practitioner_service.get_by_user_id(current_user.user_id, db)
         practitioner_id = practitioner.practitioner_id
+        requester_speciality = practitioner.expertise or practitioner.practitioner_type
     else:
         # Patient (USER) initiating: must specify which specialist to call
         if not data.specialist_id:
@@ -69,11 +72,23 @@ async def create_teleconsultation(
             "consultation_id": str(data.consultation_id) if data.consultation_id else None,
             "practitioner_id": str(practitioner_id) if practitioner_id else None,
             "requested_by_user_id": str(requested_by_user_id),
+            "requester_name": current_user.name,
+            "requester_role": current_user.role,
+            "requester_speciality": requester_speciality,
+            "source": data.source or "DIRECT",
         }
         if data.specialist_id:
-            await websocket_service.manager.send_to_specialist(data.specialist_id, payload)
+            # If a practitioner is calling their own assigned specialist_id (e.g. specialist
+            # starting a call from an appointment), avoid sending the popup back to the
+            # same participant connection. In that case, broadcast to other participants only.
+            if practitioner_id and data.specialist_id == practitioner_id:
+                await websocket_service.manager.broadcast_to_participants(
+                    payload, exclude=practitioner_id
+                )
+            else:
+                await websocket_service.manager.send_to_participant(data.specialist_id, payload)
         else:
-            await websocket_service.manager.broadcast_to_specialists(payload)
+            await websocket_service.manager.broadcast_to_participants(payload)
     except Exception as e:
         logger.warning("Teleconsultation WebSocket notify failed (request still created): %s", e)
 
@@ -121,7 +136,7 @@ async def accept_teleconsultation(
 
     # Notify practitioner (if any) that specialist joined; patient-initiated uses polling/frontend redirect
     if teleconsultation.practitioner_id:
-        await websocket_service.manager.send_to_specialist(
+        await websocket_service.manager.send_to_participant(
             teleconsultation.practitioner_id,
             {
                 "type": "teleconsultation_accepted",
@@ -151,7 +166,7 @@ async def end_teleconsultation(
             detail="Teleconsultation not found",
         )
     
-    if teleconsultation.status != "ACTIVE":
+    if teleconsultation.status not in ("ACTIVE", "PENDING"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Teleconsultation is not active",
@@ -299,5 +314,6 @@ async def get_or_create_teleconsultation_for_appointment(
     data = TeleconsultationCreate(
         consultation_id=appointment.consultation_id,
         specialist_id=appointment.specialist_id,
+        source="APPOINTMENT",
     )
     return await create_teleconsultation(current_user, data, db)

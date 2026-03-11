@@ -21,13 +21,14 @@ export interface TeleconsultationToken {
 	room_name: string;
 }
 
-export function useIncomingTeleconsultations() {
+export function useIncomingTeleconsultations(enabled = true) {
 	return useQuery({
 		queryKey: ["teleconsultations", "incoming"],
 		queryFn: async () => {
 			const response = await api.get<Teleconsultation[]>("/api/teleconsultations/incoming");
 			return response.data;
 		},
+		enabled,
 	});
 }
 

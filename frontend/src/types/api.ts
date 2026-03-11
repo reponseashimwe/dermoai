@@ -95,6 +95,7 @@ export interface ConsultationUpdate {
   referral_note?: string;
   got_treatment?: boolean;
   outcome_verified?: boolean;
+  urgency?: string | null;
 }
 
 // Image
@@ -306,10 +307,19 @@ export interface TelemedStatusBreakdown {
   active: number;
 }
 
+export interface AppointmentStatusBreakdown {
+  pending: number;
+  approved: number;
+  rescheduled: number;
+  completed: number;
+  rejected: number;
+}
+
 export interface TelemedStats {
   teleconsultations_total: number;
   appointments_total: number;
   status: TelemedStatusBreakdown;
+  appointment_status?: AppointmentStatusBreakdown;
 }
 
 export interface TopCondition {

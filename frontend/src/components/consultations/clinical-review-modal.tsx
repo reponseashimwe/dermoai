@@ -24,7 +24,12 @@ export function ClinicalReviewModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Complete Clinical Review">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Complete Clinical Review"
+      className="max-w-4xl"
+    >
       <ClinicalReviewCompleteForm
         consultationId={consultationId}
         canMarkFinal={canMarkFinal}

@@ -82,7 +82,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 	async function handleAppointmentCall(requestId: string) {
 		try {
 			const data = await startCall.mutateAsync(requestId);
-			router.push(`/teleconsultations/${data.teleconsultation_id}`);
+			router.push(`/teleconsultations/${data.teleconsultation_id}?appointmentId=${requestId}`);
 		} catch {
 			toast("Could not start call. Try the Call page if no specialist is assigned.", "error");
 		}
@@ -136,7 +136,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 
 	return (
 		<div className='space-y-4'>
-			<div className='flex flex-wrap items-center justify-between gap-3'>
+				<div className='flex flex-wrap items-center justify-between gap-3'>
 				<Link
 					href='/consultations'
 					className='inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900'
@@ -145,7 +145,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 					Back
 				</Link>
 				<div className='flex items-center gap-2'>
-					{latestActiveAppointment && (
+					{latestActiveAppointment && !isClosed && (
 						<div className='flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700'>
 							<Clock className='h-3 w-3 shrink-0 text-slate-400' />
 							<span>
@@ -159,16 +159,16 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 									)}
 								</strong>
 							</span>
-							{latestActiveAppointment.status === "APPROVED" && (
+							{latestActiveAppointment.status !== "REJECTED" && (
 								<Button
 									size='sm'
 									variant='outline'
 									onClick={() => handleAppointmentCall(latestActiveAppointment.request_id)}
 									loading={startCall.isPending}
-									className='h-7 text-xs'
+									className='h-7 w-7 rounded-full p-0'
+									title='Join call'
 								>
 									<Phone className='h-3 w-3' />
-									Call
 								</Button>
 							)}
 						</div>
@@ -210,8 +210,8 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 				consultation.status !== "CLOSED" &&
 				!consultation.has_appointments &&
 				!consultation.has_teleconsultation && (
-				<UrgentConsultationBanner consultationId={consultation.consultation_id} />
-			)}
+					<UrgentConsultationBanner consultationId={consultation.consultation_id} />
+				)}
 
 			{/* Main grid: left = patient + practitioner + images, right = result + reviews */}
 			<div className='grid gap-4 lg:grid-cols-[1fr_1.2fr]'>
@@ -222,8 +222,12 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 						{patient && (
 							<Card className='border border-slate-200 bg-[#f7f5f3] overflow-hidden'>
 								<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 border-b border-slate-200/80'>
-									<h2 className='text-xs font-semibold uppercase tracking-wider text-slate-600'>Patient</h2>
-									<span className='text-xs text-slate-500'>{consultation && formatDate(consultation.created_at)}</span>
+									<h2 className='text-xs font-semibold uppercase tracking-wider text-slate-600'>
+										Patient
+									</h2>
+									<span className='text-xs text-slate-500'>
+										{consultation && formatDate(consultation.created_at)}
+									</span>
 								</CardHeader>
 								<CardContent className='flex items-center gap-3 pt-4'>
 									<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white'>
@@ -248,36 +252,45 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 							</Card>
 						)}
 						{(() => {
-							const fromReviews = [...new Set((reviews ?? []).map((r) => r.practitioner_name).filter(Boolean))] as string[];
-							const fromAppointments = [...new Set((appointments ?? []).map((a) => (a as { specialist_name?: string | null }).specialist_name).filter(Boolean))] as string[];
+							const fromReviews = [
+								...new Set((reviews ?? []).map((r) => r.practitioner_name).filter(Boolean)),
+							] as string[];
+							const fromAppointments = [
+								...new Set(
+									(appointments ?? [])
+										.map((a) => (a as { specialist_name?: string | null }).specialist_name)
+										.filter(Boolean),
+								),
+							] as string[];
 							const allNames = [...new Set([...fromReviews, ...fromAppointments])];
 							const treatingReview = reviews?.length
 								? [...reviews].sort((a, b) => {
 										if (a.is_final && !b.is_final) return -1;
 										if (!a.is_final && b.is_final) return 1;
 										return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-								  })[0]
+									})[0]
 								: null;
 							const practitionerName = treatingReview?.practitioner_name ?? allNames[0] ?? null;
 							const creatorPractitioner = consultation?.created_by
 								? practitioners?.find((p) => p.user_id === consultation.created_by)
 								: null;
 							const displayName = practitionerName ?? creatorPractitioner?.name ?? null;
-							const displaySubtext =
-								treatingReview
-									? 'Treating clinician'
-									: fromAppointments.length
-										? 'Scheduled for call'
-										: fromReviews.length
-											? 'From review'
-											: creatorPractitioner
-												? 'Consultation creator'
-												: null;
+							const displaySubtext = treatingReview
+								? "Treating clinician"
+								: fromAppointments.length
+									? "Scheduled for call"
+									: fromReviews.length
+										? "From review"
+										: creatorPractitioner
+											? "Consultation creator"
+											: null;
 							if (!displayName && allNames.length === 0) {
 								return (
 									<Card className='border border-slate-200 bg-[#f7f5f3] overflow-hidden'>
 										<CardHeader className='pb-2 border-b border-slate-200/80'>
-											<h2 className='text-xs font-semibold uppercase tracking-wider text-slate-600'>Practitioner</h2>
+											<h2 className='text-xs font-semibold uppercase tracking-wider text-slate-600'>
+												Practitioner
+											</h2>
 										</CardHeader>
 										<CardContent className='pt-4'>
 											<p className='text-sm text-slate-500'>No review assigned yet</p>
@@ -286,11 +299,19 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 								);
 							}
 							const nameToShow = displayName ?? allNames[0];
-							const initials = nameToShow.split(" ").map((s) => s[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+							const initials = nameToShow
+								.split(" ")
+								.map((s) => s[0])
+								.filter(Boolean)
+								.slice(0, 2)
+								.join("")
+								.toUpperCase();
 							return (
 								<Card className='border border-slate-200 bg-[#f7f5f3] overflow-hidden'>
 									<CardHeader className='pb-2 border-b border-slate-200/80'>
-										<h2 className='text-xs font-semibold uppercase tracking-wider text-slate-600'>Practitioner</h2>
+										<h2 className='text-xs font-semibold uppercase tracking-wider text-slate-600'>
+											Practitioner
+										</h2>
 									</CardHeader>
 									<CardContent className='pt-4 space-y-2'>
 										<div className='flex items-center gap-3'>
@@ -306,7 +327,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 										</div>
 										{allNames.length > 1 && (
 											<p className='text-xs text-slate-500 border-t border-slate-200/80 pt-2'>
-												Involved: {allNames.join(', ')}
+												Involved: {allNames.join(", ")}
 											</p>
 										)}
 									</CardContent>
@@ -322,11 +343,15 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 								<h2 className='text-base font-semibold text-slate-900'>Images</h2>
 								<div className='flex gap-1.5'>
 									<ImageUploadZone
-									consultationId={consultationId}
-									compact
-									onUploadSuccess={setOpenDetailImageId}
-								/>
-									<Button variant='outline' size='sm' onClick={() => setAttachOpen(true)}>
+										consultationId={consultationId}
+										compact
+										onUploadSuccess={setOpenDetailImageId}
+									/>
+									<Button
+										variant='outline'
+										size='sm'
+										onClick={() => setAttachOpen(true)}
+									>
 										<Paperclip className='h-4 w-4' />
 									</Button>
 								</div>
@@ -377,142 +402,91 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 							/>
 						</CardContent>
 					</Card>
-
-					{/* Appointments and Teleconsultations side by side */}
-					<div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-						<Card>
-							<CardHeader>
-								<div className='flex items-center justify-between gap-2'>
-									<h2 className='text-base font-semibold text-slate-900'>Appointments</h2>
-									{isPractitioner && hasImages && (
-										<Button size='sm' onClick={() => setAppointmentModalOpen(true)}>
-											<Calendar className='h-4 w-4' />
-											Book
-										</Button>
-									)}
-								</div>
-							</CardHeader>
-							<CardContent>
-								{!appointments || appointments.length === 0 ? (
-									<p className='py-3 text-center text-sm text-slate-500'>No appointments yet</p>
-								) : (
-									<div className='space-y-2'>
-										{appointments.map((apt) => (
-											<div
-												key={apt.request_id}
-												className='flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 p-2.5'
-											>
-												<div className='flex items-center gap-2 min-w-0 flex-1'>
-													<Clock className='h-3.5 w-3.5 shrink-0 text-slate-400' />
-													<div className='min-w-0'>
-														<p className='text-sm font-medium text-slate-900'>
-															{formatDate(apt.proposed_datetime)}
-														</p>
-														{getAppointmentOtherParty(apt) && (
-															<p className='text-xs text-slate-500'>
-																{isSpecialist ? "By: " : "With: "}
-																{getAppointmentOtherParty(apt)}
-															</p>
-														)}
-													</div>
-												</div>
-												<div className='flex items-center gap-1.5'>
-													<span
-														className={cn(
-															"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-															apt.status === "APPROVED" && "bg-green-100 text-green-800",
-															apt.status === "PENDING" && "bg-amber-100 text-amber-800",
-															apt.status === "REJECTED" && "bg-red-100 text-red-800",
-															apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800",
-														)}
-													>
-														{apt.status}
-													</span>
-													{user?.user_id === apt.requested_by_user_id && (
-														<Button
-															size='sm'
-															variant='outline'
-															className='h-7 w-7 p-0 text-red-600 hover:bg-red-50'
-															onClick={() => setDeleteTargetId(apt.request_id)}
-														>
-															<Trash2 className='h-3.5 w-3.5' />
-														</Button>
-													)}
-												</div>
-											</div>
-										))}
-									</div>
-								)}
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<h2 className='text-base font-semibold text-slate-900'>Teleconsultations</h2>
-							</CardHeader>
-							<CardContent>
-								{!teleconsultations || teleconsultations.length === 0 ? (
-									<p className='py-3 text-center text-sm text-slate-500'>No calls yet</p>
-								) : (
-									<div className='space-y-2'>
-										{teleconsultations.map((tc) => (
-											<div
-												key={tc.teleconsultation_id}
-												className='flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 p-2.5'
-											>
-												<div className='flex items-center gap-2 min-w-0 flex-1'>
-													<Phone className='h-3.5 w-3.5 shrink-0 text-slate-400' />
-													<div className='min-w-0'>
-														<p className='text-sm font-medium text-slate-900'>
-															{formatDate(tc.created_at)}
-														</p>
-														{tc.started_at && (
-															<p className='text-xs text-slate-500'>
-																Started {formatDate(tc.started_at)}
-																{tc.ended_at && ` • Ended ${formatDate(tc.ended_at)}`}
-															</p>
-														)}
-													</div>
-												</div>
-												<div className='flex items-center gap-1.5'>
-													<span
-														className={cn(
-															"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-															tc.status === "ACTIVE" && "bg-green-100 text-green-800",
-															tc.status === "PENDING" && "bg-amber-100 text-amber-800",
-															(tc.status === "ENDED" || !["ACTIVE", "PENDING"].includes(tc.status)) && "bg-slate-100 text-slate-700",
-														)}
-													>
-														{tc.status}
-													</span>
-													{(tc.status === "ACTIVE" || tc.status === "PENDING") && (
-														<Button
-															size='sm'
-															onClick={() => router.push(`/teleconsultations/${tc.teleconsultation_id}`)}
-															className='h-7 text-xs'
-														>
-															<Phone className='h-3 w-3' />
-															Join
-														</Button>
-													)}
-												</div>
-											</div>
-										))}
-									</div>
-								)}
-							</CardContent>
-						</Card>
-					</div>
 				</div>
 
 				{/* Right column: Result + Treatment grid, then Reviews */}
 				<div className='space-y-4'>
 					<div className='grid gap-4 sm:grid-cols-2'>
-						<AggregatedResultCard consultation={consultation} images={images ?? undefined} />
+						<AggregatedResultCard
+							consultation={consultation}
+							images={images ?? undefined}
+						/>
 						<TreatmentOutcomeCard consultation={consultation} />
 					</div>
 					{reviewSection?.(hasImages)}
 				</div>
+			</div>
+
+			{/* Appointments */}
+			<div className='grid grid-cols-1 gap-4 col-span-2'>
+				<Card>
+					<CardHeader>
+						<div className='flex items-center justify-between gap-2'>
+							<h2 className='text-base font-semibold text-slate-900'>Appointments</h2>
+							{isPractitioner && hasImages && !isClosed && (
+								<Button
+									size='sm'
+									onClick={() => setAppointmentModalOpen(true)}
+								>
+									<Calendar className='h-4 w-4' />
+									Book
+								</Button>
+							)}
+						</div>
+					</CardHeader>
+					<CardContent>
+						{!appointments || appointments.length === 0 ? (
+							<p className='py-3 text-center text-sm text-slate-500'>No appointments yet</p>
+						) : (
+							<div className='grid grid-cols-1 gap-2 lg:grid-cols-3'>
+								{appointments.map((apt) => (
+									<div
+										key={apt.request_id}
+										className='flex flex-col gap-2 rounded-lg bg-slate-50 p-2.5'
+									>
+										<div className='flex items-center gap-2 min-w-0'>
+											<Clock className='h-3.5 w-3.5 shrink-0 text-slate-400' />
+											<div className='min-w-0'>
+												<p className='text-sm font-medium text-slate-900'>
+													{formatDate(apt.proposed_datetime)}
+												</p>
+												{getAppointmentOtherParty(apt) && (
+													<p className='text-xs text-slate-500'>
+														{isSpecialist ? "By: " : "With: "}
+														{getAppointmentOtherParty(apt)}
+													</p>
+												)}
+											</div>
+										</div>
+										<div className='flex items-center justify-between gap-1.5'>
+											<span
+												className={cn(
+													"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+													apt.status === "APPROVED" && "bg-green-100 text-green-800",
+													apt.status === "PENDING" && "bg-amber-100 text-amber-800",
+													apt.status === "REJECTED" && "bg-red-100 text-red-800",
+													apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800",
+												)}
+											>
+												{apt.status}
+											</span>
+											{user?.user_id === apt.requested_by_user_id && (
+												<Button
+													size='sm'
+													variant='outline'
+													className='h-7 w-7 p-0 text-red-600 hover:bg-red-50'
+													onClick={() => setDeleteTargetId(apt.request_id)}
+												>
+													<Trash2 className='h-3.5 w-3.5' />
+												</Button>
+											)}
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+					</CardContent>
+				</Card>
 			</div>
 
 			<AttachScanModal

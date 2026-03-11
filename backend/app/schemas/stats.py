@@ -63,10 +63,19 @@ class TelemedStatusBreakdown(BaseModel):
     active: int
 
 
+class AppointmentStatusBreakdown(BaseModel):
+    pending: int
+    approved: int
+    rescheduled: int
+    completed: int
+    rejected: int
+
+
 class TelemedStats(BaseModel):
     teleconsultations_total: int
     appointments_total: int
     status: TelemedStatusBreakdown
+    appointment_status: AppointmentStatusBreakdown | None = None
 
 
 class TopCondition(BaseModel):
