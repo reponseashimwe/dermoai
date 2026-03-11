@@ -71,7 +71,7 @@ async def get_my_requests(user_id: UUID, db: AsyncSession) -> list[AppointmentRe
 async def get_incoming_requests(
     practitioner_id: UUID, db: AsyncSession
 ) -> list[AppointmentRequest]:
-    """Get incoming appointment requests for a specialist."""
+    """Get incoming appointment requests for a specialist (all non-rejected)."""
     result = await db.execute(
         select(AppointmentRequest)
         .where(
@@ -79,7 +79,7 @@ async def get_incoming_requests(
                 AppointmentRequest.specialist_id == practitioner_id,
                 AppointmentRequest.specialist_id.is_(None),
             ),
-            AppointmentRequest.status.in_(["PENDING", "RESCHEDULED"]),
+            AppointmentRequest.status != "REJECTED",
         )
         .order_by(AppointmentRequest.created_at.desc())
     )

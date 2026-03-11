@@ -34,6 +34,11 @@ class StartCallResponse(BaseModel):
     teleconsultation_id: UUID
 
 
+class AppointmentCompleteResponse(BaseModel):
+    request_id: UUID
+    status: str
+
+
 async def _enrich_appointment_responses(
     requests: list[AppointmentRequest], db: AsyncSession
 ) -> list[AppointmentRequestRead]:
@@ -226,6 +231,41 @@ async def start_call_from_appointment(
     except Exception as e:
         print(f"SMS (call started) failed: {e}")
     return StartCallResponse(teleconsultation_id=teleconsultation.teleconsultation_id)
+
+
+@router.patch("/{request_id}/complete", response_model=AppointmentCompleteResponse)
+async def complete_appointment(
+    request_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Mark an appointment as completed after a successful call.
+
+    This is intentionally light on validation: any user with access to the
+    appointment's consultation can complete it.
+    """
+    appointment = await appointment_service.get_appointment_request(request_id, db)
+    if not appointment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found",
+        )
+
+    # Ensure current user can see the related consultation; this reuses
+    # existing access checks in consultation_service.
+    if appointment.consultation_id:
+        await consultation_service.get_consultation(
+            appointment.consultation_id, db, current_user=current_user
+        )
+
+    updated = await appointment_service.update_appointment_request(
+        request_id, AppointmentRequestUpdate(status="COMPLETED"), db
+    )
+    return AppointmentCompleteResponse(
+        request_id=updated.request_id,
+        status=updated.status,
+    )
 
 
 @router.delete("/{request_id}", status_code=204)

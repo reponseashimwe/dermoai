@@ -1,33 +1,49 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
-import { useUserStats } from "@/hooks/use-stats";
 import { useAppointmentsForMyConsultations } from "@/hooks/use-appointments";
-import { usePractitionerStats } from "@/hooks/use-stats";
 import { useIncomingTeleconsultations } from "@/hooks/use-teleconsultations";
+import { useConsultations } from "@/hooks/use-consultations";
+import { usePractitioners } from "@/hooks/use-practitioners";
 
 /**
- * Returns the number of "alerts" to show in the sidebar badge for the current user.
- * USER: referral notifications + upcoming appointments.
- * PRACTITIONER: cases to refer + incoming calls.
+ * Returns the number of alerts to show in the sidebar badge.
+ *
+ * USER: one alert per open REFER consultation they created + upcoming appointments.
+ * PRACTITIONER (GP): one alert per open REFER consultation they can see + incoming calls.
+ * PRACTITIONER (specialist): only incoming calls count.
  */
 export function useAlertCount(): number {
   const { user } = useAuth();
-  const { data: userStats } = useUserStats(!!user && user.role === "USER");
+  const { data: consultations } = useConsultations();
   const { data: appointments } = useAppointmentsForMyConsultations();
-  const { data: practitionerStats } = usePractitionerStats(!!user && user.role === "PRACTITIONER");
-  const { data: incomingCalls } = useIncomingTeleconsultations();
+  const isPractitioner = user?.role === "PRACTITIONER";
+  const { data: incomingCalls } = useIncomingTeleconsultations(!!user && isPractitioner);
+  const { data: practitioners } = usePractitioners();
 
   if (!user) return 0;
+
+  const activeReferConsults =
+    consultations?.filter(
+      (c) => c.status !== "CLOSED" && c.urgency === "REFER",
+    ) ?? [];
+
   if (user.role === "USER") {
-    const referral = (userStats && "urgent_alerts" in userStats ? userStats.urgent_alerts : 0) ?? 0;
+    const referral = activeReferConsults.length;
     const upcoming = appointments?.length ?? 0;
     return referral + upcoming;
   }
+
   if (user.role === "PRACTITIONER") {
-    const toRefer = (practitionerStats && "urgent_cases" in practitionerStats ? practitionerStats.urgent_cases : 0) ?? 0;
+    const currentPractitioner = practitioners?.find(
+      (p) => p.user_id === user.user_id,
+    );
+    const isSpecialist = currentPractitioner?.practitioner_type === "SPECIALIST";
+
+    const toRefer = isSpecialist ? 0 : activeReferConsults.length;
     const incoming = incomingCalls?.length ?? 0;
     return toRefer + incoming;
   }
+
   return 0;
 }

@@ -5,6 +5,7 @@ interface LogoProps {
 	className?: string;
 	size?: "sm" | "md" | "lg";
 	iconOnly?: boolean;
+	light?: boolean;
 }
 
 const sizeMap = {
@@ -19,7 +20,7 @@ const iconSizeMap = {
 	lg: { class: "h-20 w-20", width: 36, height: 36 },
 };
 
-export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
+export function Logo({ className, size = "md", iconOnly = false, light = false }: LogoProps) {
 	return (
 		<Link
 			href='/'
@@ -38,8 +39,8 @@ export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
 				/>
 			</span>
 			{!iconOnly && (
-				<span className={cn("font-bold tracking-tight text-slate-900", sizeMap[size])}>
-					Dermo<span className='text-primary-500'>AI</span>
+				<span className={cn("font-bold tracking-tight", light ? "text-white" : "text-slate-900", sizeMap[size])}>
+					Dermo<span className={light ? "text-primary-200" : "text-primary-500"}>AI</span>
 				</span>
 			)}
 		</Link>

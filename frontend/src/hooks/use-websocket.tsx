@@ -8,6 +8,7 @@ interface WebSocketMessage {
 
 interface UseWebSocketOptions {
 	enabled?: boolean;
+	path?: string;
 }
 
 export function useWebSocket(
@@ -15,7 +16,7 @@ export function useWebSocket(
 	options: UseWebSocketOptions = {}
 ) {
 	const { user } = useAuth();
-	const { enabled = true } = options;
+	const { enabled = true, path = "/api/ws/specialists" } = options;
 	const [isConnected, setIsConnected] = useState(false);
 	const wsRef = useRef<WebSocket | null>(null);
 	const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -25,7 +26,7 @@ export function useWebSocket(
 
 		const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 		const host = process.env.NEXT_PUBLIC_API_URL?.replace(/^https?:\/\//, "") || "localhost:8000";
-		const wsUrl = `${protocol}//${host}/api/ws/specialists?user_id=${user.user_id}`;
+		const wsUrl = `${protocol}//${host}${path}?user_id=${user.user_id}`;
 
 		const ws = new WebSocket(wsUrl);
 
@@ -49,7 +50,8 @@ export function useWebSocket(
 		};
 
 		ws.onerror = (error) => {
-			console.error("WebSocket error:", error);
+			// Network/WebSocket issues are expected during reloads; log quietly.
+			console.debug("WebSocket error:", error);
 			ws.close();
 		};
 

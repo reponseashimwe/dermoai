@@ -55,8 +55,14 @@ async def register(data: RegisterRequest, db: AsyncSession) -> TokenResponse:
 
     await db.commit()
     await db.refresh(user)
+
+    # Before approval, practitioners should behave like regular users in the system.
+    token_role = user.role
+    if user.role == "PRACTITIONER":
+        token_role = "USER"
+
     return TokenResponse(
-        access_token=create_access_token(str(user.user_id), user.role),
+        access_token=create_access_token(str(user.user_id), token_role),
         refresh_token=create_refresh_token(str(user.user_id)),
     )
 
@@ -74,8 +80,18 @@ async def login(data: LoginRequest, db: AsyncSession) -> TokenResponse:
             status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated"
         )
 
+    # Compute effective role: pending / rejected practitioners act as regular users.
+    token_role = user.role
+    if user.role == "PRACTITIONER":
+        result = await db.execute(
+            select(Practitioner).where(Practitioner.user_id == user.user_id)
+        )
+        practitioner = result.scalar_one_or_none()
+        if not practitioner or practitioner.approval_status != "APPROVED":
+            token_role = "USER"
+
     return TokenResponse(
-        access_token=create_access_token(str(user.user_id), user.role),
+        access_token=create_access_token(str(user.user_id), token_role),
         refresh_token=create_refresh_token(str(user.user_id)),
     )
 
@@ -98,7 +114,17 @@ async def refresh(refresh_token: str, db: AsyncSession) -> TokenResponse:
             detail="User not found or inactive",
         )
 
+    # Keep refresh tokens aligned with the same effective-role behavior as login.
+    token_role = user.role
+    if user.role == "PRACTITIONER":
+        result = await db.execute(
+            select(Practitioner).where(Practitioner.user_id == user.user_id)
+        )
+        practitioner = result.scalar_one_or_none()
+        if not practitioner or practitioner.approval_status != "APPROVED":
+            token_role = "USER"
+
     return TokenResponse(
-        access_token=create_access_token(str(user.user_id), user.role),
+        access_token=create_access_token(str(user.user_id), token_role),
         refresh_token=create_refresh_token(str(user.user_id)),
     )

@@ -28,7 +28,9 @@ export default function SchedulesPage() {
   async function handleAppointmentCall(requestId: string) {
     try {
       const data = await startCall.mutateAsync(requestId);
-      router.push(`/teleconsultations/${data.teleconsultation_id}`);
+      router.push(
+        `/teleconsultations/${data.teleconsultation_id}?appointmentId=${requestId}`
+      );
     } catch {
       toast("Could not start call. Try the Call page if no specialist is assigned.", "error");
     }
@@ -94,7 +96,8 @@ export default function SchedulesPage() {
                             apt.status === "APPROVED" && "bg-green-100 text-green-800",
                             apt.status === "PENDING" && "bg-amber-100 text-amber-800",
                             apt.status === "REJECTED" && "bg-red-100 text-red-800",
-                            apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800"
+                            apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800",
+                            apt.status === "COMPLETED" && "bg-emerald-100 text-emerald-800"
                           )}
                         >
                           {apt.status}

@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import {
 	useAppointmentsForMyConsultations,
 	useUpcomingAppointments,
+	useStartCallFromAppointment,
 } from "@/hooks/use-appointments";
 import { CreateAppointmentModal } from "@/components/appointments/create-appointment-modal";
 import { Avatar } from "@/components/ui/avatar";
@@ -45,6 +46,7 @@ export default function TelemedicinePage() {
 		online_only: filter === "online",
 	});
 	const requestCall = useRequestTeleconsultation();
+	const startCallFromAppointment = useStartCallFromAppointment();
 	const isPractitioner = user?.role === "PRACTITIONER";
 	const { data: myConsultationAppointments } = useAppointmentsForMyConsultations();
 	const { data: upcomingAppointments } = useUpcomingAppointments();
@@ -64,47 +66,49 @@ export default function TelemedicinePage() {
 					description='Connect with available practitioners via video call'
 				/>
 				<div className='flex flex-wrap items-center gap-2 sm:ml-auto'>
-				{nextAppointment && nextAppointment.status === "APPROVED" && (
-					<div className='flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700'>
-						<span>
-							Next: <strong>{formatDate(nextAppointment.proposed_datetime)}</strong>
-						</span>
-						{nextAppointment.consultation_id && (
-							<>
-								<Link
-									href={`/consultations/${nextAppointment.consultation_id}`}
-									className='font-medium text-primary-600 hover:underline'
-								>
-									Consultation
-								</Link>
-								<Button
-									size='sm'
-									variant='outline'
-									loading={requestCall.isPending}
-									onClick={() => {
-										requestCall.mutate(
-											{ consultation_id: nextAppointment.consultation_id! },
-											{
-												onSuccess: (data) => {
-													router.push(`/teleconsultations/${data.teleconsultation_id}`);
-												},
-											},
-										);
-									}}
-								>
-									{requestCall.isPending ? (
-										"Connecting…"
-									) : (
-										<>
-											<Phone className='h-3 w-3' />
-											Join
-										</>
-									)}
-								</Button>
-							</>
-						)}
-					</div>
-				)}
+					{nextAppointment && nextAppointment.status !== "REJECTED" && (
+						<div className='flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700'>
+							<span>
+								Next: <strong>{formatDate(nextAppointment.proposed_datetime)}</strong>
+							</span>
+							{nextAppointment.consultation_id && (
+								<>
+									<Link
+										href={`/consultations/${nextAppointment.consultation_id}`}
+										className='font-medium text-primary-600 hover:underline'
+									>
+										Consultation
+									</Link>
+									<Button
+										size='sm'
+										variant='outline'
+										loading={startCallFromAppointment.isPending}
+										onClick={async () => {
+											try {
+												const data = await startCallFromAppointment.mutateAsync(
+													nextAppointment.request_id,
+												);
+												router.push(
+													`/teleconsultations/${data.teleconsultation_id}?appointmentId=${nextAppointment.request_id}`,
+												);
+											} catch {
+												// Ignore; flow is also available from consultation detail / Call page
+											}
+										}}
+									>
+										{startCallFromAppointment.isPending ? (
+											"Connecting…"
+										) : (
+											<>
+												<Phone className='h-3 w-3' />
+												Join
+											</>
+										)}
+									</Button>
+								</>
+							)}
+						</div>
+					)}
 					<Button onClick={() => openBookModal()} size='sm'>
 						<Calendar className='mr-2 h-4 w-4' />
 						Book appointment

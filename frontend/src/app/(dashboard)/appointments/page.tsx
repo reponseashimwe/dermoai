@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { usePractitioners } from "@/hooks/use-practitioners";
 import {
@@ -9,6 +10,7 @@ import {
   useApproveAppointment,
   useRejectAppointment,
   useProposeAlternativeTime,
+  useStartCallFromAppointment,
   type AppointmentRequest,
 } from "@/hooks/use-appointments";
 import { PageHeader } from "@/components/layout/page-header";
@@ -31,6 +33,7 @@ const STATUS_CONFIG = {
   APPROVED: { label: "Approved", color: "bg-green-100 text-green-800" },
   REJECTED: { label: "Rejected", color: "bg-red-100 text-red-800" },
   RESCHEDULED: { label: "Rescheduled", color: "bg-blue-100 text-blue-800" },
+  COMPLETED: { label: "Completed", color: "bg-emerald-100 text-emerald-800" },
 };
 
 function AppointmentStatusBadge({ status }: { status: AppointmentRequest["status"] }) {
@@ -135,6 +138,19 @@ function SpecialistView({
 }) {
   const approveAppointment = useApproveAppointment();
   const { toast } = useToast();
+  const startCall = useStartCallFromAppointment();
+  const router = useRouter();
+
+  async function handleAppointmentCall(requestId: string) {
+    try {
+      const data = await startCall.mutateAsync(requestId);
+      router.push(
+        `/teleconsultations/${data.teleconsultation_id}?appointmentId=${requestId}`
+      );
+    } catch {
+      toast("Could not start call. Try the Call page if no specialist is assigned.", "error");
+    }
+  }
 
   async function handleApprove(requestId: string) {
     try {
@@ -203,12 +219,16 @@ function SpecialistView({
                     >
                       View consultation →
                     </Link>
-                    <Link href={`/telemedicine?consultationId=${request.consultation_id}`}>
-                      <Button size="sm" variant="outline">
-                        <Phone className="mr-1 h-4 w-4" />
-                        Call
-                      </Button>
-                    </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleAppointmentCall(request.request_id)}
+                      title="Join call"
+                      loading={startCall.isPending}
+                    >
+                      <Phone className="mr-1 h-4 w-4" />
+                      Call
+                    </Button>
                   </div>
                 )}
               </div>

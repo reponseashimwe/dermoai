@@ -1,36 +1,36 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/layout/header";
 import { Logo } from "@/components/layout/logo";
 import { ScanUploadForm, type ScanUploadFormHandle } from "@/components/scan/scan-upload-form";
 import { ImageDetailContent } from "@/components/images/image-detail-content";
 import { Avatar } from "@/components/ui/avatar";
-import { Shield, Zap, Stethoscope, ArrowRight, Scan } from "lucide-react";
+import { Shield, Zap, Video, Scan, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useSaveQuickScanToConsultation } from "@/hooks/use-save-quick-scan-to-consultation";
 import { useToast } from "@/components/ui/toast";
 import { isApiError } from "@/lib/api/errors";
+import { useState } from "react";
 import type { QuickScanResponse } from "@/types/api";
 
 const features = [
 	{
 		icon: Zap,
 		title: "Instant Analysis",
-		desc: "Upload a photo and get AI-powered results in seconds.",
+		desc: "AI-powered triage in under 5 seconds.",
 	},
 	{
 		icon: Shield,
 		title: "Privacy First",
-		desc: "Your images are processed securely and never shared.",
+		desc: "Never stored without patient consent.",
 	},
 	{
-		icon: Stethoscope,
-		title: "Clinical-Grade",
-		desc: "Optimized for Fitzpatrick Skin Types V-VI.",
+		icon: Video,
+		title: "Telemedicine Ready",
+		desc: "Connect urgent cases to a dermatologist.",
 	},
 ];
 
@@ -43,7 +43,6 @@ export default function HomePage() {
 	const resultSectionRef = useRef<HTMLDivElement>(null);
 	const saveToConsultation = useSaveQuickScanToConsultation();
 
-	// Redirect logged-in users to dashboard only when they have no scan result (so they can complete a quick scan first)
 	useEffect(() => {
 		if (!isLoading && user && !scanResult) {
 			router.replace("/dashboard");
@@ -72,10 +71,7 @@ export default function HomePage() {
 			router.push(`/consultations/${consultation.consultation_id}`);
 			toast("Consultation created. Your scan has been saved.", "success");
 		} catch (err) {
-			toast(
-				isApiError(err) ? err.detail : "Failed to create consultation. Please try again.",
-				"error"
-			);
+			toast(isApiError(err) ? err.detail : "Failed to create consultation. Please try again.", "error");
 		}
 	}
 
@@ -83,7 +79,7 @@ export default function HomePage() {
 		return null;
 	}
 
-	// When we have a result, show only the result (no hero) — one viewport, scroll inside content
+	// Result view — full page, replaces hero
 	if (scanResult) {
 		return (
 			<div className='flex h-screen flex-col bg-white'>
@@ -98,7 +94,11 @@ export default function HomePage() {
 						>
 							Create consultation
 						</Button>
-						<Button variant='outline' size='sm' onClick={handleScanAgain}>
+						<Button
+							variant='outline'
+							size='sm'
+							onClick={handleScanAgain}
+						>
 							<Scan className='mr-2 h-4 w-4' />
 							Scan again
 						</Button>
@@ -118,7 +118,11 @@ export default function HomePage() {
 							>
 								Create consultation
 							</Button>
-							<Button variant='outline' onClick={handleScanAgain} className='min-w-[180px]'>
+							<Button
+								variant='outline'
+								onClick={handleScanAgain}
+								className='min-w-[180px]'
+							>
 								<Scan className='mr-2 h-4 w-4' />
 								Scan again
 							</Button>
@@ -131,43 +135,214 @@ export default function HomePage() {
 
 	return (
 		<>
-			{/* Mobile to md: single-column, full-width whole screen */}
-			<div className='flex min-h-screen flex-col bg-white lg:hidden'>
-				<Header />
-				<main className='flex flex-1 w-full flex-col overflow-hidden px-4 pt-6 pb-8 sm:px-6 sm:pt-8'>
-					<div className='mb-6 flex justify-center gap-6'>
-						{features.map((f, i) => (
-							<div
-								key={i}
-								className='flex flex-col items-center gap-1 text-center'
+			{/* ── Phone layout (< sm) ─────────────────────────────────── */}
+			<div
+				className='relative flex min-h-screen flex-col overflow-hidden sm:hidden'
+				style={{
+					backgroundImage:
+						"linear-gradient(135deg, var(--color-primary-900) 0%, var(--color-primary-700) 45%, var(--color-primary-500) 100%)",
+				}}
+			>
+				{/* Grid pattern overlay */}
+				<div
+					className='pointer-events-none absolute inset-0'
+					style={{
+						backgroundImage:
+							"linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+						backgroundSize: "32px 32px",
+					}}
+				/>
+
+				{/* Header */}
+				<header className='relative z-10 flex items-center justify-between px-4 pb-2 pt-5'>
+					<Logo
+						size='sm'
+						light
+					/>
+					{!isLoading && !user && (
+						<Link href='/login'>
+							<Button
+								variant='ghost'
+								size='sm'
+								className='rounded-full border border-white/30 px-4 text-white hover:bg-white/10'
 							>
-								<div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50'>
-									<f.icon className='h-5 w-5 text-primary-500' />
+								Sign in
+							</Button>
+						</Link>
+					)}
+					{!isLoading && user && (
+						<Link href='/dashboard'>
+							<Button
+								size='sm'
+								className='rounded-full'
+							>
+								Dashboard
+							</Button>
+						</Link>
+					)}
+				</header>
+
+				{/* Hero copy */}
+				<div className='relative z-10 px-4 pb-10 pt-5'>
+					<span className='inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90'>
+						<span className='h-1.5 w-1.5 rounded-full bg-white/60' />
+						Made for Africa · Fitzpatrick V–VI
+					</span>
+					<h1 className='mt-3 text-[1.75rem] font-bold leading-snug text-white'>
+						AI Skin Triage <span className='text-primary-50'>for Dark Skin.</span>
+					</h1>
+					<p className='mt-2 text-sm leading-relaxed text-white/75'>
+						Instant dermatological analysis powered by deep learning — optimised for darker skin tones and
+						built for resource-limited clinics.
+					</p>
+
+					{/* Features row */}
+					<div className='mt-4 rounded-2xl border border-white/15 bg-white/5 py-3 hidden'>
+						<div className='grid grid-cols-3 text-center text-xs font-medium text-white/85'>
+							{features.map((f, i) => (
+								<div
+									key={i}
+									className='flex flex-col items-center gap-1.5 px-2'
+								>
+									<div className='flex h-9 w-9 items-center justify-center rounded-full bg-white/10'>
+										<f.icon className='h-4 w-4 text-primary-50' />
+									</div>
+									<span className='text-xs'>{f.title}</span>
 								</div>
-								<span className='text-xs font-medium text-slate-700'>{f.title}</span>
-							</div>
-						))}
-					</div>
-					<div className='flex min-h-0 flex-1 flex-col items-center justify-center'>
-						<div className='mb-4 text-center'>
-							<h1 className='text-2xl font-bold text-slate-900'>
-								AI Skin Triage <span className='text-primary-600'>for Everyone.</span>
-							</h1>
-							<p className='mt-1 text-sm text-slate-500'>
-								Instant dermatological analysis powered by deep learning — optimised for darker skin tones
-								and low-resource clinics.
-							</p>
+							))}
 						</div>
-						<div className='w-full max-w-md'>
-							<h2 className='mb-1 text-center text-base font-semibold text-slate-900'>Quick Skin Scan</h2>
-							<p className='mb-4 text-center text-xs font-medium text-emerald-700'>
-								Free · No login required
-							</p>
+					</div>
+				</div>
+
+				{/* White bottom sheet */}
+				<div className='relative z-10 flex-1 rounded-t-3xl bg-white px-8 pb-8 pt-3 shadow-2xl'>
+					<div className='mx-auto mb-5 h-1 w-10 rounded-full bg-slate-200' />
+
+					<h2 className='text-xl font-bold text-slate-900'>Quick Skin Scan</h2>
+					<div className='mt-1 flex items-center gap-2'>
+						<span className='text-xs text-slate-500'>Free · No login required</span>
+						<span className='rounded-full border border-emerald-500 px-2 py-0.5 text-[10px] font-bold text-emerald-600'>
+							FREE
+						</span>
+					</div>
+
+					<div className='mt-4'>
+						<ScanUploadForm
+							ref={scanFormRef}
+							resultDisplay='fullPage'
+							onResultReady={setScanResult}
+							onScanAgain={handleScanAgain}
+							showSampleResult
+						/>
+					</div>
+
+					<div className='mt-4 flex items-start gap-1.5 rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500'>
+						<Info className='mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400' />
+						<p>
+							<span className='font-semibold text-slate-700'>Triage support only.</span> For confirmed
+							diagnosis or treatment, connect with a specialist via DermoAI teleconsultation.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			{/* ── Tablet layout (sm – lg) ─────────────────────────────────── */}
+			<div className='hidden min-h-screen flex-col bg-white sm:flex lg:hidden'>
+				{/* Header */}
+				<header className='shrink-0 bg-white py-4 font-sans sm:py-5'>
+					<div className='mx-auto flex max-w-7xl items-center justify-between px-6'>
+						<Link
+							href='/'
+							className='flex items-center gap-2'
+						>
+							<Logo size='sm' />
+						</Link>
+						<div className='flex items-center gap-3'>
+							{!isLoading && !user && (
+								<>
+									<Link href='/login'>
+										<Button
+											variant='ghost'
+											size='sm'
+											className='h-8 px-3 text-sm font-medium text-slate-700'
+										>
+											Sign in
+										</Button>
+									</Link>
+									<Link href='/register'>
+										<Button
+											size='sm'
+											className='h-8 px-3 text-sm font-medium'
+										>
+											Get Started
+										</Button>
+									</Link>
+								</>
+							)}
+						</div>
+					</div>
+				</header>
+
+				<main className='flex w-full flex-1 flex-col px-6 pb-8 pt-6'>
+					<div className='mx-auto flex w-full max-w-xl flex-1 flex-col'>
+						{/* Hero card */}
+						<section className='mb-6'>
+							<div
+								className='relative overflow-hidden rounded-2xl px-5 py-6'
+								style={{
+									backgroundImage:
+										"linear-gradient(135deg, var(--color-primary-900) 0%, var(--color-primary-700) 45%, var(--color-primary-500) 100%)",
+								}}
+							>
+								<div
+									className='pointer-events-none absolute inset-0'
+									style={{
+										backgroundImage:
+											"linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+										backgroundSize: "32px 32px",
+									}}
+								/>
+								<div className='relative z-10'>
+									<span className='inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90'>
+										<span className='h-1.5 w-1.5 rounded-full bg-white/60' />
+										Made for Africa · Fitzpatrick V–VI
+									</span>
+									<h1 className='mt-3 text-2xl font-bold leading-snug text-white'>
+										AI Skin Triage <span className='text-primary-50'>for Dark Skin.</span>
+									</h1>
+									<p className='mt-2 text-sm leading-relaxed text-white/75'>
+										Instant dermatological analysis powered by deep learning — optimised for darker
+										skin tones and built for resource-limited clinics.
+									</p>
+									<div className='mt-4 rounded-2xl border border-white/15 bg-white/5 px-2 py-3'>
+										<div className='grid grid-cols-3 text-center text-xs font-medium text-white/85'>
+											{features.map((f, i) => (
+												<div
+													key={i}
+													className='flex flex-col items-center gap-1 px-2'
+												>
+													<div className='flex h-9 w-9 items-center justify-center rounded-full bg-white/10'>
+														<f.icon className='h-4 w-4 text-primary-50' />
+													</div>
+													<span className='text-xs'>{f.title}</span>
+												</div>
+											))}
+										</div>
+									</div>
+								</div>
+							</div>
+						</section>
+
+						{/* Scan form */}
+						<div className='flex flex-1 flex-col'>
+							<h2 className='mb-1 text-base font-semibold text-slate-900'>Quick Skin Scan</h2>
+							<p className='mb-4 text-xs font-medium text-emerald-700'>Free · No login required</p>
 							<ScanUploadForm
 								ref={scanFormRef}
-								resultDisplay="fullPage"
+								resultDisplay='fullPage'
 								onResultReady={setScanResult}
 								onScanAgain={handleScanAgain}
+								showSampleResult
 							/>
 							<p className='mt-4 text-center text-xs text-slate-500'>
 								No account required. Results support triage only — for diagnosis or treatment, connect
@@ -178,110 +353,154 @@ export default function HomePage() {
 				</main>
 			</div>
 
-			{/* Desktop: hero + form only (no result section; result replaces whole page) */}
-			<div className='relative hidden min-h-screen w-full lg:block'>
+			{/* ── Desktop layout (≥ lg) ─────────────────────────────────── */}
+			<div className='relative hidden h-screen w-full overflow-hidden lg:block bg-white'>
 				<div
-					className='absolute inset-0 z-0 flex flex-row pointer-events-none'
-					aria-hidden
+					className='absolute w-1/2 h-full'
+					style={{
+						backgroundImage:
+							"linear-gradient(135deg, var(--color-primary-900) 0%, var(--color-primary-700) 45%, var(--color-primary-500) 100%)",
+					}}
 				>
-					<div className='absolute left-0 top-0 h-full w-1/2 bg-slate-100' />
+					{/* Grid overlay */}
 					<div
-						className='absolute right-0 top-0 h-full w-1/2 bg-white'
+						className='pointer-events-none absolute inset-0'
+						style={{
+							backgroundImage:
+								"linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+							backgroundSize: "40px 40px",
+						}}
 					/>
 				</div>
-				<div className='relative z-10 flex min-h-screen justify-center'>
-					<div className='flex w-full max-w-7xl flex-row'>
-						<div className='flex w-1/2 flex-col'>
-							<header className='flex min-h-[72px] shrink-0 items-center px-6 py-5 lg:min-h-[80px] lg:px-8 lg:py-6'>
-								<Logo size='sm' />
-							</header>
-							<div className='flex flex-1 flex-col justify-center overflow-auto px-6 pr-12 lg:px-8 lg:pr-16'>
-								<div>
-									<span className='inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700'>
-										<span className='h-1.5 w-1.5 rounded-full bg-primary-500' />
+				<div className='mx-auto flex h-full max-w-[90vw]'>
+					{/* ── Left panel (brand / hero) ── */}
+					<div className='relative flex w-1/2 flex-col overflow-hidden'>
+						<div className='relative z-10 flex h-full flex-col px-8 py-7 lg:px-10 lg:py-8'>
+							{/* Logo */}
+							<Logo
+								size='sm'
+								light
+							/>
+
+							{/* Hero copy */}
+							<div className='flex flex-1 flex-col justify-center items-center max-w-lg'>
+								<div className='max-w-xl '>
+									<span className='inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90'>
+										<span className='h-1.5 w-1.5 rounded-full bg-white/60' />
 										Made for Africa · Fitzpatrick V–VI
 									</span>
-									<h1 className='mt-4 text-4xl font-bold leading-tight text-slate-900 xl:text-5xl'>
+
+									<h1 className='mt-5 text-4xl font-bold leading-tight text-white xl:text-5xl'>
 										AI Skin Triage
 										<br />
-										<span className='text-primary-600'>for Everyone.</span>
+										for Dark Skin.
 									</h1>
-									<p className='mt-4 max-w-md text-slate-500'>
+
+									<p className='mt-4 text-sm leading-relaxed text-white/75'>
 										Instant dermatological analysis powered by deep learning — optimised for darker
 										skin tones and built for resource-limited clinics across Sub-Saharan Africa.
 									</p>
-								</div>
-								<div className='mt-10 space-y-4'>
-									{features.map((f, i) => (
-										<div
-											key={i}
-											className='flex items-start gap-3'
-										>
-											<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50'>
-												<f.icon className='h-4 w-4 text-primary-500' />
+
+									{/* Feature cards */}
+									<div className='mt-8 space-y-3'>
+										{features.map((f, i) => (
+											<div
+												key={i}
+												className='flex items-center gap-3 rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm'
+											>
+												<div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10'>
+													<f.icon className='h-4 w-4 text-white/80' />
+												</div>
+												<div>
+													<p className='text-sm font-semibold text-white'>{f.title}</p>
+													<p className='text-xs text-white/60'>{f.desc}</p>
+												</div>
 											</div>
-											<div>
-												<p className='text-sm font-semibold text-slate-800'>{f.title}</p>
-												<p className='text-sm text-slate-400'>{f.desc}</p>
-											</div>
-										</div>
-									))}
-								</div>
-								{!user && (
-									<div className='mt-10 flex gap-3'>
-										<Link href='/register'>
-											<Button>
-												Get Started
-												<ArrowRight className='h-4 w-4' />
-											</Button>
-										</Link>
-										<Link href='/login'>
-											<Button variant='ghost'>Sign in</Button>
-										</Link>
+										))}
 									</div>
-								)}
+								</div>
 							</div>
 						</div>
+					</div>
 
-						<div className='flex w-1/2 flex-col'>
-							<header className='flex min-h-[72px] shrink-0 items-center justify-end px-6 py-5 lg:min-h-[80px] lg:px-8 lg:py-6'>
-								<div className='flex items-center gap-4'>
-									{!isLoading && !user && (
-										<>
-											<Link href='/login'>
-												<Button variant='ghost' size='sm'>Sign in</Button>
-											</Link>
-											<Link href='/register'>
-												<Button size='sm'>Get Started</Button>
-											</Link>
-										</>
-									)}
-									{!isLoading && user && (
-										<>
-											<Link href='/consultations'>
-												<Button size='sm'>Dashboard</Button>
-											</Link>
-											<Link href='/profile' className='flex items-center' aria-label='Profile'>
-												<Avatar name={user.name} size='md' />
-											</Link>
-										</>
-									)}
+					{/* ── Right panel (form) ── */}
+					<div className='flex w-1/2 flex-col overflow-y-auto'>
+						{/* Header */}
+						<header className='flex shrink-0 items-center justify-end gap-3 px-8 py-5 lg:px-10 lg:py-6'>
+							{!isLoading && !user && (
+								<>
+									<Link href='/login'>
+										<Button
+											variant='ghost'
+											size='sm'
+										>
+											Sign in
+										</Button>
+									</Link>
+									<Link href='/register'>
+										<Button size='sm'>Get Started</Button>
+									</Link>
+								</>
+							)}
+							{!isLoading && user && (
+								<>
+									<Link href='/dashboard'>
+										<Button size='sm'>Dashboard</Button>
+									</Link>
+									<Link
+										href='/profile'
+										className='flex items-center'
+										aria-label='Profile'
+									>
+										<Avatar
+											name={user.name}
+											size='md'
+										/>
+									</Link>
+								</>
+							)}
+						</header>
+
+						{/* Form content */}
+						<div className='flex flex-1 flex-col items-center justify-center px-8 pb-10 lg:px-14 mx-auto max-w-lg'>
+							<div className='w-full max-w-md'>
+								<h2
+									id='quick-scan'
+									className='text-lg font-bold text-slate-900'
+								>
+									Quick Skin Scan
+								</h2>
+								<div className='mt-1.5 flex items-center gap-2'>
+									<span className='text-xs text-slate-500'>Free · No login required</span>
 								</div>
-							</header>
-							<div className='flex flex-1 flex-col items-center justify-center overflow-auto pl-12 lg:pl-16'>
-								<div className='w-full max-w-md px-6 lg:px-8'>
-									<h2 className='mb-1 text-base font-semibold text-slate-900'>Quick Skin Scan</h2>
-									<p className='mb-4 text-xs font-medium text-emerald-700'>Free · No login required</p>
+
+								<div className='mt-12'>
 									<ScanUploadForm
 										ref={scanFormRef}
-										resultDisplay="fullPage"
+										resultDisplay='fullPage'
 										onResultReady={setScanResult}
 										onScanAgain={handleScanAgain}
+										showSampleResult
 									/>
-									<p className='mt-4 text-xs text-slate-500'>
-										No account required. Results support triage only — for diagnosis or treatment,
-										you can connect with a specialist through teleconsultation in DermoAI.
-									</p>
+								</div>
+
+								{/* Disclaimer */}
+								<p className='mt-10 flex gap-1.5 text-xs text-slate-500'>
+									<Info className='mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400' />
+									<span>
+										<span className='font-semibold text-slate-700'>Triage support only.</span> For
+										confirmed diagnosis or treatment, connect with a specialist via DermoAI
+										teleconsultation.
+									</span>
+								</p>
+
+								{/* Footer checks */}
+								<div className='mt-5 flex items-center justify-center gap-3 text-xs font-medium text-primary-600'>
+									<span>✓ No account required</span>
+									<span className='text-slate-200'>·</span>
+									<span>✓ Educational purposes</span>
+									<span className='text-slate-200'>·</span>
+									<span>✓ 10 MB max</span>
 								</div>
 							</div>
 						</div>

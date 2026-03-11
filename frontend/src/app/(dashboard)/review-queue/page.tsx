@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { ImageDetailModal } from "@/components/images/image-detail-modal";
 import { Pagination } from "@/components/ui/pagination";
 import { useUnreviewedImages, useReviewedImages, useUpdateImageReview } from "@/hooks/use-images";
+import { useAuth } from "@/hooks/use-auth";
+import { usePractitioners } from "@/hooks/use-practitioners";
 import { useConditions } from "@/hooks/use-conditions";
 import { useToast } from "@/components/ui/toast";
 import { formatConfidence, formatDate } from "@/lib/utils";
@@ -126,6 +128,27 @@ function ReviewedCard({ image, onClick }: { image: ImageType; onClick: () => voi
 }
 
 export default function ReviewQueuePage() {
+	const { user } = useAuth();
+	const { data: practitioners } = usePractitioners();
+	const currentPractitioner = practitioners?.find((p) => p.user_id === user?.user_id);
+	const isSpecialist = currentPractitioner?.practitioner_type === "SPECIALIST";
+
+	// Hard guard: only specialists can access this page
+	if (!user || user.role !== "PRACTITIONER" || !isSpecialist) {
+		return (
+			<div className='space-y-4'>
+				<PageHeader
+					title='Image Review Queue'
+					description='Only specialist doctors can access the review queue.'
+				/>
+				<Card>
+					<CardContent className='py-6 text-sm text-slate-600'>
+						You do not have access to this page.
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
 	const [tab, setTab] = useState<Tab>("pending");
 	const [skip, setSkip] = useState(0);
 	const [reviewedSkip, setReviewedSkip] = useState(0);

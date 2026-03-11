@@ -25,6 +25,7 @@ from app.schemas.stats import (
     RecentActivityItem,
     TelemedStats,
     TelemedStatusBreakdown,
+    AppointmentStatusBreakdown,
     TopCondition,
     UserStatsResponse,
 )
@@ -251,8 +252,13 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
     tc_result = await db.execute(select(func.count()).select_from(Teleconsultation))
     teleconsultations_total = tc_result.scalar() or 0
 
-    apt_result = await db.execute(select(func.count()).select_from(AppointmentRequest))
-    appointments_total = apt_result.scalar() or 0
+    apt_result = await db.execute(
+        select(func.count(), AppointmentRequest.status)
+        .select_from(AppointmentRequest)
+        .group_by(AppointmentRequest.status)
+    )
+    apt_status_data = {row.status: row.count for row in apt_result}
+    appointments_total = sum(apt_status_data.values())
 
     # Status breakdown for teleconsultations (using actual TC statuses)
     tc_status_result = await db.execute(
@@ -262,8 +268,19 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
     )
     tc_status_data = {row.status: row.count for row in tc_status_result}
 
+    # Completed should reflect completed appointments; pending/active from teleconsultations
+    appt_completed_count = apt_status_data.get("COMPLETED", 0)
+
+    appointment_status = AppointmentStatusBreakdown(
+        pending=apt_status_data.get("PENDING", 0),
+        approved=apt_status_data.get("APPROVED", 0),
+        rescheduled=apt_status_data.get("RESCHEDULED", 0),
+        completed=apt_status_data.get("COMPLETED", 0),
+        rejected=apt_status_data.get("REJECTED", 0),
+    )
+
     telemed_status = TelemedStatusBreakdown(
-        completed=tc_status_data.get("COMPLETED", 0),
+        completed=appt_completed_count,
         pending=tc_status_data.get("PENDING", 0),
         active=tc_status_data.get("ACTIVE", 0),
     )
@@ -272,6 +289,7 @@ async def get_admin_stats(db: AsyncSession) -> AdminStatsResponse:
         teleconsultations_total=teleconsultations_total,
         appointments_total=appointments_total,
         status=telemed_status,
+        appointment_status=appointment_status,
     )
 
     # Conditions breakdown from all analyzed images (not just consultations)
@@ -353,8 +371,9 @@ async def get_practitioner_stats(practitioner_id: UUID, db: AsyncSession) -> Pra
     result = await db.execute(select(func.count()).select_from(Consultation).where(base_filter))
     pending_consultations = result.scalar() or 0
 
-    # To Refer: my consultations with REFER urgency (any status)
+    # To Refer: my consultations with REFER urgency, only active (OPEN / IN_REVIEW)
     refer_filter = Consultation.urgency == "REFER"
+    refer_filter = refer_filter & Consultation.status.in_(["OPEN", "IN_REVIEW"])
     if user_id is not None:
         refer_filter = refer_filter & or_(
             Consultation.created_by == user_id,

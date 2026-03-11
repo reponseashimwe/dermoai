@@ -12,16 +12,24 @@ import {
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { useEndTeleconsultation, useLiveKitToken } from "@/hooks/use-teleconsultations";
+import { useCompleteAppointment } from "@/hooks/use-appointments";
 import { Button } from "@/components/ui/button";
 import { PhoneOff, User, Monitor, MessageSquare, MoreHorizontal, ChevronLeft } from "lucide-react";
 import { useCallback, useState } from "react";
 
 interface CallInterfaceProps {
 	teleconsultationId: string;
+	appointmentId?: string;
 	onEnd?: () => void;
 }
 
-function VideoCallInner({ onEndCall }: { onEndCall: () => void }) {
+function VideoCallInner({
+	onEndCall,
+	onRemoteJoined,
+}: {
+	onEndCall: () => void;
+	onRemoteJoined?: () => void;
+}) {
 	const participants = useParticipants();
 	const cameraTracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare]);
 	const remoteTracks = cameraTracks.filter((ref) => ref.participant.isLocal === false);
@@ -29,6 +37,10 @@ function VideoCallInner({ onEndCall }: { onEndCall: () => void }) {
 	const primaryRemote = remoteTracks[0];
 	const remoteParticipant = participants.find((p) => !p.isLocal);
 	const [showChat, setShowChat] = useState(false);
+
+	if (remoteParticipant && onRemoteJoined) {
+		onRemoteJoined();
+	}
 
 	return (
 		<div className="relative flex h-full w-full min-h-0 flex-col bg-slate-900">
@@ -140,14 +152,26 @@ function VideoCallInner({ onEndCall }: { onEndCall: () => void }) {
 	);
 }
 
-export function CallInterface({ teleconsultationId, onEnd }: CallInterfaceProps) {
+export function CallInterface({ teleconsultationId, appointmentId, onEnd }: CallInterfaceProps) {
 	const router = useRouter();
 	const { data: tokenData, isLoading } = useLiveKitToken(teleconsultationId);
 	const endMutation = useEndTeleconsultation();
+	const completeAppointment = useCompleteAppointment();
+	const [bothJoined, setBothJoined] = useState(false);
+
+	const maybeCompleteAppointment = useCallback(
+		() => {
+			if (!appointmentId || !bothJoined) return;
+			// Fire-and-forget; errors are non-blocking for ending the call.
+			completeAppointment.mutate(appointmentId);
+		},
+		[appointmentId, bothJoined, completeAppointment],
+	);
 
 	const handleDisconnected = useCallback(async () => {
 		try {
 			await endMutation.mutateAsync(teleconsultationId);
+			maybeCompleteAppointment();
 			onEnd?.();
 		} catch {
 			// ignore
@@ -158,6 +182,7 @@ export function CallInterface({ teleconsultationId, onEnd }: CallInterfaceProps)
 	const handleEndCall = async () => {
 		try {
 			await endMutation.mutateAsync(teleconsultationId);
+			maybeCompleteAppointment();
 			onEnd?.();
 		} catch {
 			// ignore
@@ -187,7 +212,10 @@ export function CallInterface({ teleconsultationId, onEnd }: CallInterfaceProps)
 			className="h-full w-full"
 		>
 			<RoomAudioRenderer />
-			<VideoCallInner onEndCall={handleEndCall} />
+			<VideoCallInner
+				onEndCall={handleEndCall}
+				onRemoteJoined={() => setBothJoined(true)}
+			/>
 		</LiveKitRoom>
 	);
 }

@@ -10,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { useQuickScan } from "@/hooks/use-quick-scan";
 import { PENDING_QUICK_SCAN_IMAGE_ID_KEY } from "@/hooks/use-save-quick-scan-to-consultation";
 import { isApiError } from "@/lib/api/errors";
-import { Scan } from "lucide-react";
+import { Scan, Check } from "lucide-react";
 import type { QuickScanResponse } from "@/types/api";
 import type { Consultation } from "@/types/api";
 
@@ -32,6 +32,8 @@ interface ScanUploadFormProps {
 	onResultReady?: (data: QuickScanResponse) => void;
 	/** When resultDisplay="fullPage", called when user clicks Scan again in form area so parent can clear its result state. */
 	onScanAgain?: () => void;
+	/** Show a static sample result preview between dropzone and submit button */
+	showSampleResult?: boolean;
 }
 
 export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormProps>(function ScanUploadForm(
@@ -44,6 +46,7 @@ export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormPro
 		resultDisplay = "inline",
 		onResultReady,
 		onScanAgain,
+		showSampleResult = false,
 	},
 	ref,
 ) {
@@ -52,13 +55,17 @@ export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormPro
 	const router = useRouter();
 	const scan = useQuickScan();
 
-	useImperativeHandle(ref, () => ({
-		reset: () => {
-			setFile(null);
-			setConsent(false);
-			scan.reset();
-		},
-	}), [scan]);
+	useImperativeHandle(
+		ref,
+		() => ({
+			reset: () => {
+				setFile(null);
+				setConsent(false);
+				scan.reset();
+			},
+		}),
+		[scan],
+	);
 
 	useEffect(() => {
 		if (scan.data && typeof window !== "undefined") {
@@ -92,7 +99,7 @@ export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormPro
 	}
 
 	return (
-		<div className='space-y-6'>
+		<div className='space-y-4'>
 			{!scan.data && (
 				<>
 					<ImageDropzone
@@ -139,7 +146,11 @@ export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormPro
 						onSaveError={onSaveError}
 						isSaving={isSaving}
 					/>
-					<Button variant='outline' onClick={handleScanAgain} className='w-full'>
+					<Button
+						variant='outline'
+						onClick={handleScanAgain}
+						className='w-full'
+					>
 						Scan Another Image
 					</Button>
 				</div>
@@ -149,7 +160,11 @@ export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormPro
 			{scan.data && !redirectToResultPage && resultDisplay === "fullPage" && (
 				<div className='space-y-3'>
 					<p className='text-sm text-slate-500'>Result shown below. Scroll down or scan another image.</p>
-					<Button variant='outline' onClick={handleScanAgain} className='w-full'>
+					<Button
+						variant='outline'
+						onClick={handleScanAgain}
+						className='w-full'
+					>
 						<Scan className='mr-2 h-4 w-4' />
 						Scan again
 					</Button>

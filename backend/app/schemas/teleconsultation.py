@@ -10,6 +10,7 @@ class TeleconsultationBase(BaseModel):
 
 class TeleconsultationCreate(TeleconsultationBase):
     specialist_id: UUID | None = None  # Optional: for direct requests to specific specialist
+    source: str | None = None  # e.g. "APPOINTMENT" or "DIRECT"
 
 
 class TeleconsultationRead(TeleconsultationBase):

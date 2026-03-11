@@ -7,7 +7,7 @@ export interface AppointmentRequest {
   requested_by_user_id: string;
   specialist_id: string | null;
   proposed_datetime: string;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "RESCHEDULED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "RESCHEDULED" | "COMPLETED";
   specialist_proposed_datetime: string | null;
   notes: string | null;
   rejection_reason: string | null;
@@ -124,6 +124,21 @@ export function useStartCallFromAppointment() {
         `/api/appointments/${requestId}/start-call`
       );
       return response.data;
+    },
+  });
+}
+
+export function useCompleteAppointment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (requestId: string) => {
+      const response = await apiClient.patch<{ request_id: string; status: string }>(
+        `/api/appointments/${requestId}/complete`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointment-requests"] });
     },
   });
 }

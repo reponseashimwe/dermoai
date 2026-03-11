@@ -14,7 +14,7 @@ from app.schemas.teleconsultation import (
     TeleconsultationRead,
     TeleconsultationToken,
 )
-from app.services import livekit_service, practitioner_service, teleconsultation_service
+from app.services import livekit_service, practitioner_service, teleconsultation_service, websocket_service
 
 router = APIRouter(prefix="/api/teleconsultations", tags=["teleconsultations"])
 
@@ -48,10 +48,10 @@ async def accept_teleconsultation(
 @router.post("/{teleconsultation_id}/end", response_model=TeleconsultationRead)
 async def end_teleconsultation(
     teleconsultation_id: UUID,
-    _user: Annotated[User, Depends(require_role("PRACTITIONER"))],
+    _user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """End an active teleconsultation."""
+    """End a teleconsultation. Any authenticated participant can end the call."""
     return await teleconsultation_service.end_teleconsultation(teleconsultation_id, db)
 
 
@@ -65,14 +65,45 @@ async def get_teleconsultation_token(
     teleconsultation = await teleconsultation_service.get_teleconsultation(
         teleconsultation_id, db
     )
-    
+
+    # Notify other practitioner participants that someone joined this call.
+    # Only practitioners trigger this notification; user joins are already
+    # represented by the initial teleconsultation_request.
+    if current_user.role == "PRACTITIONER":
+        try:
+            from app.services import practitioner_service as _ps
+
+            practitioner = await _ps.get_by_user_id(current_user.user_id, db)
+        except Exception:
+            practitioner = None
+
+        other_practitioner_ids: set[UUID] = set()
+        if practitioner:
+            # Current user is a practitioner: notify the other practitioner party (GP or specialist)
+            if teleconsultation.practitioner_id and teleconsultation.practitioner_id != practitioner.practitioner_id:
+                other_practitioner_ids.add(teleconsultation.practitioner_id)
+            if teleconsultation.specialist_id and teleconsultation.specialist_id != practitioner.practitioner_id:
+                other_practitioner_ids.add(teleconsultation.specialist_id)
+
+        join_payload = {
+            "type": "teleconsultation_joined",
+            "teleconsultation_id": str(teleconsultation.teleconsultation_id),
+            "consultation_id": str(teleconsultation.consultation_id) if teleconsultation.consultation_id else None,
+        }
+        for pid in other_practitioner_ids:
+            try:
+                await websocket_service.manager.send_to_participant(pid, join_payload)
+            except Exception:
+                # Do not fail token generation if notification fails
+                continue
+
     # Generate token for the user
     token = livekit_service.generate_token(
         room_name=teleconsultation.livekit_room_name,
         participant_name=current_user.name,
         participant_identity=str(current_user.user_id),
     )
-    
+
     return TeleconsultationToken(
         token=token,
         room_name=teleconsultation.livekit_room_name,

@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 
 export interface Condition {
@@ -20,10 +20,15 @@ export function useConditions() {
 }
 
 export function useCreateCondition() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (data: { condition_name: string; category?: string }) => {
 			const response = await api.post<Condition>("/api/conditions/", data);
 			return response.data;
+		},
+		onSuccess: () => {
+			// Ensure all ConditionSelect instances see the new option without a full page refresh
+			queryClient.invalidateQueries({ queryKey: ["conditions"] });
 		},
 	});
 }

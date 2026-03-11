@@ -33,6 +33,7 @@ class ConsultationUpdate(BaseModel):
     referral_note: str | None = None
     got_treatment: bool | None = None
     outcome_verified: bool | None = None
+    urgency: str | None = None
 
 
 class ConsultationImagesConsentUpdate(BaseModel):
