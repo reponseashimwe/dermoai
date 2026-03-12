@@ -107,7 +107,7 @@ function VideoCallInner({ onEndCall, onRemoteJoined }: { onEndCall: () => void; 
 					{/* Screen share toggle */}
 					<TrackToggle
 						source={Track.Source.ScreenShare}
-						className='flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 transition-colors data-[lk-enabled=true]:bg-primary-600 data-[lk-enabled=true]:border-primary-500 [&_svg]:h-5 [&_svg]:w-5'
+						className='flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 transition-colors data-[lk-enabled=true]:bg-primary-700 data-[lk-enabled=true]:border-primary-500 [&_svg]:h-5 [&_svg]:w-5'
 					></TrackToggle>
 					{/* More options */}
 					<button

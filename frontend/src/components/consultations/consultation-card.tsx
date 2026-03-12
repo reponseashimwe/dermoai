@@ -21,7 +21,7 @@ export function ConsultationCard({ consultation, compact }: ConsultationCardProp
 	if (compact) {
 		const confidence = consultation.final_confidence ?? 0;
 		const confidencePct = Math.round(confidence * 100);
-		const barColor = isRefer ? "bg-amber-500" : "bg-primary-500";
+		const barColor = isRefer ? "bg-amber-500" : "bg-primary-600";
 		return (
 			<Link href={`/consultations/${consultation.consultation_id}`}>
 				<Card className='cursor-pointer transition-shadow hover:shadow-md min-w-0 overflow-hidden'>
@@ -33,7 +33,9 @@ export function ConsultationCard({ consultation, compact }: ConsultationCardProp
 								</div>
 								<div className='min-w-0'>
 									<p className='font-semibold text-slate-900 truncate text-base'>{conditionName}</p>
-									<p className='text-sm text-slate-500 mt-0.5'>{formatDate(consultation.created_at)}</p>
+									<p className='text-sm text-slate-500 mt-0.5'>
+										{formatDate(consultation.created_at)}
+									</p>
 								</div>
 							</div>
 							<ConsultationStatusBadge status={consultation.status} />
@@ -97,8 +99,10 @@ export function ConsultationCard({ consultation, compact }: ConsultationCardProp
 									<>
 										<div className='h-1.5 w-14 overflow-hidden rounded-full bg-slate-200'>
 											<div
-												className={`h-full rounded-full transition-all ${isRefer ? "bg-amber-500" : "bg-primary-500"}`}
-												style={{ width: `${Math.min(100, Math.round(consultation.final_confidence * 100))}%` }}
+												className={`h-full rounded-full transition-all ${isRefer ? "bg-amber-500" : "bg-primary-600"}`}
+												style={{
+													width: `${Math.min(100, Math.round(consultation.final_confidence * 100))}%`,
+												}}
 											/>
 										</div>
 										<span className='text-sm font-semibold tabular-nums text-slate-900'>

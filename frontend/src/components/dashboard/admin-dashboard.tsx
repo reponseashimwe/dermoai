@@ -15,7 +15,7 @@ import type { AdminStats } from "@/types/api";
 import { formatConditionName } from "@/lib/utils";
 
 export function AdminDashboard() {
-	const { data: stats, isLoading } = useAdminStats();	
+	const { data: stats, isLoading } = useAdminStats();
 
 	if (isLoading || !stats) {
 		return (
@@ -47,7 +47,7 @@ export function AdminDashboard() {
 			<div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5'>
 				<Card className='border border-slate-200 bg-white'>
 					<CardContent className='flex items-center gap-3 px-4 py-6'>
-						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white'>
+						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-700 text-white'>
 							<UsersRound className='h-4 w-4' />
 						</div>
 						<div className='min-w-0 flex-1'>
@@ -58,7 +58,7 @@ export function AdminDashboard() {
 				</Card>
 				<Card className='border border-slate-200 bg-white'>
 					<CardContent className='flex items-center gap-3 px-4 py-6'>
-						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white'>
+						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-700 text-white'>
 							<FileText className='h-4 w-4' />
 						</div>
 						<div className='min-w-0 flex-1'>
@@ -69,7 +69,7 @@ export function AdminDashboard() {
 				</Card>
 				<Card className='border border-slate-200 bg-white'>
 					<CardContent className='flex items-center gap-3 px-4 py-6'>
-						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white'>
+						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-700 text-white'>
 							<ScanLine className='h-4 w-4' />
 						</div>
 						<div className='min-w-0 flex-1'>
@@ -93,7 +93,7 @@ export function AdminDashboard() {
 				</Card>
 				<Card className='border border-slate-200 bg-white'>
 					<CardContent className='flex items-center gap-3 px-4 py-6'>
-						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white'>
+						<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-700 text-white'>
 							<Stethoscope className='h-4 w-4' />
 						</div>
 						<div className='min-w-0 flex-1'>
@@ -243,7 +243,7 @@ export function AdminDashboard() {
 								{
 									label: "High (>80%)",
 									value: s.model_stats.confidence_distribution.high,
-									color: "bg-primary-600",
+									color: "bg-primary-700",
 								},
 							].map((bin) => {
 								const total = s.model_stats.total_predictions || 1;
@@ -321,7 +321,7 @@ export function AdminDashboard() {
 						<div className='space-y-2 text-sm'>
 							<div className='flex items-center justify-between'>
 								<div className='flex items-center gap-2'>
-									<span className='inline-block h-2.5 w-2.5 rounded-full bg-primary-600' />
+									<span className='inline-block h-2.5 w-2.5 rounded-full bg-primary-700' />
 									<span className='text-slate-700'>Consented</span>
 								</div>
 								<span className='font-medium text-slate-900'>{s.consent_stats.consented}</span>
@@ -353,7 +353,7 @@ export function AdminDashboard() {
 								{s.top_conditions.map((c, index) => {
 									const maxCount = s.top_conditions[0]?.count || 1;
 									const barColor = [
-										"bg-primary-600",
+										"bg-primary-700",
 										"bg-slate-500",
 										"bg-amber-500",
 										"bg-amber-400",

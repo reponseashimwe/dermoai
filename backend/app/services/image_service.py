@@ -292,8 +292,10 @@ async def set_consultation_images_consent(
 
 async def list_for_user(user_id: UUID, db: AsyncSession) -> list[Image]:
     """List quick-scan images for a user."""
+    from sqlalchemy.orm import selectinload
     result = await db.execute(
         select(Image)
+        .options(selectinload(Image.reviewer))
         .where(Image.uploaded_by == user_id, Image.source == "QUICK_SCAN")
         .order_by(Image.uploaded_at.desc())
     )
@@ -377,7 +379,8 @@ async def list_all(
     count_result = await db.execute(count_query)
     total = count_result.scalar() or 0
 
-    list_query = select(Image).order_by(Image.uploaded_at.desc()).offset(skip).limit(limit)
+    from sqlalchemy.orm import selectinload
+    list_query = select(Image).options(selectinload(Image.reviewer)).order_by(Image.uploaded_at.desc()).offset(skip).limit(limit)
     if criteria:
         list_query = list_query.where(*criteria)
     result = await db.execute(list_query)

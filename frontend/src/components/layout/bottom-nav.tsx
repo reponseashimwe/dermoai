@@ -11,7 +11,16 @@ import { getVisibleNavItems, type AppRole } from "@/config/roles";
 function getBottomNavItems(role: AppRole | undefined, isSpecialist: boolean) {
 	const visible = getVisibleNavItems(role, isSpecialist);
 	const primaryHref = "/scan-history";
-	const allowedHrefs = ["/dashboard", "/consultations", "/scan-history", "/telemedicine", "/review-queue", "/notifications", "/schedules", "/appointments"];
+	const allowedHrefs = [
+		"/dashboard",
+		"/consultations",
+		"/scan-history",
+		"/telemedicine",
+		"/review-queue",
+		"/notifications",
+		"/schedules",
+		"/appointments",
+	];
 	const filtered = visible.filter((item) => allowedHrefs.includes(item.href)).slice(0, 5);
 	const scanIndex = filtered.findIndex((item) => item.href === primaryHref);
 	const sorted =
@@ -37,7 +46,7 @@ export function BottomNav() {
 	const items = getBottomNavItems(user?.role as AppRole | undefined, !!isSpecialist);
 
 	return (
-		<nav className='fixed inset-x-0 bottom-0 z-30 border-t border-primary-700 bg-primary-600 pb-[env(safe-area-inset-bottom)] md:hidden'>
+		<nav className='fixed inset-x-0 bottom-0 z-30 border-t border-primary-700 bg-primary-700 pb-[env(safe-area-inset-bottom)] md:hidden'>
 			<div className='flex h-14 items-center justify-around'>
 				{items.map((item) => {
 					const active =
@@ -48,7 +57,7 @@ export function BottomNav() {
 							<Link
 								key={item.href}
 								href={item.href}
-								className='flex -mt-10 flex-col items-center justify-center gap-0.5 rounded-full bg-primary-600 px-4 py-2.5 text-white shadow-xl shadow-black/30 min-h-[2.75rem] ring-2 ring-white/30'
+								className='flex -mt-10 flex-col items-center justify-center gap-0.5 rounded-full bg-primary-700 px-4 py-2.5 text-white shadow-xl shadow-black/30 min-h-[2.75rem] ring-2 ring-white/30'
 							>
 								<item.icon className='h-5 w-5' />
 								<span className='text-[10px] font-medium'>{item.label}</span>

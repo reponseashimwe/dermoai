@@ -212,8 +212,8 @@ export function ScanResultCard({
 					{onSaveToConsultations ? (
 						<Button
 							size='sm'
-							variant={isRefer ? 'outline' : 'primary'}
-							className={isRefer ? 'border-red-300 text-red-700 hover:bg-red-100' : ''}
+							variant={isRefer ? "outline" : "primary"}
+							className={isRefer ? "border-red-300 text-red-700 hover:bg-red-100" : ""}
 							disabled={isSaving}
 							loading={isSaving}
 							onClick={async () => {
@@ -232,10 +232,10 @@ export function ScanResultCard({
 						<Link
 							href='/consultations/new'
 							className={cn(
-								'inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium',
+								"inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium",
 								isRefer
-									? 'border border-red-300 bg-transparent text-red-700 hover:bg-red-100'
-									: 'bg-primary-500 text-white hover:bg-primary-600'
+									? "border border-red-300 bg-transparent text-red-700 hover:bg-red-100"
+									: "bg-primary-600 text-white hover:bg-primary-700",
 							)}
 						>
 							<FileText className='h-4 w-4' />
