@@ -73,7 +73,7 @@ export function SpecialistDashboard() {
 		.slice()
 		.sort(() => Math.random() - 0.5)
 		.slice(0, PREVIEW_IMAGES);
-	const recentConsultations = consultations?.slice(0, 5) ?? [];
+	const recentConsultations = consultations?.slice(0, 3) ?? [];
 	const pendingAppointments = appointmentRequests?.slice(0, 3) ?? [];
 	const s = stats as PractitionerStats;
 

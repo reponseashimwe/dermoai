@@ -1,10 +1,12 @@
 "use client";
 
+import { use } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConsultationCreateForm } from "@/components/consultations/consultation-create-form";
 import { useAuth } from "@/hooks/use-auth";
 
-export default function NewConsultationPage() {
+export default function NewConsultationPage({ searchParams }: { searchParams: Promise<{ scanId?: string }> }) {
+  const { scanId } = use(searchParams);
   const { user } = useAuth();
   const isPatient = user?.role === "USER";
 
@@ -18,7 +20,7 @@ export default function NewConsultationPage() {
             : "Select a patient or create one, then start the consultation."
         }
       />
-      <ConsultationCreateForm />
+      <ConsultationCreateForm scanId={scanId} />
     </div>
   );
 }

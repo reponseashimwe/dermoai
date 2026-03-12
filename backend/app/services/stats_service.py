@@ -371,17 +371,35 @@ async def get_practitioner_stats(practitioner_id: UUID, db: AsyncSession) -> Pra
     result = await db.execute(select(func.count()).select_from(Consultation).where(base_filter))
     pending_consultations = result.scalar() or 0
 
-    # To Refer: my consultations with REFER urgency, only active (OPEN / IN_REVIEW)
-    refer_filter = Consultation.urgency == "REFER"
-    refer_filter = refer_filter & Consultation.status.in_(["OPEN", "IN_REVIEW"])
-    if user_id is not None:
-        refer_filter = refer_filter & or_(
-            Consultation.created_by == user_id,
-            Consultation.consultation_id.in_(tc_consultation_ids.scalar_subquery()),
-            Consultation.consultation_id.in_(apt_consultation_ids.scalar_subquery()),
-        )
-    result = await db.execute(select(func.count()).select_from(Consultation).where(refer_filter))
-    urgent_cases = result.scalar() or 0
+    # Total distinct consultations this practitioner has been involved in (all statuses)
+    # Build via UNION of: created by me + appointment specialist + teleconsult participant + reviewed by me
+    created_cids = select(Consultation.consultation_id).where(
+        Consultation.created_by == user_id
+    ) if user_id is not None else None
+    apt_cids = select(AppointmentRequest.consultation_id).where(
+        AppointmentRequest.specialist_id == practitioner_id,
+        AppointmentRequest.consultation_id.isnot(None),
+    )
+    tc_cids = select(Teleconsultation.consultation_id).where(
+        Teleconsultation.consultation_id.isnot(None),
+        or_(
+            Teleconsultation.specialist_id == practitioner_id,
+            Teleconsultation.practitioner_id == practitioner_id,
+        ),
+    )
+    reviewed_cids = select(ClinicalReview.consultation_id).where(
+        ClinicalReview.practitioner_id == practitioner_id,
+        ClinicalReview.consultation_id.isnot(None),
+    )
+    from sqlalchemy import union
+    parts = [apt_cids, tc_cids, reviewed_cids]
+    if created_cids is not None:
+        parts.insert(0, created_cids)
+    union_q = union(*parts)
+    total_result = await db.execute(
+        select(func.count()).select_from(union_q.subquery())
+    )
+    urgent_cases = total_result.scalar() or 0
 
     # Distinct patients from consultations this practitioner has reviewed
     result = await db.execute(

@@ -31,7 +31,7 @@ export function UserDashboard() {
 	const { data: appointments } = useAppointmentsForMyConsultations();
 	const startCall = useStartCallFromAppointment();
 
-	const recentConsultations = consultations?.slice(0, 5) ?? [];
+	const recentConsultations = consultations?.slice(0, 3) ?? [];
 	const upcomingAppointments = appointments?.slice(0, 3) ?? [];
 
 	async function handleAppointmentCall(requestId: string) {
@@ -276,7 +276,7 @@ export function UserDashboard() {
 							</div>
 						) : (
 							<div className='space-y-4 grid'>
-								{recentConsultations.slice(0, 5).map((c) => (
+								{recentConsultations.map((c) => (
 									<ConsultationCard
 										key={c.consultation_id}
 										consultation={c}

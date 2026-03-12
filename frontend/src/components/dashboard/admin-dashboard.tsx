@@ -2,38 +2,20 @@
 
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
-import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminStats } from "@/hooks/use-stats";
 import { usePendingPractitioners } from "@/hooks/use-practitioners";
-import { PendingPractitionerList } from "@/components/practitioners/pending-practitioner-list";
 import { DispositionChart } from "@/components/dashboard/charts/disposition-chart";
 import { LocationChart } from "@/components/dashboard/charts/location-chart";
-import { ConsentChart } from "@/components/dashboard/charts/consent-chart";
-import { OutcomeChart } from "@/components/dashboard/charts/outcome-chart";
-import { ModelConfidenceChart } from "@/components/dashboard/charts/model-confidence-chart";
-import { ConfidenceDistributionChart } from "@/components/dashboard/charts/confidence-distribution-chart";
-import {
-	Users,
-	UserCheck,
-	Stethoscope,
-	FileText,
-	Image,
-	UsersRound,
-	UserCog,
-	ScanLine,
-	AlertTriangle,
-	Zap,
-} from "lucide-react";
+import { Users, Stethoscope, FileText, UsersRound, ScanLine, AlertTriangle, Zap } from "lucide-react";
 import { DASHBOARD_CONFIG } from "@/config/roles";
 import type { AdminStats } from "@/types/api";
 import { formatConditionName } from "@/lib/utils";
 
 export function AdminDashboard() {
-	const { data: stats, isLoading } = useAdminStats();
-	const { data: pending } = usePendingPractitioners();
+	const { data: stats, isLoading } = useAdminStats();	
 
 	if (isLoading || !stats) {
 		return (
@@ -142,8 +124,8 @@ export function AdminDashboard() {
 							</Button>
 						</Link>
 					</CardHeader>
-					<CardContent className='grid grid-cols-2 divide-x divide-y divide-slate-200'>
-						<div className='space-y-1 p-4'>
+					<CardContent className='grid grid-cols-2'>
+						<div className='space-y-1 p-4  border-r border-b border-slate-200'>
 							<div className='flex items-center gap-2'>
 								<div className='flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100'>
 									<ScanLine className='h-4 w-4 text-primary-600' />
@@ -155,7 +137,7 @@ export function AdminDashboard() {
 							<p className='text-xs text-slate-500'>Total Scans</p>
 							<p className='text-xs font-medium text-primary-600'>All time</p>
 						</div>
-						<div className='space-y-1 p-4'>
+						<div className='space-y-1 p-4 border-b border-slate-200'>
 							<div className='flex items-center gap-2'>
 								<div className='flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100'>
 									<FileText className='h-4 w-4 text-amber-600' />
@@ -167,7 +149,7 @@ export function AdminDashboard() {
 							<p className='text-xs text-slate-500'>In Consultations</p>
 							<p className='text-xs font-medium text-amber-700'>Linked cases</p>
 						</div>
-						<div className='space-y-1 p-4'>
+						<div className='space-y-1 p-4 border-r border-slate-200'>
 							<div className='flex items-center gap-2'>
 								<div className='flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100'>
 									<Zap className='h-4 w-4 text-slate-600' />
@@ -238,7 +220,7 @@ export function AdminDashboard() {
 									{s.model_stats.total_predictions.toLocaleString()}
 								</p>
 								<p className='text-xs text-slate-500'>total predictions</p>
-								<p className='text-xs text-primary-600'>~ Stable · last 8 weeks</p>
+								<p className='text-xs text-primary-600'>~ Stable</p>
 							</div>
 						</div>
 						<div className='space-y-2.5 text-sm'>
@@ -410,7 +392,7 @@ export function AdminDashboard() {
 			<div className='grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
 				<Card className='border border-slate-200'>
 					<CardHeader>
-						<h2 className='text-base font-semibold text-slate-900'>Patients by Province</h2>
+						<h2 className='text-base font-semibold text-slate-900'>Patients by Location</h2>
 						<p className='text-sm text-slate-500'>Top district shown per province</p>
 					</CardHeader>
 					<CardContent>

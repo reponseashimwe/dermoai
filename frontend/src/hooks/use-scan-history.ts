@@ -7,5 +7,6 @@ export function useScanHistory() {
   return useQuery({
     queryKey: ["scan-history"],
     queryFn: triageHistory,
+    staleTime: 0,
   });
 }

@@ -172,7 +172,10 @@ async def attach_to_consultation(
 
 
 async def get_image(image_id: UUID, db: AsyncSession) -> Image:
-    result = await db.execute(select(Image).where(Image.image_id == image_id))
+    from sqlalchemy.orm import selectinload
+    result = await db.execute(
+        select(Image).options(selectinload(Image.reviewer)).where(Image.image_id == image_id)
+    )
     image = result.scalar_one_or_none()
     if not image:
         raise HTTPException(
@@ -224,8 +227,10 @@ async def get_image_with_gradcam(
 async def list_for_consultation(
     consultation_id: UUID, db: AsyncSession
 ) -> list[Image]:
+    from sqlalchemy.orm import selectinload
     result = await db.execute(
         select(Image)
+        .options(selectinload(Image.reviewer))
         .where(Image.consultation_id == consultation_id)
         .order_by(Image.uploaded_at.desc())
     )
@@ -301,6 +306,7 @@ async def list_unreviewed(
     limit: int = 20,
 ) -> tuple[list[Image], int]:
     """List images eligible for review: no reviewed_label, consented for reuse only."""
+    from sqlalchemy.orm import selectinload
     criteria = (
         Image.reviewed_label.is_(None),
         Image.consent_to_reuse.is_(True),
@@ -309,6 +315,7 @@ async def list_unreviewed(
     total = count_result.scalar() or 0
     result = await db.execute(
         select(Image)
+        .options(selectinload(Image.reviewer))
         .where(*criteria)
         .order_by(Image.uploaded_at.desc())
         .offset(skip)
@@ -323,6 +330,7 @@ async def list_reviewed(
     limit: int = 20,
 ) -> tuple[list[Image], int]:
     """List images that have been reviewed (have reviewed_label), consented for reuse only. Paginated."""
+    from sqlalchemy.orm import selectinload
     criteria = (
         Image.reviewed_label.isnot(None),
         Image.consent_to_reuse.is_(True),
@@ -331,6 +339,7 @@ async def list_reviewed(
     total = count_result.scalar() or 0
     result = await db.execute(
         select(Image)
+        .options(selectinload(Image.reviewer))
         .where(*criteria)
         .order_by(Image.uploaded_at.desc())
         .offset(skip)
@@ -376,15 +385,23 @@ async def list_all(
 
 
 async def update_reviewed_label(
-    image_id: UUID, reviewed_label: str, db: AsyncSession
+    image_id: UUID, reviewed_label: str, db: AsyncSession,
+    reviewer_id: UUID | None = None,
 ) -> Image:
-    image = await get_image(image_id, db)
+    from sqlalchemy.orm import selectinload
+    result = await db.execute(
+        select(Image).options(selectinload(Image.reviewer)).where(Image.image_id == image_id)
+    )
+    image = result.scalar_one_or_none()
+    if not image:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
     if not image.allowed_review and not image.consultation_id and not image.consent_to_reuse:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Image does not allow review",
         )
     image.reviewed_label = reviewed_label
+    image.reviewed_by = reviewer_id
     image.reviewed_as_final = False  # Set via queue, not final clinical review
     if image.consultation_id:
         image.allowed_review = True  # Ensure consultation images are marked allowed

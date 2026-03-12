@@ -44,7 +44,7 @@ export function QuickScanModal({ open, onClose }: QuickScanModalProps) {
   if (!open) return null;
 
   return (
-    <Modal open={open} onClose={onClose} title="Quick Scan" className="max-w-lg">
+    <Modal open={open} onClose={onClose} title="Quick Scan" className="max-w-5xl">
       <p className="mb-4 text-sm text-slate-500">
         Upload a skin image for instant AI analysis. Results stay in this dialog.
       </p>

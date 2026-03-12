@@ -108,6 +108,8 @@ export interface Image {
   predicted_condition: string | null;
   confidence: number | null;
   reviewed_label: string | null;
+  reviewed_by: string | null;
+  reviewed_by_name: string | null;
   reviewed_as_final: boolean;
   uploaded_at: string;
   file_size: number | null;

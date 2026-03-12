@@ -33,7 +33,7 @@ export function PractitionerDashboard() {
 	const isOnline = updateStatus.data?.is_online ?? currentPractitioner?.is_online ?? false;
 
 	const nextAppointments = upcomingAppointments?.slice(0, 3) ?? [];
-	const recentConsultations = consultations?.slice(0, 5) ?? [];
+	const recentConsultations = consultations?.slice(0, 3) ?? [];
 
 	if (isLoading || !stats) {
 		return (
