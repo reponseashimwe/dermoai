@@ -79,7 +79,7 @@ export function ModelConfidenceChart({ data, avgConfidence, embedded = false }: 
 					>
 						<div className='w-full flex items-end h-full'>
 							<div
-								className='w-full bg-primary-500 rounded-t hover:bg-primary-600 transition-colors relative group'
+								className='w-full bg-primary-600 rounded-t hover:bg-primary-700 transition-colors relative group'
 								style={{ height: `${height}%`, minHeight: "8px" }}
 							>
 								<div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap'>

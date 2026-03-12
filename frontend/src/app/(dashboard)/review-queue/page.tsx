@@ -51,7 +51,7 @@ function PendingReviewCard({ image, onClick }: { image: ImageType; onClick: () =
 								<div
 									className={cn(
 										"h-full rounded-full transition-[width]",
-										urgency === "REFER" ? "bg-amber-500" : "bg-primary-500"
+										urgency === "REFER" ? "bg-amber-500" : "bg-primary-600",
 									)}
 									style={{ width: `${Math.round(image.confidence * 100)}%` }}
 								/>
@@ -95,7 +95,10 @@ function ReviewedCard({ image, onClick }: { image: ImageType; onClick: () => voi
 				<div className='p-3'>
 					{image.reviewed_label && (
 						<div className='flex items-center gap-1.5'>
-							<CheckCircle className='h-4 w-4 shrink-0 text-primary-600' aria-hidden />
+							<CheckCircle
+								className='h-4 w-4 shrink-0 text-primary-600'
+								aria-hidden
+							/>
 							<p className='truncate text-sm font-bold text-slate-900'>
 								{image.reviewed_label.replace(/_/g, " ")}
 							</p>
@@ -111,7 +114,7 @@ function ReviewedCard({ image, onClick }: { image: ImageType; onClick: () => voi
 								<div
 									className={cn(
 										"h-full rounded-full transition-[width]",
-										urgency === "REFER" ? "bg-amber-500" : "bg-primary-500"
+										urgency === "REFER" ? "bg-amber-500" : "bg-primary-600",
 									)}
 									style={{ width: `${Math.round(image.confidence * 100)}%` }}
 								/>
@@ -342,7 +345,10 @@ export default function ReviewQueuePage() {
 								allowCustom={true}
 							/>
 							<div className='flex justify-end gap-2'>
-								<Button variant='outline' onClick={closeModal}>
+								<Button
+									variant='outline'
+									onClick={closeModal}
+								>
 									Cancel
 								</Button>
 								<Button

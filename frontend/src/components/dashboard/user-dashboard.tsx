@@ -70,10 +70,10 @@ export function UserDashboard() {
 				description={config.description}
 			/>
 
-			<Card className='border-0 bg-primary-600 overflow-hidden'>
+			<Card className='border-0 bg-primary-700 overflow-hidden'>
 				<CardContent className='flex flex-col gap-1 py-6 px-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4'>
 					<div className='flex items-center gap-3'>
-						<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-500 text-white'>
+						<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white'>
 							<Hand className='h-6 w-6' />
 						</div>
 						<div>

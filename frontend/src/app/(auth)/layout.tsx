@@ -25,32 +25,50 @@ export default function AuthLayout({
             <div className="mt-10 flex-1">{children}</div>
           </div>
 
-          {/* Right — Brand panel */}
-          <div className="flex w-[45%] flex-col justify-between rounded-l-3xl bg-primary-500 p-10 lg:p-12">
-            <div />
-            <div>
-              <h2 className="text-3xl font-bold leading-tight text-white">
-                AI-Powered Skin
-                <br />
-                Triage for Africa
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-white/80">
-                Instant dermatological analysis optimized for darker skin tones,
-                designed for resource-limited settings.
-              </p>
-            </div>
-            <div className="flex gap-6 text-white/70">
-              <div className="flex items-center gap-1.5 text-xs">
-                <Zap className="h-3.5 w-3.5" />
-                <span>Instant</span>
+          {/* Right — Brand panel (matches landing gradient + grid) */}
+          <div className="relative flex w-[45%] flex-col justify-between rounded-l-3xl overflow-hidden">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, var(--color-primary-900) 0%, var(--color-primary-700) 45%, var(--color-primary-500) 100%)",
+              }}
+            />
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+              }}
+            />
+
+            <div className="relative z-10 flex flex-1 flex-col justify-between p-10 lg:p-12 text-white">
+              <div />
+              <div>
+                <h2 className="text-3xl font-bold leading-tight">
+                  AI-Powered Skin
+                  <br />
+                  Triage for Africa
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-white/80">
+                  Instant dermatological analysis optimized for darker skin tones,
+                  designed for resource-limited settings.
+                </p>
               </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <Shield className="h-3.5 w-3.5" />
-                <span>Private</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <Stethoscope className="h-3.5 w-3.5" />
-                <span>Clinical</span>
+              <div className="mt-8 flex gap-6 text-white/70">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>Instant</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Private</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Stethoscope className="h-3.5 w-3.5" />
+                  <span>Clinical</span>
+                </div>
               </div>
             </div>
           </div>

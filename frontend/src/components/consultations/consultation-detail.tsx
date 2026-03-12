@@ -136,7 +136,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 
 	return (
 		<div className='space-y-4'>
-				<div className='flex flex-wrap items-center justify-between gap-3'>
+			<div className='flex flex-wrap items-center justify-between gap-3'>
 				<Link
 					href='/consultations'
 					className='inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900'
@@ -230,7 +230,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 									</span>
 								</CardHeader>
 								<CardContent className='flex items-center gap-3 pt-4'>
-									<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white'>
+									<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-700 text-sm font-bold text-white'>
 										{patient.name
 											.split(" ")
 											.map((s) => s[0])
@@ -315,7 +315,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 									</CardHeader>
 									<CardContent className='pt-4 space-y-2'>
 										<div className='flex items-center gap-3'>
-											<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white'>
+											<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-700 text-sm font-bold text-white'>
 												{initials}
 											</div>
 											<div className='min-w-0 flex-1'>
