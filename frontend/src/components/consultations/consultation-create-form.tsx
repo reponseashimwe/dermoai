@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { PatientSelect } from "@/components/patients/patient-select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,9 +13,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/components/ui/toast";
 import { isApiError } from "@/lib/api/errors";
 import { Spinner } from "@/components/ui/spinner";
+import { attachToConsultation } from "@/lib/api/images";
 import type { Patient } from "@/types/api";
 
-export function ConsultationCreateForm() {
+export function ConsultationCreateForm({ scanId }: { scanId?: string }) {
 	const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 	const { user } = useAuth();
 	const isPatient = user?.role === "USER";
@@ -22,6 +24,7 @@ export function ConsultationCreateForm() {
 	const createPatient = useCreatePatient();
 	const createConsultation = useCreateConsultation();
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { toast } = useToast();
 
 	async function createConsultationAndRedirect(patient: Patient) {
@@ -29,6 +32,10 @@ export function ConsultationCreateForm() {
 			const consultation = await createConsultation.mutateAsync({
 				patient_id: patient.patient_id,
 			});
+			if (scanId) {
+				await attachToConsultation(scanId, consultation.consultation_id);
+				queryClient.invalidateQueries({ queryKey: ["scan-history"] });
+			}
 			toast("Consultation created successfully", "success");
 			router.push(`/consultations/${consultation.consultation_id}`);
 		} catch (err) {
@@ -57,6 +64,10 @@ export function ConsultationCreateForm() {
 			const consultation = await createConsultation.mutateAsync({
 				patient_id: patient.patient_id,
 			});
+			if (scanId) {
+				await attachToConsultation(scanId, consultation.consultation_id);
+				queryClient.invalidateQueries({ queryKey: ["scan-history"] });
+			}
 			toast("Consultation created successfully", "success");
 			router.push(`/consultations/${consultation.consultation_id}`);
 		} catch (err) {

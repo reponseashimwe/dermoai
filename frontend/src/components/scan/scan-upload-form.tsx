@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "re
 import { useRouter } from "next/navigation";
 import { ImageDropzone } from "./image-dropzone";
 import { ConsentCheckbox } from "./consent-checkbox";
-import { ScanResultCard } from "./scan-result-card";
+import { ImageDetailContent } from "@/components/images/image-detail-content";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { useQuickScan } from "@/hooks/use-quick-scan";
@@ -138,13 +138,24 @@ export const ScanUploadForm = forwardRef<ScanUploadFormHandle, ScanUploadFormPro
 			)}
 
 			{scan.data && !redirectToResultPage && resultDisplay === "inline" && (
-				<div className='space-y-4'>
-					<ScanResultCard
-						result={scan.data}
-						onSaveToConsultations={onSaveToConsultations}
-						onSaveSuccess={onSaveSuccess}
-						onSaveError={onSaveError}
+				<div className='space-y-6'>
+					<ImageDetailContent
+						image={scan.data}
+						onSaveConsultation={
+							onSaveToConsultations
+								? async () => {
+										try {
+											const consultation = await onSaveToConsultations(scan.data!);
+											onSaveSuccess?.(consultation.consultation_id);
+										} catch (err) {
+											onSaveError?.(err);
+										}
+									}
+								: undefined
+						}
+						saveConsultationLabel="Create Consultation"
 						isSaving={isSaving}
+						explainabilityMetrics="visible"
 					/>
 					<Button
 						variant='outline'

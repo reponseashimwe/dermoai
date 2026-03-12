@@ -89,7 +89,7 @@ async def list_consultations(
     db: AsyncSession,
     *,
     current_user: User,
-    include_closed: bool = False,
+    include_closed: bool = True,
 ) -> list[Consultation]:
     query = select(Consultation).order_by(Consultation.created_at.desc())
     if not include_closed:

@@ -11,7 +11,8 @@ import { QuickScanModal } from "@/components/scan/quick-scan-modal";
 import { ImageDetailModal } from "@/components/images/image-detail-modal";
 import { ConfidenceCircle } from "@/components/scan/confidence-circle";
 import { formatConditionName, formatConfidence, formatDate } from "@/lib/utils";
-import { Camera } from "lucide-react";
+import Link from "next/link";
+import { Camera, ExternalLink, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ScanHistoryList() {
@@ -76,12 +77,9 @@ export function ScanHistoryList() {
                           ? formatConditionName(scan.predicted_condition)
                           : "Pending"}
                       </p>
-                      {scan.predicted_condition && (
-                        <Badge
-                          variant={scan.source === "quick_scan" ? "info" : "default"}
-                          className="shrink-0 text-xs"
-                        >
-                          {scan.source === "quick_scan" ? "Quick Scan" : "Reviewed"}
+                      {scan.reviewed_label && (
+                        <Badge variant="default" className="shrink-0 text-xs">
+                          Reviewed
                         </Badge>
                       )}
                     </div>
@@ -124,6 +122,27 @@ export function ScanHistoryList() {
                       </span>
                       <span className="text-slate-600">Consent for reuse in model improvement</span>
                     </label>
+                    <div className="mt-2 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      {scan.consultation_id ? (
+                        <Link
+                          href={`/consultations/${scan.consultation_id}`}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          View Consultation
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/consultations/new?scanId=${scan.image_id}`}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 hover:bg-primary-100"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Plus className="h-3 w-3" />
+                          Create Consultation
+                        </Link>
+                      )}
+                    </div>
                   </div>
                   {scan.confidence !== null && (
                     <div className="shrink-0" onClick={(e) => e.stopPropagation()}>

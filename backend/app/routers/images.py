@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import get_current_user, require_role
+from app.core.deps import get_current_active_practitioner, get_current_user, require_role
+from app.models.practitioner import Practitioner
 from app.models.user import User
 from app.schemas.image import (
     AttachImageRequest,
@@ -124,12 +125,15 @@ async def get_image(
 async def update_image_review(
     image_id: UUID,
     data: ImageReviewUpdate,
-    _user: Annotated[User, Depends(require_role("PRACTITIONER"))],
+    practitioner: Annotated[Practitioner, Depends(get_current_active_practitioner)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Set reviewed_label for an image (specialist review queue)."""
+    """Set reviewed_label for an image (specialist review queue — specialists only)."""
+    from fastapi import HTTPException
+    if practitioner.practitioner_type != "SPECIALIST":
+        raise HTTPException(status_code=403, detail="Only specialists can review images")
     return await image_service.update_reviewed_label(
-        image_id, data.reviewed_label, db
+        image_id, data.reviewed_label, db, reviewer_id=practitioner.user_id
     )
 
 

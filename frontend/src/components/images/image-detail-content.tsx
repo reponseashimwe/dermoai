@@ -13,6 +13,7 @@ import {
   Save,
   ChevronDown,
   ChevronUp,
+  UserCheck,
 } from "lucide-react";
 import { formatConditionName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -241,6 +242,29 @@ export function ImageDetailContent({
             <p className="text-slate-500">No prediction available</p>
           )}
         </div>
+
+        {"reviewed_label" in image && image.reviewed_label && (
+          <div className="rounded-lg border border-primary-200 bg-primary-50/60 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100">
+                <UserCheck className="h-4 w-4 text-primary-600" />
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-primary-700">
+                  Specialist review
+                </p>
+                <p className="mt-0.5 text-sm font-semibold text-slate-900">
+                  {formatConditionName(image.reviewed_label)}
+                </p>
+                {image.reviewed_by_name && (
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Reviewed by {image.reviewed_by_name}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {image.all_probabilities && Object.keys(image.all_probabilities).length > 0 && (
           <div>

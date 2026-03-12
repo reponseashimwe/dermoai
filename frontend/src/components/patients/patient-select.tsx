@@ -122,7 +122,7 @@ export function PatientSelect({ onSelect, selectedId, onCreateAndStartConsultati
 						</div>
 					)}
 
-					<div className='max-h-48 space-y-1 overflow-auto'>
+					<div className='max-h-72 space-y-1 overflow-auto'>
 						{filtered?.map((patient) => (
 							<button
 								key={patient.patient_id}

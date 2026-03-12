@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 class ImageRead(BaseModel):
@@ -13,7 +14,16 @@ class ImageRead(BaseModel):
     predicted_condition: str | None = None
     confidence: float | None = None
     reviewed_label: str | None = None
+    reviewed_by: uuid.UUID | None = None
+    reviewed_by_name: str | None = None
     reviewed_as_final: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def extract_reviewer_name(cls, data: Any) -> Any:
+        if hasattr(data, "reviewer") and data.reviewer is not None:
+            data.__dict__["reviewed_by_name"] = data.reviewer.name
+        return data
     uploaded_at: datetime
     file_size: int | None = None
     source: str
