@@ -36,7 +36,7 @@ MODEL_DATE = "2026-03-05"
 INPUT_SIZE = (224, 224)
 
 # Two-stage triage thresholds (from model card)
-CONFIDENCE_THRESHOLD = 0.45  # Stage 1: Below this → route to REFER
+CONFIDENCE_THRESHOLD = 0.35  # Stage 1: Below this → UNCERTAIN
 REFER_OVERRIDE_THRESHOLD = 0.6  # Stage 2: REFER class prob > this → force REFER
 
 # Load class names from JSON (5 conditions)
@@ -125,15 +125,9 @@ def predict(image_url: str) -> str:
     max_confidence = float(np.max(predictions))
     predicted_idx = int(np.argmax(predictions))
 
-    # Stage 1: Low confidence routing to REFER
+    # Stage 1: Low confidence → UNCERTAIN
     if max_confidence < CONFIDENCE_THRESHOLD:
-        # Route to highest-probability REFER class
-        refer_probs = {
-            cls: float(predictions[CLASS_NAMES.index(cls)])
-            for cls in REFER_CLASSES
-        }
-        best_refer_class = max(refer_probs, key=refer_probs.get)
-        return best_refer_class
+        return "UNCERTAIN"
 
     # Stage 2: REFER override if any REFER class probability > threshold
     for refer_class in REFER_CLASSES:
@@ -173,8 +167,8 @@ def classify_urgency(condition: str, confidence: float) -> str:
     Returns:
         "REFER" or "MANAGE LOCALLY".
     """
-    # Conservative: low confidence defaults to REFER
-    if confidence < CONFIDENCE_THRESHOLD:
+    # Conservative: low confidence or uncertain image defaults to REFER
+    if confidence < CONFIDENCE_THRESHOLD or condition == "UNCERTAIN":
         return "REFER"
 
     # Use loaded triage mapping (REFER or MANAGE LOCALLY)
@@ -200,15 +194,10 @@ def predict_with_details(image_url: str) -> dict:
 
     triage_stage = None
 
-    # Stage 1: Low confidence routing
+    # Stage 1: Low confidence → UNCERTAIN
     if max_confidence < CONFIDENCE_THRESHOLD:
-        refer_probs = {
-            cls: float(predictions[CLASS_NAMES.index(cls)])
-            for cls in REFER_CLASSES
-        }
-        best_refer_class = max(refer_probs, key=refer_probs.get)
-        predicted_condition = best_refer_class
-        confidence = refer_probs[best_refer_class]
+        predicted_condition = "UNCERTAIN"
+        confidence = max_confidence
         triage_stage = "STAGE_1_LOW_CONFIDENCE"
     else:
         # Stage 2: REFER override check
@@ -257,6 +246,13 @@ def predict_with_gradcam(image_url: str, layer_name: str = "top_conv") -> dict:
     """
     # Get base prediction details
     prediction_details = predict_with_details(image_url)
+
+    # Skip GradCAM entirely for uncertain predictions
+    if prediction_details["predicted_condition"] == "UNCERTAIN":
+        prediction_details["gradcam_base64"] = None
+        prediction_details["gradcam_metrics"] = None
+        prediction_details["gradcam_error"] = "Skipped — low confidence prediction"
+        return prediction_details
 
     # Generate GradCAM for the predicted class
     try:
@@ -322,7 +318,7 @@ def aggregate_predictions(images: list[dict]) -> dict[str, str | float | None]:
     final_confidence = (
         round(sum(confidences) / len(confidences), 4) if confidences else 0.0
     )
-    urgency = classify_urgency(final_condition, final_confidence)
+    urgency = "REFER" if final_condition == "UNCERTAIN" else classify_urgency(final_condition, final_confidence)
 
     return {
         "final_predicted_condition": final_condition,

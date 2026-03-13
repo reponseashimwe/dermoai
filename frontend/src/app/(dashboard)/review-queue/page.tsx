@@ -24,7 +24,7 @@ const PAGE_SIZE = 12;
 type Tab = "pending" | "reviewed";
 
 function PendingReviewCard({ image, onClick }: { image: ImageType; onClick: () => void }) {
-	const urgency = (image.confidence ?? 0) < 0.45 ? "REFER" : "MANAGE LOCALLY";
+	const urgency = image.predicted_condition === "UNCERTAIN" || (image.confidence ?? 0) < 0.35 ? "REFER" : "MANAGE LOCALLY";
 	return (
 		<Card
 			className='cursor-pointer overflow-hidden transition-shadow hover:shadow-md'
@@ -68,7 +68,7 @@ function PendingReviewCard({ image, onClick }: { image: ImageType; onClick: () =
 }
 
 function ReviewedCard({ image, onClick }: { image: ImageType; onClick: () => void }) {
-	const urgency = (image.confidence ?? 0) < 0.45 ? "REFER" : "MANAGE LOCALLY";
+	const urgency = image.predicted_condition === "UNCERTAIN" || (image.confidence ?? 0) < 0.35 ? "REFER" : "MANAGE LOCALLY";
 	return (
 		<Card
 			className='cursor-pointer overflow-hidden transition-shadow hover:shadow-md'

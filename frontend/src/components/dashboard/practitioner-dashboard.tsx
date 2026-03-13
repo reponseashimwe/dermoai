@@ -11,8 +11,9 @@ import { useConsultations } from "@/hooks/use-consultations";
 import { useAuth } from "@/hooks/use-auth";
 import { usePractitioners, useUpdateMyStatus } from "@/hooks/use-practitioners";
 import { useIncomingTeleconsultations, useAcceptTeleconsultation } from "@/hooks/use-teleconsultations";
-import { useUpcomingAppointments } from "@/hooks/use-appointments";
+import { useAppointmentsForMyConsultations } from "@/hooks/use-appointments";
 import { FileText, ClipboardCheck, AlertTriangle, Users, Phone, Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { DASHBOARD_CONFIG } from "@/config/roles";
 import { formatDate } from "@/lib/utils";
@@ -25,14 +26,14 @@ export function PractitionerDashboard() {
 	const { data: stats, isLoading } = usePractitionerStats(true);
 	const { data: consultations } = useConsultations();
 	const { data: incomingCalls, refetch: refetchIncoming } = useIncomingTeleconsultations(true);
-	const { data: upcomingAppointments } = useUpcomingAppointments();
+	const { data: appointments } = useAppointmentsForMyConsultations();
 	const acceptCall = useAcceptTeleconsultation();
 	const updateStatus = useUpdateMyStatus();
 
 	const currentPractitioner = user ? practitioners?.find((p) => p.user_id === user.user_id) : undefined;
 	const isOnline = updateStatus.data?.is_online ?? currentPractitioner?.is_online ?? false;
 
-	const nextAppointments = upcomingAppointments?.slice(0, 3) ?? [];
+	const nextAppointments = appointments?.slice(0, 3) ?? [];
 	const recentConsultations = consultations?.slice(0, 3) ?? [];
 
 	if (isLoading || !stats) {
@@ -86,7 +87,7 @@ export function PractitionerDashboard() {
 				<StatCard
 					compact
 					label='Schedules'
-					value={upcomingAppointments?.length ?? 0}
+					value={appointments?.length ?? 0}
 					icon={Calendar}
 					color='purple'
 					subtext='Upcoming'
@@ -174,18 +175,60 @@ export function PractitionerDashboard() {
 							</Link>
 						</div>
 					</CardHeader>
-					<CardContent className='space-y-3 pt-0'>
+					<CardContent className='pt-0'>
 						{nextAppointments.length > 0 && (
-							<div className='space-y-2'>
+							<div className='space-y-3'>
 								{nextAppointments.slice(0, 3).map((apt) => (
 									<div
 										key={apt.request_id}
-										className='rounded-lg border border-slate-200 p-3'
+										className='rounded-lg border border-slate-200 p-4'
 									>
-										<p className='text-sm font-medium text-slate-900'>
-											{formatDate(apt.proposed_datetime)}
-										</p>
-										<p className='text-xs text-primary-700'>Approved</p>
+										<div className='flex items-center justify-between gap-2'>
+											<div className='min-w-0 flex-1'>
+												<p className='text-base font-medium text-slate-900'>
+													{formatDate(apt.proposed_datetime)}
+												</p>
+												{(() => {
+													const isRequester = apt.requested_by_user_id === user?.user_id;
+													const otherName = isRequester
+														? apt.specialist_name ?? apt.requester_name
+														: apt.requester_name ?? apt.specialist_name;
+													return otherName ? (
+														<p className='mt-1 text-sm text-slate-600'>
+															With {otherName}
+														</p>
+													) : null;
+												})()}
+												{apt.notes && (
+													<p className='mt-1 text-sm text-slate-500'>{apt.notes}</p>
+												)}
+											</div>
+											<span
+												className={cn(
+													"shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+													apt.status === "APPROVED" && "bg-green-100 text-green-800",
+													apt.status === "PENDING" && "bg-amber-100 text-amber-800",
+													apt.status === "REJECTED" && "bg-red-100 text-red-800",
+													apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800",
+													apt.status === "COMPLETED" && "bg-emerald-100 text-emerald-800",
+												)}
+											>
+												{apt.status}
+											</span>
+										</div>
+										<div className='mt-3 flex items-center justify-between gap-3'>
+											{apt.consultation_id && (
+												<Link
+													href={`/consultations/${apt.consultation_id}`}
+													className='text-xs font-medium text-primary-600 hover:text-primary-700'
+												>
+													Consultation
+												</Link>
+											)}
+											<div className='flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50'>
+												<Calendar className='h-4 w-4 text-slate-500' />
+											</div>
+										</div>
 									</div>
 								))}
 							</div>

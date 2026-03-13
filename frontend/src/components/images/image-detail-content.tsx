@@ -53,7 +53,7 @@ export function ImageDetailContent({
 	const urgency =
 		"urgency" in image && image.urgency
 			? image.urgency
-			: image.confidence != null && image.confidence < 0.45
+			: image.predicted_condition === "UNCERTAIN" || (image.confidence != null && image.confidence < 0.35)
 				? "REFER"
 				: "MANAGE LOCALLY";
 	const showActionButtons = !hideActions && (onReferSpecialist || onSaveConsultation);
@@ -205,15 +205,17 @@ export function ImageDetailContent({
 					{image.predicted_condition ? (
 						<div className='flex flex-wrap items-center gap-6 sm:gap-8'>
 							<div className='flex items-center gap-5 sm:gap-6'>
-								<div className='flex flex-col items-center'>
-									<ConfidenceCircle
-										value={image.confidence ?? 0}
-										urgency={urgency}
-										size={72}
-										strokeWidth={6}
-									/>
-									<span className='mt-0.5 text-[10px] font-medium text-slate-500'>CONF.</span>
-								</div>
+								{image.predicted_condition !== "UNCERTAIN" && (
+									<div className='flex flex-col items-center'>
+										<ConfidenceCircle
+											value={image.confidence ?? 0}
+											urgency={urgency}
+											size={72}
+											strokeWidth={6}
+										/>
+										<span className='mt-0.5 text-[10px] font-medium text-slate-500'>CONF.</span>
+									</div>
+								)}
 								<div>
 									<p className='text-xl font-bold text-slate-900'>
 										{formatConditionName(image.predicted_condition)}
@@ -254,7 +256,7 @@ export function ImageDetailContent({
 					</div>
 				)}
 
-				{image.all_probabilities && Object.keys(image.all_probabilities).length > 0 && (
+				{image.predicted_condition !== "UNCERTAIN" && image.all_probabilities && Object.keys(image.all_probabilities).length > 0 && (
 					<div>
 						<h3 className='text-xs font-medium uppercase tracking-wide text-slate-400 mb-3'>
 							Top conditions

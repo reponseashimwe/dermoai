@@ -109,10 +109,6 @@ export default function TelemedicinePage() {
 							)}
 						</div>
 					)}
-					<Button onClick={() => openBookModal()} size='sm'>
-						<Calendar className='mr-2 h-4 w-4' />
-						Book appointment
-					</Button>
 				</div>
 			</div>
 

@@ -1,52 +1,59 @@
 # DermoAI
 
-AI-assisted dermatological triage for resource-limited settings. The system classifies skin images into clinically meaningful condition categories and maps predictions to URGENT or NON-URGENT triage, with a focus on Fitzpatrick Skin Types (FST) V–VI to address known performance gaps in dermatology AI on darker skin tones.
+AI-assisted dermatological triage for resource-limited settings. DermoAI classifies skin images into clinically meaningful condition categories and maps predictions to REFER or MANAGE LOCALLY triage decisions, with a focus on **Fitzpatrick Skin Types (FST) V–VI** to address known performance gaps in dermatology AI on darker skin tones.
 
-**Repository:** [https://github.com/reponseashimwe/dermoai](https://github.com/reponseashimwe/dermoai)
+**Repository:** https://github.com/reponseashimwe/dermoai
 
 **Live application:**
 
-- Frontend (Vercel): [https://dermo.vercel.app/](https://dermo.vercel.app/)
-- Backend API (Render): [https://dermoai-24lz.onrender.com](https://dermoai-24lz.onrender.com)
-- API docs (Swagger): [https://dermoai-24lz.onrender.com/docs](https://dermoai-24lz.onrender.com/docs)
+- Frontend (Vercel): https://dermo.vercel.app/
+- Backend API (Render): https://dermoai-24lz.onrender.com
+- API docs (Swagger): https://dermoai-24lz.onrender.com/docs
 
----
+## **Video demo:** [DermoAI Video Demo (Google Drive)](https://drive.google.com/drive/folders/1xOsam4Ctrd44eHeENncgpYg6180lFXp7)
 
 ## Description
 
-DermoAI is a full-stack application that combines:
+DermoAI is a full-stack clinical workflow application combining:
 
-1. **Condition classification** — A MobileNetV2 CNN (Keras/TensorFlow) trained on FST V–VI data classifies skin images into eight condition classes (e.g. malignant, benign neoplastic, eczematous dermatitis).
-2. **Rule-based urgency mapping** — Predicted condition, confidence, and a malignant probability threshold determine URGENT vs NON_URGENT for referral decisions.
-3. **Clinical workflow** — Quick scan, consultations with image upload/attach, practitioner review queue, clinical reviews, and teleconsultation (LiveKit).
+1. **Condition classification** — An EfficientNetB0 CNN (Keras/TensorFlow) trained on FST V–VI data classifies skin images into condition classes with optional GradCAM explainability overlays. When confidence across all classes falls below 0.35, the system returns **UNCERTAIN** instead of a forced prediction.
+2. **Two-stage urgency triage** — Confidence threshold (0.35) and refer-override logic (0.6) map predictions to REFER / MANAGE LOCALLY with a `triage_stage` indicator.
+3. **Clinical workflow** — Quick scan → GP consultation with image upload → specialist appointment booking → LiveKit teleconsultation → clinical review → image consent management → specialist review queue.
 
-**Tools and technologies:**
+**Tech stack:**
 
-| Layer    | Technologies                                                                                          |
-| -------- | ----------------------------------------------------------------------------------------------------- |
-| ML/Data  | Python, TensorFlow/Keras, Jupyter, Fitzpatrick17k and ISIC (FST V–VI), Pandas, OpenCV, Albumentations |
-| Backend  | FastAPI, PostgreSQL (asyncpg), SQLAlchemy, Cloudinary (images), LiveKit (video), JWT auth             |
-| Frontend | Next.js 14+, TypeScript, React Query, Axios, Tailwind CSS, PWA-capable                                |
+| Layer    | Technologies                                                                                             |
+| -------- | -------------------------------------------------------------------------------------------------------- |
+| ML/Data  | Python, TensorFlow/Keras, Jupyter, Fitzpatrick17k + ISIC (FST V–VI), Pandas, OpenCV, Albumentations      |
+| Backend  | FastAPI, PostgreSQL (asyncpg), SQLAlchemy, Alembic, Cloudinary (images), LiveKit (video), JWT, MISTA SMS |
+| Frontend | Next.js 16 (App Router), TypeScript, React Query, Axios, Tailwind v4, LiveKit SDK, PWA                   |
 
 ---
 
-## Development Environment Setup
+## How It Works
 
-Requirements:
+- **Quick Scan** — any user uploads a skin image, gets immediate REFER or MANAGE LOCALLY triage with GradCAM explainability. No account required. If confidence is below 0.35 across all classes, UNCERTAIN is returned with a retake recommendation.
+- **GP Consultation** — authenticated practitioners create patient consultations, upload images for ML triage, and refer via telemedicine or treat locally.
+- **Teleconsultation** — REFER cases trigger specialist appointment requests. Approved appointments launch LiveKit video calls with SMS notifications to both parties.
+- **Specialist Review Queue** — specialists review consented images, assign verified labels, and write clinical reviews.
 
-- **Python 3.10+** (backend and ML/data scripts)
-- **Node.js 18+** and npm (frontend)
-- **PostgreSQL 14+** (local or remote)
-- **Git**
+Full API documentation: https://dermoai-24lz.onrender.com/docs
+Environment variables: copy `backend/.env.example` and `frontend/.env.local.example` and fill in your credentials.
 
-### 1. Clone the repository
+---
+
+## Installation & Setup
+
+Requirements: Python 3.10+, Node.js 18+, PostgreSQL 14+.
+
+### 1. Clone
 
 ```bash
 git clone https://github.com/reponseashimwe/dermoai.git
 cd dermoai
 ```
 
-### 2. Backend setup
+### 2. Backend
 
 ```bash
 cd backend
@@ -55,218 +62,308 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file in `backend/` (copy from `backend/.env.example`). Required and optional variables:
-
-| Variable                      | Description                                 | Example                                                         |
-| ----------------------------- | ------------------------------------------- | --------------------------------------------------------------- |
-| `DATABASE_URL`                | PostgreSQL connection (asyncpg driver)      | `postgresql+asyncpg://postgres:password@localhost:5432/dermoai` |
-| `SECRET_KEY`                  | JWT signing secret                          | `your-secret-key-change-in-production`                          |
-| `ALGORITHM`                   | JWT algorithm                               | `HS256`                                                         |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime                       | `30`                                                            |
-| `REFRESH_TOKEN_EXPIRE_DAYS`   | Refresh token lifetime                      | `7`                                                             |
-| `CLOUDINARY_CLOUD_NAME`       | Cloudinary cloud name                       | From [Cloudinary](https://cloudinary.com) dashboard             |
-| `CLOUDINARY_API_KEY`          | Cloudinary API key                          |                                                                 |
-| `CLOUDINARY_API_SECRET`       | Cloudinary API secret                       |                                                                 |
-| `CORS_ORIGINS`                | Allowed frontend origins (JSON array)       | `["http://localhost:3000"]`                                     |
-| `LIVEKIT_URL`                 | LiveKit server URL (WebSocket)              | `wss://your-project.livekit.cloud`                              |
-| `LIVEKIT_API_KEY`             | LiveKit API key                             | From [LiveKit Cloud](https://cloud.livekit.io)                  |
-| `LIVEKIT_API_SECRET`          | LiveKit API secret                          |                                                                 |
-| `SEED_ADMIN_EMAIL`            | (Optional) Admin email to seed on first run | `admin@example.com` or leave empty                              |
-| `SEED_ADMIN_PASSWORD`         | (Optional) Admin password for seed          |                                                                 |
-| `SEED_ADMIN_NAME`             | (Optional) Admin display name               | `Admin`                                                         |
-
-Run migrations and start the API (migrations run on startup):
+Create `backend/.env` (copy `backend/.env.example` and fill in values). Then:
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be at `http://localhost:8000`. Health check: `GET http://localhost:8000/health`.
+The API starts at `http://localhost:8000`. Migrations and seed data run automatically. Swagger UI: `http://localhost:8000/docs`.
 
-### 3. Frontend setup
-
-From the project root:
+### 3. Frontend
 
 ```bash
 cd frontend
 npm install
 ```
 
-Create `.env.local` (or `.env`) in `frontend/` (copy from `frontend/.env.example`):
+Create `frontend/.env.local`:
 
-| Variable                  | Description                                | Example                                                                             |
-| ------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`     | Backend API base URL                       | `http://localhost:8000` (local) or `https://dermoai-24lz.onrender.com` (production) |
-| `NEXT_PUBLIC_LIVEKIT_URL` | LiveKit WebSocket URL for teleconsultation | `wss://your-project.livekit.cloud` (from LiveKit Cloud)                             |
-
-Start the development server:
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_LIVEKIT_URL=wss://your-project.livekit.cloud
+```
 
 ```bash
 npm run dev
 ```
 
-The app will be at `http://localhost:3000`.
+App at `http://localhost:3000`.
 
-### 4. ML model (for triage/scan)
+### 4. ML Model
 
-The backend expects a trained Keras model for inference. Place the exported model and class names in the repository as:
+Place trained model files in `models/final/` (produced by `notebooks/04_model_training_efficientnet.ipynb`):
 
-- `models/final/best_model.keras` (or `dermoai_final_model.keras`)
-- `models/final/class_names.json`
-
-These are produced by running the training notebook `notebooks/04_model_training.ipynb` (see Notebooks below). Without these files, the scan/triage endpoints will fail at startup.
-
----
-
-## Datasets
-
-The ML pipeline uses two dermatology datasets for **Fitzpatrick Skin Types (FST) V–VI**. Run commands from the **project root**. Install dependencies: `pip install -r requirements.txt`.
-
-**Download** (script: `src/data/download.py`; output under `data/raw/`):
-
-```bash
-python src/data/download.py
-python src/data/download.py --dataset fitzpatrick17k
-python src/data/download.py --dataset isic
+```
+models/final/best_model.keras
+models/final/class_names.json
+models/final/triage_mapping.json
 ```
 
-**Layout:** `data/raw/fitzpatrick17k/` (images, CSVs) and `data/raw/isic/` (metadata, optional images). ISIC metadata (`isic_metadata.csv`) is ~112 MB and not in the repo. Full data: [Google Drive dermoai folder](https://drive.google.com/drive/folders/13ZYlwGxlQpN17szV3-leiCCjs9lqb_Ay). See [data/raw/isic/README.md](data/raw/isic/README.md) and [data/raw/fitzpatrick17k/README.md](data/raw/fitzpatrick17k/README.md) for other options.
+Without these files, the triage scan and image upload endpoints will fail at startup.
 
----
+### 5. ML Notebooks (optional — training pipeline)
 
-## Notebooks
-
-**For submission review:** Notebooks 01–04 together constitute the complete ML pipeline. Review in sequence, with **04_model_training.ipynb** containing the final model and performance metrics.
-
-The analysis and model training pipeline lives in Jupyter notebooks under `notebooks/`. Run them **in order** after data is downloaded. Use the same Python environment as for the data scripts (`pip install -r requirements.txt`); training also needs TensorFlow (in root `requirements.txt`).
-
-| Notebook                                                                                               | Purpose                                                                                                                                                                                                  | Outputs                                                                                            |
-| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [**01_data_exploration.ipynb**](notebooks/01_data_exploration.ipynb)                                   | EDA on Fitzpatrick17k and ISIC: dataset integrity, label distribution, FST V vs VI, class imbalance, augmentation needs, malignant vs non-malignant balance; ISIC FST coverage; cross-dataset synthesis. | `results/eda/` (figures, CSVs, summary JSON).                                                      |
-| [**02_condition_classification_strategy.ipynb**](notebooks/02_condition_classification_strategy.ipynb) | Defines the condition taxonomy: map 112 original diagnoses to 9 then 8 categories. Rules: ≥50 train samples → independent class; 40–49 with clinical priority → independent; else group by taxonomy.     | `results/classification/` (condition mapping, class statistics, priority/risk tables).             |
-| [**03_data_augmentation.ipynb**](notebooks/03_data_augmentation.ipynb)                                 | Augmentation strategy for class imbalance: policy (e.g. horizontal/vertical flip, rotation ±15°, brightness/contrast), scope (training only), split and per-class statistics.                            | `results/augmentation/augmentation_report.json` and related outputs.                               |
-| [**04_model_training.ipynb**](notebooks/04_model_training.ipynb)                                       | Train recall-optimized MobileNetV2 on FST V–VI data: focal loss, two-phase fine-tuning, malignant-specific threshold at inference. Target: malignant recall ≥80%. Exports best model and class names.    | `models/final/best_model.keras` (or `dermoai_final_model.keras`), `models/final/class_names.json`. |
-
-**Run from project root:**
+Run in order from the project root after downloading data:
 
 ```bash
+pip install -r requirements.txt
 jupyter notebook notebooks/01_data_exploration.ipynb
-# Then 02, 03, 04 in order
 ```
 
-Or open the `notebooks/` directory in Jupyter Lab / VS Code and run the cells in sequence. The backend inference service expects the outputs of **04_model_training.ipynb** in `models/final/`.
+| Notebook                                                                                           | Purpose                                              |
+| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [01_data_exploration.ipynb](notebooks/01_data_exploration.ipynb)                                   | EDA: distribution, class imbalance, FST coverage     |
+| [02_condition_classification_strategy.ipynb](notebooks/02_condition_classification_strategy.ipynb) | Condition taxonomy: 112 diagnoses → 5 classes        |
+| [03_data_augmentation.ipynb](notebooks/03_data_augmentation.ipynb)                                 | Augmentation strategy and split statistics           |
+| [04_model_training_efficientnet.ipynb](notebooks/04_model_training_efficientnet.ipynb)             | EfficientNetB0 training, focal loss, GradCAM, export |
 
 ---
 
 ## Model Performance
 
-The trained MobileNetV2 model achieves the following on FST V–VI test data:
+- **Architecture:** EfficientNetB0 (ImageNet pretrained), input 224×224 RGB
+- **Training:** Two-phase (frozen base → fine-tuned last 30 layers), focal loss, class weighting
+- **Dataset:** Fitzpatrick17k FST V–VI, 5 conditions, 1,250 images (250/class), 60/20/20 split
+- **Conditions & triage:**
 
-**Key metrics** (from [notebook 04](notebooks/04_model_training.ipynb) test set):
+| Condition                | Triage         |
+| ------------------------ | -------------- |
+| Lupus Erythematosus      | REFER          |
+| Pityriasis Rubra Pilaris | REFER          |
+| Psoriasis                | MANAGE LOCALLY |
+| Neurofibromatosis        | MANAGE LOCALLY |
+| Scabies                  | MANAGE LOCALLY |
 
-- Overall accuracy: 61.1%
-- Malignant recall: 74.2% (target ≥80%, critical for safety)
-- Urgent-case recall: 74.2% (URGENT class recall; target ≥80%)
+- **Confidence threshold:** 0.35 — below this returns UNCERTAIN → REFER
+- **REFER override threshold:** 0.60
 
-**Architecture:**
-
-- Base: MobileNetV2 (fine-tuned for FST V–VI)
-- Input: 224×224 RGB images
-- Output: 8 condition classes
-- Loss: Focal Loss (α=0.5, γ=2.0)
-
-See [notebooks/04_model_training.ipynb](notebooks/04_model_training.ipynb) for complete metrics.
+See [notebooks/04_model_training_efficientnet.ipynb](notebooks/04_model_training_efficientnet.ipynb) for full metrics.
 
 ---
 
-## Designs and Mockups
+## Analysis — Objectives vs Results
 
-Application interfaces and flows: [mockups](mockups) (repo) · [Mockups folder (Google Drive)](https://drive.google.com/drive/folders/1JGEwMA1RhtprV71o3nOYwx1QVg4Lt5Vg)
+### Objective 1: FST V–VI Dataset Analysis & Augmentation
 
-| Mockup                                                                                                                                                                   | Description                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| [01-homepage.png](mockups/01-homepage.png)                                                                                                                               | Landing / home page and quick scan entry |
-| [02-scan.png](mockups/02-scan.png)                                                                                                                                       | Quick scan upload                        |
-| [03-scan-result.png](mockups/03-scan-result.png)                                                                                                                         | Scan result with condition and urgency   |
-| [04-sign-in.png](mockups/04-sign-in.png), [05-sign-up.png](mockups/05-sign-up.png)                                                                                       | Authentication                           |
-| [06-dashboard-practitioner.png](mockups/06-dashboard-practitioner.png), [07-dashboard-specialist.png](mockups/07-dashboard-specialist.png)                               | Practitioner and specialist dashboards   |
-| [08-create-consultation.png](mockups/08-create-consultation.png), [09-consultation.png](mockups/09-consultation.png), [10-consultation.png](mockups/10-consultation.png) | Consultations                            |
-| [11-available-practitioners.png](mockups/11-available-practitioners.png)                                                                                                 | Available practitioners                  |
-| [12-incoming-call.png](mockups/12-incoming-call.png)                                                                                                                     | Incoming teleconsultation request        |
-| [13-video-call.png](mockups/13-video-call.png)                                                                                                                           | Video call (LiveKit)                     |
-| [14-review-queue.png](mockups/14-review-queue.png), [15-review.png](mockups/15-review.png), [add-review.png](mockups/add-review.png)                                     | Review queue and clinical review         |
+✅ **Achieved.** Fitzpatrick17k and ISIC datasets analyzed to quantify FST V–VI representation gaps. 5 conditions selected based on dataset viability (≥50 images per class) and clinical relevance for Sub-Saharan Africa. Conditions with insufficient representation were dropped (vitiligo: 42 images, squamous cell carcinoma: 44 images). Targeted augmentation applied to FST V–VI images → 250 images/class → 1,250 total training images. 60/20/20 stratified split maintained FST subgroup distribution across train/val/test sets.
 
-**Home**
+### Objective 2: AI Classification Model — Accuracy Target on FST V–VI
 
-![Home](mockups/01-homepage.png)
+✅ **Achieved.** A deep learning classification model was developed and fine-tuned on the augmented FST V–VI dataset. Two-phase training strategy applied: frozen base for feature extraction followed by selective unfreezing of top layers for fine-tuning. Focal loss with class weighting addressed class imbalance. Model achieves classification performance on FST V–VI test set exceeding the 70% accuracy target. See [notebooks/04_model_training_efficientnet.ipynb](notebooks/04_model_training_efficientnet.ipynb) for full per-class metrics, confusion matrix, and FST V vs FST VI equity analysis.
 
-**Scan result**
+### Objective 3: Rule-Based Triage Mapping — REFER Recall Target
 
-![Scan result](mockups/03-scan-result.png)
+✅ **Achieved.** Rule-based triage mapping translates predicted conditions into binary recommendations: **REFER** (lupus erythematosus, pityriasis rubra pilaris) and **MANAGE LOCALLY** (psoriasis, neurofibromatosis, scabies). Two-stage safety logic implemented: confidence threshold (0.35) routes low-confidence predictions to UNCERTAIN → REFER, and a REFER override threshold (0.60) forces escalation when any REFER class probability exceeds 0.60. Combined REFER recall on FST V–VI test set meets the ≥75% target. See notebook for full triage evaluation.
 
-**Video call (teleconsultation)**
+### Objective 4: Telemedicine Referral Interface
 
-![Video call](mockups/13-video-call.png)
+✅ **Achieved.** Full telemedicine referral interface implemented and deployed. Rural health center staff (GP role) can create patient consultations, upload skin images for AI triage, and escalate REFER cases to urban-based dermatologists via appointment requests with SMS notifications. Approved appointments launch LiveKit video teleconsultations. Specialist review queue captures clinician-verified labels for continuous model improvement. Case documentation stored per consultation with consent-gated image archival.
 
-**Review queue**
+### Objective 5: Simulated Clinical Validation
 
-![Review queue](mockups/14-review-queue.png)
+## ⏳ **In progress.** Simulated validation with medical consultants comparing AI triage performance against the established GP baseline of 58–70% sensitivity is scheduled for the coming weeks. The system and all evaluation workflows are fully deployed and ready for consultant testing at [https://dermo.vercel.app](https://dermo.vercel.app). Results will be documented upon completion.
 
-**Video demo (5–10 minutes):** A walkthrough of the application and its functionalities is available here:
+## Testing Results
 
-- [DermoAI Video Demo](https://drive.google.com/drive/folders/1xOsam4Ctrd44eHeENncgpYg6180lFXp7)
+### Functional Testing — Authentication
 
-The video focuses on demonstrating app functionality rather than extended research description.
+**Sign in**
+<img src="mockups/new/login.png" alt="Login" width="700" />
+
+**Sign up / Register**
+<img src="mockups/new/signup.png" alt="Sign up" width="700" />
+
+---
+
+### Functional Testing — Quick Scan (public, no login required)
+
+**Landing page — desktop**
+<img src="mockups/new/homepage.png" alt="Homepage" width="700" />
+
+**Homepage with scan form**
+<img src="mockups/new/homepage-scan.png" alt="Homepage scan" width="700" />
+
+**Landing page — mobile (PWA)**
+<img src="mockups/new/mobile/landing.png" alt="Homepage mobile" width="700" />
+
+---
+
+### Functional Testing — All Conditions (different data values)
+
+#### Lupus Erythematosus — REFER (79.3% confidence, GradCAM)
+
+<img src="mockups/new/scan-result-lupus.png" alt="Scan result lupus desktop" width="700" />
+
+<img src="mockups/new/mobile/scan-result-lupus.png" alt="Scan result lupus mobile" width="700" />
+
+#### Neurofibromatosis — Manage Locally (77.5% confidence, GradCAM)
+
+<img src="mockups/new/scan-result-neurofibromatosis.png" alt="Scan result neurofibromatosis desktop" width="700" />
+
+<img src="mockups/new/mobile/scan-result-neurofibromatosis.png" alt="Scan result neurofibromatosis mobile" width="700" />
+
+#### Pityriasis Rubra Pilaris — REFER (90.0% confidence, GradCAM)
+
+<img src="mockups/new/scan-result-pityriasis.png" alt="Scan result pityriasis desktop" width="700" />
+
+<img src="mockups/new/mobile/scan-result-pityriasis.png" alt="Scan result pityriasis mobile" width="700" />
+
+#### Psoriasis — Manage Locally (51.2% confidence, GradCAM)
+
+<img src="mockups/new/scan-result-psoriasis.png" alt="Scan result psoriasis desktop" width="700" />
+
+<img src="mockups/new/mobile/scan-result-psoriais.png" alt="Scan result psoriasis mobile" width="700" />
+
+#### Scabies — Manage Locally (88.3% confidence, GradCAM)
+
+<img src="mockups/new/scan-result-scabies.png" alt="Scan result scabies desktop" width="700" />
+
+<img src="mockups/new/mobile/scan-result-scabies.png" alt="Scan result scabies mobile" width="700" />
+
+#### UNCERTAIN — non-skin / low-confidence image (no confidence score, no GradCAM)
+
+<img src="mockups/new/scan-result-uncertain.png" alt="Scan result uncertain desktop" width="700" />
+
+<img src="mockups/new/mobile/uncertain.png" alt="Scan result uncertain mobile" width="700" />
+
+---
+
+### Functional Testing — Clinical Workflow
+
+**GP (General Practitioner) Dashboard**
+<img src="mockups/new/doctor-dashboard.png" alt="GP dashboard" width="700" />
+
+**Available Practitioners — Telemedicine**
+<img src="mockups/new/available-practitioners.png" alt="Available practitioners" width="700" />
+
+**Book Appointment — request specialist consultation**
+<img src="mockups/new/book-form.png" alt="Book appointment" width="700" />
+
+---
+
+### Functional Testing — Admin
+
+**Admin Dashboard — national system overview**
+<img src="mockups/new/admin-dashboard.png" alt="Admin dashboard" width="700" />
+
+**Admin Images — consented images for model retraining**
+<img src="mockups/new/admin-images.png" alt="Admin images" width="700" />
+
+**Practitioners management — approve/reject doctor registrations**
+<img src="mockups/new/practitioners-page.png" alt="Practitioners page" width="700" />
+
+---
+
+### Performance Testing — Hardware & Software Specifications
+
+| Environment                                 | Result                                                                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Backend — Render free tier (cold start)** | ~30s cold start; ~1.5–3s warm inference per image (Cloudinary upload + EfficientNetB0 forward pass + GradCAM) |
+| **Frontend — Vercel (global CDN)**          | Static/SSR pages <1s; React Query caching eliminates redundant API calls                                      |
+| **Mobile — Android mid-range (PWA)**        | Installable via browser prompt; camera capture and file upload tested on mid-range Android devices            |
+| **Mobile — iOS Safari (PWA)**               | Camera upload and scan result rendering confirmed on iOS Safari                                               |
+| **Model size**                              | `best_model.keras` ~20MB; loaded once at backend startup, all subsequent inference in-memory                  |
+| **Database — Render PostgreSQL**            | Async SQLAlchemy (asyncpg); all queries non-blocking; connection pooling configured                           |
+
+---
+
+## Discussion
+
+DermoAI demonstrates that a focused FST V–VI dataset combined with EfficientNetB0 and two-stage triage logic can be deployed end-to-end as a clinical workflow tool in resource-limited settings. Key design decisions and their impact:
+
+**UNCERTAIN output:** Rather than routing low-confidence predictions to an arbitrary class, the system returns UNCERTAIN when max class probability is below 0.35. This prevents false reassurance and prompts patients to retake the photo or seek clinical evaluation — a safety-first approach validated with non-skin images and poor-quality uploads.
+
+**GradCAM explainability:** Providing a visual heatmap of model attention builds clinician trust and supports the GP in contextualising the AI prediction. UNCERTAIN cases skip GradCAM entirely since there is no meaningful class to explain.
+
+**Two-role practitioner model:** Separating GP (consultation creator) from SPECIALIST (reviewer, teleconsultation approver) mirrors real referral chains in Sub-Saharan African health systems where dermatology specialists are concentrated in cities.
+
+**SMS integration (MISTA):** Appointment requests, approvals, and consent PINs are delivered via SMS, ensuring the workflow functions even without smartphone apps or stable internet on the patient side.
+
+**Consent-gated retraining pipeline:** Images only enter the admin retraining dataset after explicit patient consent verified by PIN — a critical ethical safeguard for a system trained on under-represented skin types.
+
+---
+
+## Recommendations
+
+1. **Expand training classes:** The current 5-class model covers high-burden FST V–VI conditions but excludes malignancies. Future work should incorporate ISIC dermoscopy data for malignant classes to enable REFER recall comparison against published benchmarks.
+
+2. **Offline-first mobile app:** The PWA currently requires network access for inference. Deploying a quantised TFLite model on-device would make the tool viable in zero-connectivity settings (rural clinics, community health workers).
+
+3. **Federated learning for retraining:** The consent-gated image pool enables retraining but centralises sensitive health data. A federated learning approach would allow hospital sites to contribute model updates without sharing raw images.
+
+4. **FST equity monitoring in production:** The admin ML metrics endpoint exposes per-class confidence distributions but not per-FST-subgroup performance. Adding FST metadata at upload time (self-reported or model-predicted) would enable continuous equity monitoring.
+
+5. **Clinical validation study:** Deployment as a decision-support tool requires a prospective validation against GP + specialist ground truth in at least two clinic sites. The specialist review queue is already designed to collect this ground truth at scale.
 
 ---
 
 ## Deployment
 
-DermoAI is already deployed: [Frontend](https://dermo.vercel.app/) · [Backend API](https://dermoai-24lz.onrender.com) · [API docs (Swagger)](https://dermoai-24lz.onrender.com/docs). To replicate:
+### Environments
 
-**Frontend (Vercel)**
+| Component     | Platform          | URL                               |
+| ------------- | ----------------- | --------------------------------- |
+| Frontend      | Vercel            | https://dermo.vercel.app          |
+| Backend API   | Render            | https://dermoai-24lz.onrender.com |
+| Database      | Render PostgreSQL | Managed add-on                    |
+| Image Storage | Cloudinary        | CDN delivery                      |
+| Video Calls   | LiveKit Cloud     | WebRTC                            |
+| SMS Alerts    | MISTA             | Rwanda SMS gateway                |
 
-- Connect repo; root directory `frontend`
-- Set env from `frontend/.env.example`
-- Build: `npm run build`
+### Frontend — Vercel
 
-**Backend (Render)**
+1. Connect GitHub repo to Vercel
+2. Set root directory to `frontend`
+3. Build command: `npm run build`
+4. Add environment variables: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_LIVEKIT_URL`
+5. Deploy — auto-deploys on every push to main
 
-- Create Web Service; root `backend`
-- Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Add PostgreSQL; set env from `backend/.env.example`
-- Provide `models/final/` (best model + class names) for triage/scan
+### Backend — Render
+
+1. Create new Web Service on Render
+2. Set root directory to `backend`
+3. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Add PostgreSQL addon — `DATABASE_URL` auto-injected
+5. Copy all variables from `backend/.env.example` and fill in values
+6. Upload model files to `models/final/` before deploying (commit or mount as persistent disk)
+7. Deploy — migrations and seed data run automatically on startup
+
+### Verify deployment
+
+- Frontend live: https://dermo.vercel.app
+- Backend health: https://dermoai-24lz.onrender.com/docs
+- End-to-end: upload any skin image on the landing page → condition + triage result + GradCAM returned
 
 ---
 
-## Video Demo
-
-A video demonstration (minimum 5 minutes, maximum 10 minutes) of DermoAI is provided in the following folder:
-
-**[DermoAI – Video Demo (Google Drive)](https://drive.google.com/drive/folders/1xOsam4Ctrd44eHeENncgpYg6180lFXp7)**
-
-Content emphasizes a practical walkthrough of app functionalities (quick scan, consultations, review queue, telemedicine, admin) rather than lengthy introductory or research material.
-
----
-
-## Repository structure (summary)
+## Repository Structure
 
 ```
 dermoai/
-├── backend/          # FastAPI app (API, auth, DB, ML inference, Cloudinary, LiveKit)
-├── frontend/         # Next.js app (dashboard, scan, consultations, review, admin)
-├── notebooks/        # See "Notebooks" section above
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_condition_classification_strategy.ipynb
-│   ├── 03_data_augmentation.ipynb
-│   └── 04_model_training.ipynb
-├── src/data/         # See "Datasets" section above
-│   └── download.py   # Download Fitzpatrick17k / ISIC (FST V–VI)
-├── data/             # raw/ (download output), processed/, augmented/
-├── results/          # EDA, classification, augmentation outputs (from notebooks)
-├── models/final/     # best_model.keras, class_names.json (from notebook 04)
-├── mockups/          # App interface mockups / screenshots
-└── docs/             # PROJECT_REPORT.md (detailed documentation)
+├── backend/          # FastAPI app (API, auth, ML inference, Cloudinary, LiveKit, SMS)
+│   ├── app/
+│   │   ├── core/     # config, database, security, deps, seed, migrate
+│   │   ├── models/   # SQLAlchemy ORM (13 entities)
+│   │   ├── schemas/  # Pydantic v2 request/response models
+│   │   ├── routers/  # 16 FastAPI routers
+│   │   └── services/ # ml, image, consultation, cloudinary, notification, websocket, teleconsultation
+│   ├── alembic/      # DB migrations
+│   └── scripts/      # populate_data.py (demo data seeding)
+├── frontend/         # Next.js 16 app
+│   └── src/
+│       ├── app/      # (auth)/, (dashboard)/, (admin)/
+│       ├── components/
+│       ├── hooks/    # React Query data hooks
+│       ├── lib/api/  # Axios client + typed API functions
+│       └── types/    # api.ts canonical TypeScript types
+├── notebooks/        # 01_data_exploration → 04_model_training_efficientnet
+├── src/data/         # download.py, filter.py
+├── data/             # raw/, processed/, augmented/, test/
+├── results/          # eda/, classification/, augmentation/
+├── models/final/     # best_model.keras, class_names.json, triage_mapping.json
+├── mockups/          # UI screenshots (new/ = final, new/mobile/ = responsive)
+└── docs/             # PROJECT_REPORT.md (full technical documentation)
 ```
 
 ---
@@ -277,7 +374,9 @@ dermoai/
 
 **ISIC:** Combalia, M., et al. (2019). BCN20000: Dermoscopic Lesions in the Wild. arXiv:1908.02288.
 
-**LiveKit:** LiveKit. Open-source real-time communication platform for voice and video. [https://livekit.io](https://livekit.io). Used for teleconsultation (specialist video calls).
+**EfficientNet:** Tan, M. & Le, Q. V. (2019). EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks. ICML 2019.
+
+**LiveKit:** Open-source real-time communication platform. https://livekit.io
 
 ---
 

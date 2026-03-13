@@ -11,6 +11,8 @@ from app.models.appointment_request import AppointmentRequest
 from app.models.practitioner import Practitioner
 from app.models.user import User
 from app.models.consultation import Consultation
+from app.models.patient import Patient
+from app.models.clinical_review import ClinicalReview
 from app.schemas.appointment import AppointmentRequestCreate, AppointmentRequestUpdate
 
 
@@ -63,7 +65,7 @@ async def get_my_requests(user_id: UUID, db: AsyncSession) -> list[AppointmentRe
     result = await db.execute(
         select(AppointmentRequest)
         .where(AppointmentRequest.requested_by_user_id == user_id)
-        .order_by(AppointmentRequest.created_at.desc())
+        .order_by(AppointmentRequest.proposed_datetime.desc())
     )
     return list(result.scalars().all())
 
@@ -81,7 +83,7 @@ async def get_incoming_requests(
             ),
             AppointmentRequest.status != "REJECTED",
         )
-        .order_by(AppointmentRequest.created_at.desc())
+        .order_by(AppointmentRequest.proposed_datetime.desc())
     )
     return list(result.scalars().all())
 
@@ -174,34 +176,87 @@ async def get_upcoming_appointments(user_id: UUID, db: AsyncSession) -> list[App
 async def get_requests_by_consultation(
     consultation_id: UUID, db: AsyncSession
 ) -> list[AppointmentRequest]:
-    """Get all appointment requests for a specific consultation."""
+    """Get all appointment requests for a specific consultation, newest time first."""
     result = await db.execute(
         select(AppointmentRequest)
         .where(AppointmentRequest.consultation_id == consultation_id)
-        .order_by(AppointmentRequest.created_at.desc())
+        .order_by(AppointmentRequest.proposed_datetime.desc())
     )
     return list(result.scalars().all())
 
 
-async def get_requests_for_user_consultations(
-    user_id: UUID, db: AsyncSession
+async def get_linked_appointments(
+    *,
+    user_id: UUID,
+    practitioner_id: UUID | None,
+    patient_id: UUID | None,
+    db: AsyncSession,
 ) -> list[AppointmentRequest]:
-    """Get all appointment requests for consultations the user can access."""
-    # First get all consultation IDs the user can access
-    consultation_query = select(Consultation.consultation_id)
-    # If USER role, only their own consultations
-    consultation_query = consultation_query.where(Consultation.created_by == user_id)
-    
-    consultation_result = await db.execute(consultation_query)
-    consultation_ids = [row[0] for row in consultation_result.all()]
-    
-    if not consultation_ids:
-        return []
-    
-    # Get appointment requests for those consultations
+    """
+    Get all appointment requests linked to this user in any role:
+    - They created the request
+    - They are the specialist
+    - They created the consultation
+    - They are the patient for the consultation
+    - (Practitioner) they added a clinical review for the consultation
+    """
+
+    # Subqueries for consultations related to this user
+    created_consultations = select(Consultation.consultation_id).where(
+        Consultation.created_by == user_id
+    )
+
+    patient_consultations = (
+        select(Consultation.consultation_id)
+        .join(Patient, Patient.patient_id == Consultation.patient_id)
+        .where(Patient.user_id == user_id)
+        if patient_id is not None
+        else None
+    )
+
+    reviewed_consultations = (
+        select(ClinicalReview.consultation_id).where(
+            ClinicalReview.practitioner_id == practitioner_id
+        )
+        if practitioner_id is not None
+        else None
+    )
+
+    # Base OR conditions for appointments directly tied to the user
+    direct_conditions = [
+        AppointmentRequest.requested_by_user_id == user_id,
+    ]
+    if practitioner_id is not None:
+        direct_conditions.append(AppointmentRequest.specialist_id == practitioner_id)
+
+    # Consultation-based relationships
+    consultation_conditions = [
+        AppointmentRequest.consultation_id.in_(created_consultations.scalar_subquery())
+    ]
+    if patient_consultations is not None:
+        consultation_conditions.append(
+            AppointmentRequest.consultation_id.in_(
+                patient_consultations.scalar_subquery()
+            )
+        )
+    if reviewed_consultations is not None:
+        consultation_conditions.append(
+            AppointmentRequest.consultation_id.in_(
+                reviewed_consultations.scalar_subquery()
+            )
+        )
+
+    where_clause = or_(
+        *direct_conditions,
+        *consultation_conditions,
+    )
+
     result = await db.execute(
         select(AppointmentRequest)
-        .where(AppointmentRequest.consultation_id.in_(consultation_ids))
-        .order_by(AppointmentRequest.created_at.desc())
+        .where(
+            where_clause,
+            AppointmentRequest.status.notin_(["REJECTED", "CANCELLED"]),
+        )
+        .order_by(AppointmentRequest.proposed_datetime.desc())
     )
     return list(result.scalars().all())

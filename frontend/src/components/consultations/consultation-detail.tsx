@@ -121,6 +121,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 
 	const hasImages = (images?.length ?? 0) > 0;
 	const allConsented = hasImages && images!.every((img) => img.consent_to_reuse);
+	const hasPendingAppointment = (appointments ?? []).some((a) => a.status === "PENDING");
 
 	if (isLoading) {
 		return (
@@ -423,7 +424,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 					<CardHeader>
 						<div className='flex items-center justify-between gap-2'>
 							<h2 className='text-base font-semibold text-slate-900'>Appointments</h2>
-							{isPractitioner && hasImages && !isClosed && (
+							{(isPractitioner || isPatient) && hasImages && !isClosed && !hasPendingAppointment && (
 								<Button
 									size='sm'
 									onClick={() => setAppointmentModalOpen(true)}

@@ -78,7 +78,7 @@ export function ImageGallery({
 							</p>
 							<div className='flex items-center gap-2 mt-0.5'>
 								<span className='text-xs text-slate-500'>{formatDate(img.uploaded_at)}</span>
-								{img.confidence !== null && (
+								{img.confidence !== null && img.predicted_condition !== "UNCERTAIN" && (
 									<>
 										<span className='text-slate-300'>·</span>
 										<div className='flex items-center gap-1.5 flex-1 min-w-0'>
@@ -86,7 +86,7 @@ export function ImageGallery({
 												<div
 													className={cn(
 														"h-full rounded-full",
-														img.confidence >= 0.45 ? "bg-primary-600" : "bg-amber-500",
+														img.predicted_condition !== "UNCERTAIN" && img.confidence >= 0.35 ? "bg-primary-600" : "bg-amber-500",
 													)}
 													style={{ width: `${Math.min(100, img.confidence * 100)}%` }}
 												/>
