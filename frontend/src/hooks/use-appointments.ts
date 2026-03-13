@@ -36,7 +36,7 @@ export function useMyAppointmentRequests() {
   });
 }
 
-export function useIncomingAppointmentRequests() {
+export function useIncomingAppointmentRequests(enabled: boolean = true) {
   return useQuery({
     queryKey: ["appointment-requests", "incoming"],
     queryFn: async () => {
@@ -45,6 +45,7 @@ export function useIncomingAppointmentRequests() {
       );
       return response.data;
     },
+    enabled,
   });
 }
 

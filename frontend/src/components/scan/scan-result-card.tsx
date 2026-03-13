@@ -124,12 +124,14 @@ export function ScanResultCard({
 						)}
 					</div>
 
-					<div className='flex-1'>
-						<ProgressBar
-							value={result.confidence}
-							urgency={result.urgency}
-						/>
-					</div>
+					{result.predicted_condition !== "UNCERTAIN" && (
+						<div className='flex-1'>
+							<ProgressBar
+								value={result.confidence}
+								urgency={result.urgency}
+							/>
+						</div>
+					)}
 				</div>
 
 				{/* GradCAM Metrics (Optional) */}
@@ -171,7 +173,7 @@ export function ScanResultCard({
 				)}
 
 				{/* All Probabilities */}
-				{result.all_probabilities && Object.keys(result.all_probabilities).length > 1 && (
+				{result.predicted_condition !== "UNCERTAIN" && result.all_probabilities && Object.keys(result.all_probabilities).length > 1 && (
 					<details
 						className='rounded-lg bg-slate-50 p-3 text-sm'
 						open={showAllProbs}

@@ -44,6 +44,13 @@ export const CONDITION_INFO: Record<string, ConditionInfo> = {
     recommendedAction:
       "Usually managed locally with prescription treatment (e.g. permethrin or ivermectin); treat close contacts and wash bedding. Refer if diagnosis uncertain, treatment failure, or crusted scabies suspected.",
   },
+  uncertain: {
+    displayName: "Uncertain",
+    description:
+      "The model could not identify a skin condition with sufficient confidence. This may happen if the image is unclear, not a close-up of skin, or does not show one of the conditions the model was trained on.",
+    recommendedAction:
+      "Please retake the photo with better lighting and ensure the skin lesion is clearly visible. If the concern persists, see a healthcare provider for a clinical evaluation.",
+  },
   other: {
     displayName: "Other / Unclassified",
     description:

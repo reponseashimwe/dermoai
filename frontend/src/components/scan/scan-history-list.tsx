@@ -59,7 +59,7 @@ export function ScanHistoryList() {
 			<div className='grid gap-4 grid-cols-1'>
 				{scans.map((scan) => {
 					const confidence = scan.confidence ?? 0;
-					const urgency = confidence < 0.45 ? "REFER" : "MANAGE LOCALLY";
+					const urgency = scan.predicted_condition === "UNCERTAIN" || confidence < 0.35 ? "REFER" : "MANAGE LOCALLY";
 					return (
 						<Card
 							key={scan.image_id}
@@ -153,7 +153,7 @@ export function ScanHistoryList() {
 											)}
 										</div>
 									</div>
-									{scan.confidence !== null && (
+									{scan.confidence !== null && scan.predicted_condition !== "UNCERTAIN" && (
 										<div
 											className='shrink-0'
 											onClick={(e) => e.stopPropagation()}

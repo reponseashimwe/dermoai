@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.models.practitioner import Practitioner
+from app.models.patient import Patient
 from app.models.appointment_request import AppointmentRequest
 from app.schemas.appointment import (
     AppointmentRequestCreate,
@@ -124,29 +125,70 @@ async def create_appointment_request(
     return await _enrich_single(appointment, db)
 
 
+async def _get_practitioner_and_patient_ids(
+    current_user: User, db: AsyncSession
+) -> tuple[UUID | None, UUID | None]:
+    """Helper to resolve practitioner_id and patient_id (if any) for the current user."""
+    practitioner_id: UUID | None = None
+    patient_id: UUID | None = None
+
+    pract_result = await db.execute(
+        select(Practitioner.practitioner_id).where(
+            Practitioner.user_id == current_user.user_id
+        )
+    )
+    pract_row = pract_result.one_or_none()
+    if pract_row:
+        practitioner_id = pract_row[0]
+
+    patient_result = await db.execute(
+        select(Patient.patient_id).where(Patient.user_id == current_user.user_id)
+    )
+    patient_row = patient_result.one_or_none()
+    if patient_row:
+        patient_id = patient_row[0]
+
+    return practitioner_id, patient_id
+
+
 @router.get("/my-requests", response_model=list[AppointmentRequestRead])
 async def get_my_requests(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Get all my outgoing appointment requests."""
-    requests = await appointment_service.get_my_requests(current_user.user_id, db)
+    """
+    Unified view of all appointments linked to me (same as /for-my-consultations).
+    """
+    practitioner_id, patient_id = await _get_practitioner_and_patient_ids(
+        current_user, db
+    )
+    requests = await appointment_service.get_linked_appointments(
+        user_id=current_user.user_id,
+        practitioner_id=practitioner_id,
+        patient_id=patient_id,
+        db=db,
+    )
     return await _enrich_appointment_responses(requests, db)
 
 
 @router.get("/incoming", response_model=list[AppointmentRequestRead])
 async def get_incoming_requests(
-    practitioner: Annotated[Practitioner, Depends(get_current_practitioner)],
+    current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Get incoming appointment requests for specialists."""
-    if practitioner.practitioner_type != "SPECIALIST":
-        raise HTTPException(
-            status_code=403, detail="Only specialists can view incoming requests"
-        )
-    
-    requests = await appointment_service.get_incoming_requests(
-        practitioner.practitioner_id, db
+    """
+    Unified view of all appointments linked to me (same as /for-my-consultations).
+
+    Kept primarily for backwards compatibility with older frontends.
+    """
+    practitioner_id, patient_id = await _get_practitioner_and_patient_ids(
+        current_user, db
+    )
+    requests = await appointment_service.get_linked_appointments(
+        user_id=current_user.user_id,
+        practitioner_id=practitioner_id,
+        patient_id=patient_id,
+        db=db,
     )
     return await _enrich_appointment_responses(requests, db)
 
@@ -192,10 +234,25 @@ async def get_appointments_for_my_consultations(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Get all appointment requests for consultations the current user can access."""
-    requests = await appointment_service.get_requests_for_user_consultations(
-        current_user.user_id, db
+    """
+    Get all appointment requests linked to this user in any role:
+    - They created the request
+    - They are the specialist
+    - They created the consultation
+    - They are the patient for the consultation
+    - (Practitioner) they added a clinical review for the consultation
+    """
+    practitioner_id, patient_id = await _get_practitioner_and_patient_ids(
+        current_user, db
     )
+
+    requests = await appointment_service.get_linked_appointments(
+        user_id=current_user.user_id,
+        practitioner_id=practitioner_id,
+        patient_id=patient_id,
+        db=db,
+    )
+
     return await _enrich_appointment_responses(requests, db)
 
 
@@ -286,13 +343,13 @@ async def approve_appointment(
     practitioner: Annotated[Practitioner, Depends(get_current_practitioner)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Approve an appointment request."""
-    if practitioner.practitioner_type != "SPECIALIST":
-        raise HTTPException(status_code=403, detail="Only specialists can approve")
-
+    """Approve an appointment request (only the assigned practitioner can approve)."""
     appointment = await appointment_service.get_appointment_request(request_id, db)
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
+
+    if appointment.specialist_id and appointment.specialist_id != practitioner.practitioner_id:
+        raise HTTPException(status_code=403, detail="Only the assigned practitioner can approve this appointment")
 
     updated = await appointment_service.update_appointment_request(
         request_id, AppointmentRequestUpdate(status="APPROVED"), db
@@ -325,13 +382,13 @@ async def reject_appointment(
     practitioner: Annotated[Practitioner, Depends(get_current_practitioner)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Reject an appointment request with reason."""
-    if practitioner.practitioner_type != "SPECIALIST":
-        raise HTTPException(status_code=403, detail="Only specialists can reject")
-
+    """Reject an appointment request with reason (only assigned practitioner)."""
     appointment = await appointment_service.get_appointment_request(request_id, db)
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
+
+    if appointment.specialist_id and appointment.specialist_id != practitioner.practitioner_id:
+        raise HTTPException(status_code=403, detail="Only the assigned practitioner can reject this appointment")
 
     updated = await appointment_service.update_appointment_request(
         request_id,
@@ -360,13 +417,13 @@ async def propose_alternative_time(
     practitioner: Annotated[Practitioner, Depends(get_current_practitioner)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Propose an alternative time for the appointment."""
-    if practitioner.practitioner_type != "SPECIALIST":
-        raise HTTPException(status_code=403, detail="Only specialists can propose times")
-    
+    """Propose an alternative time for the appointment (only assigned practitioner)."""
     appointment = await appointment_service.get_appointment_request(request_id, db)
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    if appointment.specialist_id and appointment.specialist_id != practitioner.practitioner_id:
+        raise HTTPException(status_code=403, detail="Only the assigned practitioner can propose a new time")
     
     return await appointment_service.update_appointment_request(
         request_id,

@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { usePractitioners } from "@/hooks/use-practitioners";
 import {
-  useMyAppointmentRequests,
-  useIncomingAppointmentRequests,
+  useAppointmentsForMyConsultations,
   useApproveAppointment,
   useRejectAppointment,
   useProposeAlternativeTime,
   useStartCallFromAppointment,
+  useDeleteAppointmentRequest,
   type AppointmentRequest,
 } from "@/hooks/use-appointments";
 import { PageHeader } from "@/components/layout/page-header";
@@ -53,51 +53,36 @@ function AppointmentStatusBadge({ status }: { status: AppointmentRequest["status
 export default function AppointmentsPage() {
   const { user } = useAuth();
   const { data: practitioners } = usePractitioners();
-  const { data: myRequests, isLoading: loadingMy } = useMyAppointmentRequests();
-  const { data: incomingRequests, isLoading: loadingIncoming } = useIncomingAppointmentRequests();
+  const { data: appointments, isLoading } = useAppointmentsForMyConsultations();
+  const currentPractitioner = practitioners?.find((p) => p.user_id === user?.user_id);
+  const practitionerId = currentPractitioner?.practitioner_id;
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [proposeModalOpen, setProposeModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<AppointmentRequest | null>(null);
-
-  const currentPractitioner = practitioners?.find((p) => p.user_id === user?.user_id);
-  const isSpecialist = currentPractitioner?.practitioner_type === "SPECIALIST";
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Appointments"
         description={
-          isSpecialist
-            ? "Manage incoming appointment requests from general practitioners"
-            : "Request appointments with specialists for teleconsultations"
+          "Manage appointment requests linked to your consultations"
         }
-        action={
-          !isSpecialist ? (
-            <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
-              <Calendar className="h-4 w-4" />
-              Request Appointment
-            </Button>
-          ) : undefined
-        }
+        action={undefined}
       />
 
-      {isSpecialist ? (
-        <SpecialistView
-          requests={incomingRequests ?? []}
-          isLoading={loadingIncoming}
-          onReject={(req) => {
-            setSelectedRequest(req);
-            setRejectModalOpen(true);
-          }}
-          onPropose={(req) => {
-            setSelectedRequest(req);
-            setProposeModalOpen(true);
-          }}
-        />
-      ) : (
-        <PractitionerView requests={myRequests ?? []} isLoading={loadingMy} />
-      )}
+      <SpecialistView
+        requests={appointments ?? []}
+        isLoading={isLoading}
+        onReject={(req) => {
+          setSelectedRequest(req);
+          setRejectModalOpen(true);
+        }}
+        onPropose={(req) => {
+          setSelectedRequest(req);
+          setProposeModalOpen(true);
+        }}
+      />
 
       <CreateAppointmentModal
         open={createModalOpen}
@@ -136,10 +121,15 @@ function SpecialistView({
   onReject: (req: AppointmentRequest) => void;
   onPropose: (req: AppointmentRequest) => void;
 }) {
+  const { user } = useAuth();
+  const { data: practitioners } = usePractitioners();
   const approveAppointment = useApproveAppointment();
   const { toast } = useToast();
   const startCall = useStartCallFromAppointment();
   const router = useRouter();
+
+  const currentPractitioner = practitioners?.find((p) => p.user_id === user?.user_id);
+  const practitionerId = currentPractitioner?.practitioner_id;
 
   async function handleAppointmentCall(requestId: string) {
     try {
@@ -183,7 +173,14 @@ function SpecialistView({
 
   return (
     <div className="space-y-3">
-      {requests.map((request) => (
+      {requests.map((request) => {
+        const isRequester = user?.user_id === request.requested_by_user_id;
+        const isAssignedPractitioner =
+          practitionerId && request.specialist_id === practitionerId;
+        const canManage =
+          !!isAssignedPractitioner && !isRequester && request.status === "PENDING";
+
+        return (
         <Card key={request.request_id}>
           <CardContent className="py-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -233,7 +230,7 @@ function SpecialistView({
                 )}
               </div>
 
-              {request.status === "PENDING" && (
+              {canManage && (
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -264,7 +261,7 @@ function SpecialistView({
             </div>
           </CardContent>
         </Card>
-      ))}
+      )})}
     </div>
   );
 }
@@ -276,6 +273,10 @@ function PractitionerView({
   requests: AppointmentRequest[];
   isLoading: boolean;
 }) {
+  const { user } = useAuth();
+  const deleteAppointment = useDeleteAppointmentRequest();
+  const { toast } = useToast();
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -297,49 +298,77 @@ function PractitionerView({
   }
 
   return (
-    <div className="space-y-3">
-      {requests.map((request) => (
-        <Card key={request.request_id}>
-          <CardContent className="py-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-slate-500" />
-                  <span className="text-sm text-slate-700">
-                    {formatDate(request.proposed_datetime)}
-                  </span>
-                  <AppointmentStatusBadge status={request.status} />
+    <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+      {requests.map((apt) => (
+        <Card key={apt.request_id} className="overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-4 min-w-0">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-50">
+                  <Calendar className="h-6 w-6 text-primary-600" />
                 </div>
-
-                {request.specialist_name && (
-                  <p className="text-sm text-slate-700">
-                    With: <span className="font-medium">{request.specialist_name}</span>
-                  </p>
-                )}
-
-                {request.specialist_proposed_datetime && (
-                  <div className="text-sm text-blue-700">
-                    Alternative time proposed: {formatDate(request.specialist_proposed_datetime)}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-lg font-semibold text-slate-900">
+                      {formatDate(apt.proposed_datetime)}
+                    </p>
+                    <span
+                      className={cn(
+                        "inline-flex shrink-0 items-center rounded-lg px-2.5 py-0.5 text-xs font-medium",
+                        apt.status === "APPROVED" && "bg-green-100 text-green-800",
+                        apt.status === "PENDING" && "bg-amber-100 text-amber-800",
+                        apt.status === "REJECTED" && "bg-red-100 text-red-800",
+                        apt.status === "RESCHEDULED" && "bg-blue-100 text-blue-800",
+                        apt.status === "COMPLETED" && "bg-emerald-100 text-emerald-800"
+                      )}
+                    >
+                      {apt.status}
+                    </span>
                   </div>
-                )}
-
-                {request.rejection_reason && (
-                  <p className="text-sm text-red-700">
-                    Rejection reason: {request.rejection_reason}
-                  </p>
-                )}
-
-                {request.notes && (
-                  <p className="text-sm text-slate-600">{request.notes}</p>
-                )}
-
-                {request.consultation_id && (
+                  {apt.specialist_name && (
+                    <p className="mt-1 font-medium text-slate-800">{apt.specialist_name}</p>
+                  )}
+                  {apt.notes && (
+                    <p className="mt-1 text-sm text-slate-500">{apt.notes}</p>
+                  )}
+                  {apt.consultation_id && (
+                    <p className="mt-2">
+                      <Link
+                        href={`/consultations/${apt.consultation_id}`}
+                        className="text-sm font-medium text-primary-600 hover:underline"
+                      >
+                        View consultation
+                      </Link>
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {apt.consultation_id && (
                   <Link
-                    href={`/consultations/${request.consultation_id}`}
-                    className="text-sm text-primary-600 hover:text-primary-700"
+                    href={`/consultations/${apt.consultation_id}`}
+                    className="text-sm text-primary-600 hover:underline"
                   >
-                    View consultation →
+                    Consultation
                   </Link>
+                )}
+                {user?.user_id === apt.requested_by_user_id && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                    onClick={async () => {
+                      if (!window.confirm("Delete this appointment request?")) return;
+                      try {
+                        await deleteAppointment.mutateAsync(apt.request_id);
+                        toast("Appointment deleted", "success");
+                      } catch {
+                        toast("Could not delete appointment", "error");
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
                 )}
               </div>
             </div>

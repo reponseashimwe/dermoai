@@ -123,12 +123,14 @@ export function ResultPageContent({
 						</div>
 						<UrgencyBadge urgency={result.urgency} />
 					</div>
-					<ConfidenceCircle
-						value={result.confidence}
-						urgency={result.urgency}
-						size={140}
-						strokeWidth={12}
-					/>
+					{result.predicted_condition !== "UNCERTAIN" && (
+						<ConfidenceCircle
+							value={result.confidence}
+							urgency={result.urgency}
+							size={140}
+							strokeWidth={12}
+						/>
+					)}
 					{result.model_version && (
 						<div className='text-xs text-slate-500'>
 							Model v{result.model_version}
@@ -143,7 +145,7 @@ export function ResultPageContent({
 			{/* Grid: About | All condition probabilities */}
 			<div className='grid gap-8 lg:grid-cols-2'>
 				<ConditionInfoPanel condition={result.predicted_condition} />
-				{result.all_probabilities && Object.keys(result.all_probabilities).length > 0 && (
+				{result.predicted_condition !== "UNCERTAIN" && result.all_probabilities && Object.keys(result.all_probabilities).length > 0 && (
 					<div className='space-y-3 min-w-0'>
 						<h2 className='text-sm font-semibold text-slate-800'>All condition probabilities</h2>
 						<div className='space-y-3'>

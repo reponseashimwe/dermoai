@@ -103,12 +103,15 @@ export default function SchedulesPage() {
                           {apt.status}
                         </span>
                       </div>
-                      {apt.specialist_name && (
-                        <p className="mt-1 font-medium text-slate-800">{apt.specialist_name}</p>
-                      )}
-                      <p className="text-sm text-slate-500">
-                        Specialist: Dermatology
-                      </p>
+                      {(() => {
+                        const isRequester = apt.requested_by_user_id === user?.user_id;
+                        const otherName = isRequester
+                          ? apt.specialist_name ?? apt.requester_name
+                          : apt.requester_name ?? apt.specialist_name;
+                        return otherName ? (
+                          <p className="mt-1 font-medium text-slate-800">{otherName}</p>
+                        ) : null;
+                      })()}
                       {apt.notes && (
                         <p className="mt-1 text-sm text-slate-500">{apt.notes}</p>
                       )}
