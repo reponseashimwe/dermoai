@@ -17,7 +17,7 @@ AI-assisted dermatological triage for resource-limited settings. DermoAI classif
 DermoAI is a full-stack clinical workflow application combining:
 
 1. **Condition classification** — An EfficientNetB0 CNN (Keras/TensorFlow) trained on FST V–VI data classifies skin images into condition classes with optional GradCAM explainability overlays. When confidence across all classes falls below 0.35, the system returns **UNCERTAIN** instead of a forced prediction.
-2. **Two-stage urgency triage** — Confidence threshold (0.35) and refer-override logic (0.6) map predictions to REFER / MANAGE LOCALLY with a `triage_stage` indicator.
+2. **Two-stage triage mapping (REFER / MANAGE LOCALLY)** — Confidence threshold (0.35) and refer-override logic (0.6) map predictions to REFER / MANAGE LOCALLY with a `triage_stage` indicator.
 3. **Clinical workflow** — Quick scan → GP consultation with image upload → specialist appointment booking → LiveKit teleconsultation → clinical review → image consent management → specialist review queue.
 
 **Tech stack:**
@@ -184,9 +184,9 @@ Per-class breakdown:
 
 All classes achieved recall ≥50%. The 80% stretch target was not met — psoriasis precision (56.5%) was the weakest result, caused by visual overlap with pityriasis rubra pilaris on FST V–VI images, a known challenge in dark-skin dermatology. The limited pre-augmentation dataset size (448 images) was the primary constraint.
 
-### Urgency Triage Mapping
+### Triage Mapping (REFER vs MANAGE LOCALLY)
 
-**Objective:** Implement rule-based urgency mapping that translates predicted conditions into binary triage recommendations (Urgent/Non-Urgent), achieving a recall of approximately 75% on urgent cases for Fitzpatrick Skin Types V–VI.
+**Objective:** Implement rule-based triage mapping that translates predicted conditions into binary recommendations (REFER / MANAGE LOCALLY), achieving a recall of approximately 75% on REFER cases for Fitzpatrick Skin Types V–VI.
 
 ✅ **Achieved. REFER recall of 95.35% significantly exceeds the 75% target.**
 
@@ -202,7 +202,7 @@ Two-stage safety logic: confidence threshold (0.35) routes low-confidence predic
 
 ### Telemedicine Referral Interface
 
-**Objective:** Implement a telemedicine referral interface enabling rural health center staff to connect flagged urgent cases with urban-based dermatologists for remote consultation, with integrated case documentation to enable continuous system improvement.
+**Objective:** Implement a telemedicine referral interface enabling rural health center staff to connect flagged refer cases with urban-based dermatologists for remote consultation, with integrated case documentation to enable continuous system improvement.
 
 ✅ **Achieved.** Full end-to-end workflow deployed at [https://dermo.vercel.app](https://dermo.vercel.app):
 
