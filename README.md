@@ -142,116 +142,161 @@ See [notebooks/04_model_training_efficientnet.ipynb](notebooks/04_model_training
 
 ---
 
-## Analysis — Objectives vs Results
+## Analysis
 
-### Objective 1: FST V–VI Dataset Analysis & Augmentation
+### Dataset Analysis & FST V–VI Augmentation
 
-✅ **Achieved.** Fitzpatrick17k and ISIC datasets analyzed to quantify FST V–VI representation gaps. 5 conditions selected based on dataset viability (≥50 images per class) and clinical relevance for Sub-Saharan Africa. Conditions with insufficient representation were dropped (vitiligo: 42 images, squamous cell carcinoma: 44 images). Targeted augmentation applied to FST V–VI images → 250 images/class → 1,250 total training images. 60/20/20 stratified split maintained FST subgroup distribution across train/val/test sets.
+**Objective:** Analyze Fitzpatrick17k and ISIC datasets to quantify representation gaps for Fitzpatrick Skin Types V–VI and apply targeted data augmentation techniques that improve model performance on African phenotypes.
 
-### Objective 2: AI Classification Model — Accuracy Target on FST V–VI
+✅ **Achieved.**
 
-✅ **Achieved.** A deep learning classification model was developed and fine-tuned on the augmented FST V–VI dataset. Two-phase training strategy applied: frozen base for feature extraction followed by selective unfreezing of top layers for fine-tuning. Focal loss with class weighting addressed class imbalance. Model achieves classification performance on FST V–VI test set exceeding the 70% accuracy target. See [notebooks/04_model_training_efficientnet.ipynb](notebooks/04_model_training_efficientnet.ipynb) for full per-class metrics, confusion matrix, and FST V vs FST VI equity analysis.
+- Fitzpatrick17k and ISIC analyzed across all FST types — FST V–VI images were significantly under-represented relative to FST I–IV
+- 112 raw diagnoses mapped; 5 conditions selected for viability (≥50 FST V–VI images) and clinical relevance for Sub-Saharan Africa
+- Dropped: vitiligo (42 images), squamous cell carcinoma (44 images), lichen planus (diagnostic ambiguity on dark skin)
+- **448 original FST V–VI images** collected across 5 classes before augmentation
+- Targeted augmentation applied (rotation, flipping, brightness/contrast, zoom) → **250 images/class → 1,250 total training images** (balanced)
+- Stratified 60/20/20 split: **1,250 train / 90 val / 90 test** — FST subgroup distribution preserved across all splits
 
-### Objective 3: Rule-Based Triage Mapping — REFER Recall Target
+### Skin Condition Classification Model
 
-✅ **Achieved.** Rule-based triage mapping translates predicted conditions into binary recommendations: **REFER** (lupus erythematosus, pityriasis rubra pilaris) and **MANAGE LOCALLY** (psoriasis, neurofibromatosis, scabies). Two-stage safety logic implemented: confidence threshold (0.35) routes low-confidence predictions to UNCERTAIN → REFER, and a REFER override threshold (0.60) forces escalation when any REFER class probability exceeds 0.60. Combined REFER recall on FST V–VI test set meets the ≥75% target. See notebook for full triage evaluation.
+**Objective:** Develop a deep learning classification model that identifies common dermatological conditions with an accuracy of at least 70% on Fitzpatrick Skin Types V–VI. The proposal specified MobileNetV2; EfficientNetB0 was selected instead after comparative evaluation showed superior FST V–VI performance on this dataset size.
 
-### Objective 4: Telemedicine Referral Interface
+✅ **Primary target achieved (76.67%). 80% stretch target not met.**
 
-✅ **Achieved.** Full telemedicine referral interface implemented and deployed. Rural health center staff (GP role) can create patient consultations, upload skin images for AI triage, and escalate REFER cases to urban-based dermatologists via appointment requests with SMS notifications. Approved appointments launch LiveKit video teleconsultations. Specialist review queue captures clinician-verified labels for continuous model improvement. Case documentation stored per consultation with consent-gated image archival.
+Overall performance on FST V–VI test set (90 samples):
 
-### Objective 5: Simulated Clinical Validation
+| Metric           | Result     |
+| ---------------- | ---------- |
+| Overall accuracy | **76.67%** |
+| Macro recall     | **76.49%** |
+| Macro precision  | **80.25%** |
+| Macro F1-score   | **77.33%** |
 
-## ⏳ **In progress.** Simulated validation with medical consultants comparing AI triage performance against the established GP baseline of 58–70% sensitivity is scheduled for the coming weeks. The system and all evaluation workflows are fully deployed and ready for consultant testing at [https://dermo.vercel.app](https://dermo.vercel.app). Results will be documented upon completion.
+Per-class breakdown:
+
+| Condition                | Recall | Precision | F1    |
+| ------------------------ | ------ | --------- | ----- |
+| Lupus Erythematosus      | 83.3%  | 93.8%     | 88.2% |
+| Neurofibromatosis        | 80.0%  | 75.0%     | 77.4% |
+| Pityriasis Rubra Pilaris | 76.0%  | 76.0%     | 76.0% |
+| Psoriasis                | 76.5%  | 56.5%     | 65.0% |
+| Scabies                  | 66.7%  | 100.0%    | 80.0% |
+
+All classes achieved recall ≥50%. The 80% stretch target was not met — psoriasis precision (56.5%) was the weakest result, caused by visual overlap with pityriasis rubra pilaris on FST V–VI images, a known challenge in dark-skin dermatology. The limited pre-augmentation dataset size (448 images) was the primary constraint.
+
+### Urgency Triage Mapping
+
+**Objective:** Implement rule-based urgency mapping that translates predicted conditions into binary triage recommendations (Urgent/Non-Urgent), achieving a recall of approximately 75% on urgent cases for Fitzpatrick Skin Types V–VI.
+
+✅ **Achieved. REFER recall of 95.35% significantly exceeds the 75% target.**
+
+| Metric                                 | Result          | Target  |
+| -------------------------------------- | --------------- | ------- |
+| Combined REFER recall                  | **95.35%**      | ≥75% ✅ |
+| Lupus Erythematosus REFER recall       | **88.9%**       | —       |
+| Pityriasis Rubra Pilaris REFER recall  | **88.0%**       | —       |
+| Critical errors (REFER→MANAGE LOCALLY) | **2 out of 90** | ≤3 ✅   |
+| FST V vs FST VI accuracy gap           | **11.36%**      | <15% ✅ |
+
+Two-stage safety logic: confidence threshold (0.35) routes low-confidence predictions to UNCERTAIN → REFER; a REFER override threshold (0.60) forces escalation when any REFER class probability exceeds 0.60. Only 2 critical misclassifications occurred (both pityriasis rubra pilaris cases predicted as MANAGE LOCALLY).
+
+### Telemedicine Referral Interface
+
+**Objective:** Implement a telemedicine referral interface enabling rural health center staff to connect flagged urgent cases with urban-based dermatologists for remote consultation, with integrated case documentation to enable continuous system improvement.
+
+✅ **Achieved.** Full end-to-end workflow deployed at [https://dermo.vercel.app](https://dermo.vercel.app):
+
+- GP creates patient consultation → uploads skin image → AI triage result in ~1.5–3s
+- REFER outcome triggers specialist appointment request with SMS notification
+- Specialist approves → LiveKit video teleconsultation launched, SMS sent to both parties
+- Post-call: specialist writes clinical review → case closed with disposition recorded
+- Specialist review queue allows post-hoc label correction for continuous model improvement
+- Consent PIN workflow (via SMS) gates image entry into the admin retraining dataset
+
+### Clinical Utility Evaluation
+
+**Objective:** Evaluate the system's clinical utility through simulated validation with medical consultants, comparing AI triage performance against the established general practitioner baseline of 58–70% sensitivity, and assessing telemedicine workflow feasibility.
+
+⏳ **In progress.** Validation sessions with medical consultants are scheduled. The system is fully deployed and ready at [https://dermo.vercel.app](https://dermo.vercel.app).
 
 ## Testing Results
 
 ### Functional Testing — Authentication
 
-**Sign in**
-<img src="mockups/new/login.png" alt="Login" width="700" />
-
-**Sign up / Register**
-<img src="mockups/new/signup.png" alt="Sign up" width="700" />
+| Screen             | Screenshot                                     |
+| ------------------ | ---------------------------------------------- |
+| Sign in            | <img src="mockups/new/login.png" width="600">  |
+| Sign up / Register | <img src="mockups/new/signup.png" width="600"> |
 
 ---
 
 ### Functional Testing — Quick Scan (public, no login required)
 
-**Landing page — desktop**
-<img src="mockups/new/homepage.png" alt="Homepage" width="700" />
-
-**Homepage with scan form**
-<img src="mockups/new/homepage-scan.png" alt="Homepage scan" width="700" />
-
-**Landing page — mobile (PWA)**
-<img src="mockups/new/mobile/landing.png" alt="Homepage mobile" width="700" />
+| Screen                         | Screenshot                                             |
+| ------------------------------ | ------------------------------------------------------ |
+| Landing page — desktop         | <img src="mockups/new/homepage.png" width="600">       |
+| Homepage with scan upload form | <img src="mockups/new/homepage-scan.png" width="600">  |
+| Landing page — mobile (PWA)    | <img src="mockups/new/mobile/landing.png" width="280"> |
 
 ---
 
 ### Functional Testing — All Conditions (different data values)
 
-#### Lupus Erythematosus — REFER (79.3% confidence, GradCAM)
+#### Lupus Erythematosus — REFER · 79.3% confidence · GradCAM heatmap
 
-<img src="mockups/new/scan-result-lupus.png" alt="Scan result lupus desktop" width="700" />
+| Desktop                                                   | Mobile                                                           |
+| --------------------------------------------------------- | ---------------------------------------------------------------- |
+| <img src="mockups/new/scan-result-lupus.png" width="600"> | <img src="mockups/new/mobile/scan-result-lupus.png" width="280"> |
 
-<img src="mockups/new/mobile/scan-result-lupus.png" alt="Scan result lupus mobile" width="700" />
+#### Neurofibromatosis — Manage Locally · 77.5% confidence · GradCAM heatmap
 
-#### Neurofibromatosis — Manage Locally (77.5% confidence, GradCAM)
+| Desktop                                                               | Mobile                                                                       |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| <img src="mockups/new/scan-result-neurofibromatosis.png" width="600"> | <img src="mockups/new/mobile/scan-result-neurofibromatosis.png" width="280"> |
 
-<img src="mockups/new/scan-result-neurofibromatosis.png" alt="Scan result neurofibromatosis desktop" width="700" />
+#### Pityriasis Rubra Pilaris — REFER · 90.0% confidence · GradCAM heatmap
 
-<img src="mockups/new/mobile/scan-result-neurofibromatosis.png" alt="Scan result neurofibromatosis mobile" width="700" />
+| Desktop                                                        | Mobile                                                                |
+| -------------------------------------------------------------- | --------------------------------------------------------------------- |
+| <img src="mockups/new/scan-result-pityriasis.png" width="600"> | <img src="mockups/new/mobile/scan-result-pityriasis.png" width="280"> |
 
-#### Pityriasis Rubra Pilaris — REFER (90.0% confidence, GradCAM)
+#### Psoriasis — Manage Locally · 51.2% confidence · GradCAM heatmap
 
-<img src="mockups/new/scan-result-pityriasis.png" alt="Scan result pityriasis desktop" width="700" />
+| Desktop                                                       | Mobile                                                              |
+| ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| <img src="mockups/new/scan-result-psoriasis.png" width="600"> | <img src="mockups/new/mobile/scan-result-psoriais.png" width="280"> |
 
-<img src="mockups/new/mobile/scan-result-pityriasis.png" alt="Scan result pityriasis mobile" width="700" />
+#### Scabies — Manage Locally · 88.3% confidence · GradCAM heatmap
 
-#### Psoriasis — Manage Locally (51.2% confidence, GradCAM)
+| Desktop                                                     | Mobile                                                             |
+| ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| <img src="mockups/new/scan-result-scabies.png" width="600"> | <img src="mockups/new/mobile/scan-result-scabies.png" width="280"> |
 
-<img src="mockups/new/scan-result-psoriasis.png" alt="Scan result psoriasis desktop" width="700" />
+#### UNCERTAIN — non-skin / low-confidence image · no confidence score · no GradCAM
 
-<img src="mockups/new/mobile/scan-result-psoriais.png" alt="Scan result psoriasis mobile" width="700" />
-
-#### Scabies — Manage Locally (88.3% confidence, GradCAM)
-
-<img src="mockups/new/scan-result-scabies.png" alt="Scan result scabies desktop" width="700" />
-
-<img src="mockups/new/mobile/scan-result-scabies.png" alt="Scan result scabies mobile" width="700" />
-
-#### UNCERTAIN — non-skin / low-confidence image (no confidence score, no GradCAM)
-
-<img src="mockups/new/scan-result-uncertain.png" alt="Scan result uncertain desktop" width="700" />
-
-<img src="mockups/new/mobile/uncertain.png" alt="Scan result uncertain mobile" width="700" />
+| Desktop                                                       | Mobile                                                   |
+| ------------------------------------------------------------- | -------------------------------------------------------- |
+| <img src="mockups/new/scan-result-uncertain.png" width="600"> | <img src="mockups/new/mobile/uncertain.png" width="280"> |
 
 ---
 
 ### Functional Testing — Clinical Workflow
 
-**GP (General Practitioner) Dashboard**
-<img src="mockups/new/doctor-dashboard.png" alt="GP dashboard" width="700" />
-
-**Available Practitioners — Telemedicine**
-<img src="mockups/new/available-practitioners.png" alt="Available practitioners" width="700" />
-
-**Book Appointment — request specialist consultation**
-<img src="mockups/new/book-form.png" alt="Book appointment" width="700" />
+| Screen                                             | Screenshot                                                      |
+| -------------------------------------------------- | --------------------------------------------------------------- |
+| GP (General Practitioner) Dashboard                | <img src="mockups/new/doctor-dashboard.png" width="600">        |
+| Available Practitioners — Telemedicine             | <img src="mockups/new/available-practitioners.png" width="600"> |
+| Book Appointment — request specialist consultation | <img src="mockups/new/book-form.png" width="600">               |
 
 ---
 
 ### Functional Testing — Admin
 
-**Admin Dashboard — national system overview**
-<img src="mockups/new/admin-dashboard.png" alt="Admin dashboard" width="700" />
-
-**Admin Images — consented images for model retraining**
-<img src="mockups/new/admin-images.png" alt="Admin images" width="700" />
-
-**Practitioners management — approve/reject doctor registrations**
-<img src="mockups/new/practitioners-page.png" alt="Practitioners page" width="700" />
+| Screen                                                  | Screenshot                                                 |
+| ------------------------------------------------------- | ---------------------------------------------------------- |
+| Admin Dashboard — national system overview              | <img src="mockups/new/admin-dashboard.png" width="600">    |
+| Admin Images — consented images for model retraining    | <img src="mockups/new/admin-images.png" width="600">       |
+| Practitioners management — approve/reject registrations | <img src="mockups/new/practitioners-page.png" width="600"> |
 
 ---
 
