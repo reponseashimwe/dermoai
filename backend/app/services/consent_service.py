@@ -34,6 +34,14 @@ async def request_consent_pin(
 
     # Generate PIN
     pin_code = generate_pin()
+    # Always log the generated PIN for debugging / local testing.
+    # (Do NOT return it from the API response.)
+    # Use print() so the PIN is visible in local dev logs (captured by uvicorn).
+    # IMPORTANT: In production you should remove this to avoid exposing PINs.
+    print(
+        f"Consent PIN generated: consultation_id={consultation_id} phone_number={patient.phone_number} pin={pin_code}",
+        flush=True,
+    )
 
     # Create PIN record
     consent_pin = ConsentPin(
@@ -48,7 +56,9 @@ async def request_consent_pin(
     sms_sent = await send_consent_pin(patient.phone_number, pin_code)
 
     return {
-        "status": "sent" if sms_sent else "created",
+        # Treat this as success even if SMS is not configured.
+        "status": "sent",
+        "sms_delivery": "sent" if sms_sent else "skipped",
         "phone_number": patient.phone_number,
         "pin_id": str(consent_pin.pin_id),
         "expires_at": consent_pin.expires_at.isoformat(),

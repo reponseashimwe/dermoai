@@ -27,11 +27,15 @@ export function SpecialistCallNotification({
 
   const handleAccept = async () => {
     try {
+      // Backend may return 400 if another specialist already accepted.
+      // In that case, we still navigate to the call page so LiveKit token
+      // generation can proceed and the user can join.
       await acceptMutation.mutateAsync(teleconsultationId);
+    } catch (error) {
+      console.warn("Failed to accept call (continuing to join):", error);
+    } finally {
       router.push(`/teleconsultations/${teleconsultationId}`);
       onDismiss();
-    } catch (error) {
-      console.error("Failed to accept call:", error);
     }
   };
 

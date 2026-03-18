@@ -37,6 +37,7 @@ if _env_path.exists():
 from sqlalchemy import select  # noqa: E402
 
 from app.core.database import async_session  # noqa: E402
+from app.core.config import settings  # noqa: E402
 from app.models.appointment_request import AppointmentRequest  # noqa: E402
 from app.models.clinical_review import ClinicalReview  # noqa: E402
 from app.models.consent_pin import ConsentPin  # noqa: E402
@@ -49,6 +50,29 @@ from app.models.teleconsultation import Teleconsultation  # noqa: E402
 # ── Config ────────────────────────────────────────────────────────────────────
 BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 DATA_DIR = Path(__file__).parent.parent.parent / "data" / "test"
+
+
+def _parse_freeze_time(value: str) -> datetime | None:
+    """Parse Settings.FREEZE_TIME (ISO date or datetime) into an aware UTC datetime."""
+    v = (value or "").strip()
+    if not v:
+        return None
+    try:
+        dt = datetime.fromisoformat(v)
+    except ValueError:
+        # Allow plain YYYY-MM-DD
+        if len(v) == 10:
+            dt = datetime.fromisoformat(v + "T23:59:59")
+        else:
+            raise
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+# Single source of truth for "current time" in demo data.
+# If FREEZE_TIME is set, all timestamps are capped at that value. Otherwise, cap at real now.
+MAX_TIME_UTC: datetime = _parse_freeze_time(settings.FREEZE_TIME) or datetime.now(timezone.utc)
 
 # ── Triage mapping (mirrors models/final/triage_mapping.json) ─────────────────
 TRIAGE_MAPPING = {
@@ -549,7 +573,7 @@ async def cleanup_data() -> None:
 async def backdate_timestamps() -> None:
     random.seed(99)
     async with async_session() as session:
-        now = datetime.now(timezone.utc)
+        now = MAX_TIME_UTC
         week_ago = now - timedelta(days=7)
 
         for Model, time_col in [
@@ -628,7 +652,13 @@ def main() -> None:
 
         # ── Get specialist practitioner IDs ───────────────────────────────────
         spec_list = get_specialists(client, gp_tokens[0])
-        spec_prac_ids = [s["practitioner_id"] for s in spec_list]
+        email_to_prac_id = {s["email"]: s["practitioner_id"] for s in spec_list}
+        # Keep the same order as SPECIALISTS so spec_prac_ids[i] matches spec_tokens[i]
+        spec_prac_ids = [
+            email_to_prac_id[sp["email"]]
+            for sp in SPECIALISTS
+            if sp["email"] in email_to_prac_id
+        ]
         if not spec_prac_ids:
             print("✗ No specialists returned — ensure the server is seeded and running")
             sys.exit(1)
@@ -795,7 +825,7 @@ def main() -> None:
         reject_set  = set(range(n_total - n_rejected, n_total))
         pending_set = set(range(n_total - n_rejected - n_pending, n_total - n_rejected))
 
-        now_utc = datetime.now(timezone.utc)
+        now_utc = MAX_TIME_UTC
         for i, info in enumerate(appointments_queue):
             proposed_dt = (now_utc + timedelta(hours=24 + i * 2)).isoformat()
             appt = create_appointment(
