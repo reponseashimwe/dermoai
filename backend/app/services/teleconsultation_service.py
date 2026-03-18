@@ -113,24 +113,42 @@ async def accept_teleconsultation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Teleconsultation not found",
         )
-    
+
+    # Idempotency: repeated accepts (double-click / retries / two callers)
+    # should not hard-fail once the teleconsultation is already decided.
+    # We return the current state for ACTIVE/COMPLETED so the frontend can
+    # proceed to request a LiveKit token and join.
+    if teleconsultation.status in ("ACTIVE", "COMPLETED"):
+        changed = False
+        if teleconsultation.specialist_id is None:
+            teleconsultation.specialist_id = data.specialist_id
+            changed = True
+        if teleconsultation.started_at is None and teleconsultation.status == "ACTIVE":
+            teleconsultation.started_at = datetime.now(timezone.utc)
+            changed = True
+
+        if changed:
+            await db.commit()
+            await db.refresh(teleconsultation)
+        return teleconsultation
+
     if teleconsultation.status != "PENDING":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Teleconsultation already accepted or completed",
+            detail=f"Unexpected teleconsultation status: {teleconsultation.status}",
         )
-    
-    # Create LiveKit room (may already exist if created when request was made)
+
+    # Create LiveKit room (may already exist if created when request was made).
     try:
         await livekit_service.create_room(teleconsultation.livekit_room_name)
     except Exception as e:
         logger.warning("LiveKit create_room on accept (may already exist): %s", e)
-    
-    # Update teleconsultation
+
+    # Update teleconsultation.
     teleconsultation.specialist_id = data.specialist_id
     teleconsultation.status = "ACTIVE"
     teleconsultation.started_at = datetime.now(timezone.utc)
-    
+
     await db.commit()
     await db.refresh(teleconsultation)
 

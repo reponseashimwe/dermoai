@@ -17,12 +17,18 @@ interface ModalProps {
 export function Modal({ open, onClose, children, className, title, description }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  // Keep the latest onClose without re-triggering effects that depend on `open`.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
@@ -31,13 +37,18 @@ export function Modal({ open, onClose, children, className, title, description }
     const focusable = contentRef.current?.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    if (focusable?.length) focusable[0].focus();
+    const prevActive = document.activeElement as HTMLElement | null;
+    // Only steal focus when the user isn't already interacting inside the modal.
+    if (focusable?.length) {
+      const activeInsideModal = !!(prevActive && contentRef.current?.contains(prevActive));
+      if (!activeInsideModal) focusable[0].focus();
+    }
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

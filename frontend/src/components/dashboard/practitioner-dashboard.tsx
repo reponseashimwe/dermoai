@@ -253,6 +253,9 @@ export function PractitionerDashboard() {
 													router.push(`/teleconsultations/${tc.teleconsultation_id}`);
 												} catch {
 													refetchIncoming();
+													// If another specialist already accepted, accept may 400.
+													// Still open the call page so the user can request the LiveKit token.
+													router.push(`/teleconsultations/${tc.teleconsultation_id}`);
 												}
 											}}
 											disabled={acceptCall.isPending}

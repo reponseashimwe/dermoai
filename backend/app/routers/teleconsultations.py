@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_role
+from app.core.config import settings
 from app.models.user import User
 from app.schemas.teleconsultation import (
     TeleconsultationAccept,
@@ -103,7 +104,6 @@ async def get_teleconsultation_token(
         participant_name=current_user.name,
         participant_identity=str(current_user.user_id),
     )
-
     return TeleconsultationToken(
         token=token,
         room_name=teleconsultation.livekit_room_name,

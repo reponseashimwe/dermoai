@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AppointmentRequestCreate(BaseModel):
@@ -34,5 +34,4 @@ class AppointmentRequestRead(BaseModel):
     specialist_name: str | None = None
     requester_name: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

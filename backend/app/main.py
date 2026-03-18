@@ -1,5 +1,36 @@
 import logging
+import sys
+import types
 from contextlib import asynccontextmanager
+
+# Pydantic v1 compat shim crashes on Python 3.13 (metaclass conflict in ConstrainedDate).
+# FastAPI calls `from pydantic import v1` for every response_model to check if it's a v1
+# model; install a stub so the check returns False instead of raising TypeError.
+try:
+    import pydantic.v1  # noqa: F401
+except TypeError:
+    _stub = types.ModuleType("pydantic.v1")
+
+    class _BaseModel:  # minimal stub — lenient_issubclass checks against this
+        pass
+
+    _stub.BaseModel = _BaseModel  # type: ignore[attr-defined]
+    sys.modules["pydantic.v1"] = _stub
+
+# Time freeze must be activated before any other imports that use datetime
+from app.core.config import settings
+if settings.FREEZE_TIME:
+    import datetime as _dt
+    from zoneinfo import ZoneInfo
+    from freezegun import freeze_time as _freeze_time
+    # Combine the frozen date with the real current Kigali time (UTC+2).
+    _kigali = ZoneInfo("Africa/Kigali")
+    _frozen_date = _dt.date.fromisoformat(settings.FREEZE_TIME)
+    _now_kigali = _dt.datetime.now(_kigali)
+    _frozen_start = _dt.datetime.combine(_frozen_date, _now_kigali.timetz())
+    _freezer = _freeze_time(_frozen_start.isoformat(), tick=True, ignore=["cloudinary"])
+    _freezer.start()
+    logging.getLogger(__name__).warning("⚠ Date frozen at: %s (Kigali time ticking)", _frozen_date)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

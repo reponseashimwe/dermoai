@@ -1,6 +1,6 @@
 """SMS notification service for urgent case alerts and consent PINs."""
 
-import os
+import logging
 import random
 from uuid import UUID
 
@@ -8,12 +8,11 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models.practitioner import Practitioner
 from app.models.user import User
 
-MISTA_API_KEY = os.getenv("MISTA_API_KEY")
-MISTA_API_URL = os.getenv("MISTA_API_URL", "https://api.mista.io/v1/sms")
-SENDER_NAME = os.getenv("SMS_SENDER_NAME", "DermoAI")
+logger = logging.getLogger(__name__)
 
 
 def generate_pin() -> str:
@@ -23,25 +22,25 @@ def generate_pin() -> str:
 
 async def send_sms(phone_number: str, message: str) -> bool:
     """Send an SMS message to a phone number."""
-    if not MISTA_API_KEY:
-        print(f"SMS not configured, would have sent to {phone_number}: {message}")
+    if not settings.MISTA_API_KEY:
+        logger.warning("SMS provider not configured; skipping send to %s", phone_number)
         return False
 
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                MISTA_API_URL,
-                headers={"Authorization": f"Bearer {MISTA_API_KEY}"},
+                settings.MISTA_API_URL,
+                headers={"Authorization": f"Bearer {settings.MISTA_API_KEY}"},
                 json={
                     "to": phone_number,
-                    "from": SENDER_NAME,
+                    "from": settings.SMS_SENDER_NAME,
                     "message": message,
                 },
                 timeout=10.0,
             )
             return response.status_code == 200
     except Exception as e:
-        print(f"SMS send failed for {phone_number}: {e}")
+        logger.warning("SMS send failed for %s: %s", phone_number, e)
         return False
 
 
@@ -60,7 +59,7 @@ async def send_urgent_alert(
     db: AsyncSession,
 ) -> dict:
     """Send SMS to all approved specialists about urgent case."""
-    if not MISTA_API_KEY:
+    if not settings.MISTA_API_KEY:
         return {"status": "skipped", "reason": "SMS not configured"}
 
     result = await db.execute(
