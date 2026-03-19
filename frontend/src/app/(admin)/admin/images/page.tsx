@@ -72,7 +72,7 @@ export default function AdminImagesPage() {
 
 			<div className='grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'>
 				{items.map((img) => {
-					const urgency = img.predicted_condition === "UNCERTAIN" || (img.confidence ?? 0) < 0.35 ? "REFER" : "MANAGE LOCALLY";
+					const urgency = img.urgency ?? "REFER";
 					return (
 						<Card
 							key={img.image_id}

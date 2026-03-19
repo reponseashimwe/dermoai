@@ -4,13 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchClient } from "@/lib/api/client";
 import type { Image, QuickScanResponse } from "@/types/api";
 
-const CONFIDENCE_REFER_THRESHOLD = 0.45;
-
 function imageToResult(image: Image): QuickScanResponse {
 	const confidence = image.confidence ?? 0;
 	const predicted = image.predicted_condition ?? "UNCERTAIN";
-	const urgency =
-		confidence < CONFIDENCE_REFER_THRESHOLD ? "REFER" : "MANAGE LOCALLY";
+	const urgency = image.urgency ?? "REFER";
 	return {
 		image_id: image.image_id,
 		image_url: image.image_url,

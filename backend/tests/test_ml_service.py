@@ -451,20 +451,18 @@ class TestAggregatePredictions:
         assert result["final_predicted_condition"] == "lupus_erythematosus"
         assert result["urgency"] == "REFER"
 
-    def test_majority_vote_selects_most_common(self):
-        """3× psoriasis vs 1× lupus → psoriasis wins."""
+    def test_weighted_aggregation_prefers_higher_total_confidence(self):
+        """Weighted score decides the winner condition."""
         from app.services.ml_service import aggregate_predictions
 
         images = [
-            {"predicted_condition": "psoriasis", "confidence": 0.80},
-            {"predicted_condition": "psoriasis", "confidence": 0.70},
-            {"predicted_condition": "psoriasis", "confidence": 0.75},
-            {"predicted_condition": "lupus_erythematosus", "confidence": 0.65},
+            {"predicted_condition": "pityriasis_rubra_pilaris", "confidence": 0.90},
+            {"predicted_condition": "scabies", "confidence": 0.81},
         ]
         result = aggregate_predictions(images)
 
-        assert result["final_predicted_condition"] == "psoriasis"
-        assert result["urgency"] == "MANAGE LOCALLY"
+        assert result["final_predicted_condition"] == "pityriasis_rubra_pilaris"
+        assert result["urgency"] == "REFER"
 
     def test_majority_refer_class_gives_refer_urgency(self):
         """2× lupus + 1× psoriasis → lupus majority → REFER."""
@@ -478,6 +476,18 @@ class TestAggregatePredictions:
         result = aggregate_predictions(images)
 
         assert result["final_predicted_condition"] == "lupus_erythematosus"
+        assert result["urgency"] == "REFER"
+
+    def test_mixed_predictions_with_any_refer_force_refer_urgency(self):
+        """Any REFER signal in mixed scans escalates consultation urgency."""
+        from app.services.ml_service import aggregate_predictions
+
+        images = [
+            {"predicted_condition": "psoriasis", "confidence": 0.80},
+            {"predicted_condition": "lupus_erythematosus", "confidence": 0.65},
+        ]
+        result = aggregate_predictions(images)
+
         assert result["urgency"] == "REFER"
 
     def test_all_uncertain_gives_refer_urgency(self):

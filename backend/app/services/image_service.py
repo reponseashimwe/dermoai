@@ -13,6 +13,16 @@ from app.models.image import Image
 from app.services import cloudinary_service, consultation_service, ml_service, notification_service
 
 
+def _attach_urgency(image: Image) -> Image:
+    """Attach transient urgency to image for API responses."""
+    if image.predicted_condition:
+        confidence = image.confidence if image.confidence is not None else 0.0
+        image.urgency = ml_service.classify_urgency(image.predicted_condition, confidence)
+    else:
+        image.urgency = None
+    return image
+
+
 async def quick_scan(
     file: UploadFile,
     db: AsyncSession,
@@ -168,7 +178,7 @@ async def attach_to_consultation(
     if consultation.urgency == "REFER":
         await notification_service.notify_urgent_case(consultation, db)
 
-    return image
+    return _attach_urgency(image)
 
 
 async def get_image(image_id: UUID, db: AsyncSession) -> Image:
@@ -181,7 +191,7 @@ async def get_image(image_id: UUID, db: AsyncSession) -> Image:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
         )
-    return image
+    return _attach_urgency(image)
 
 
 async def get_image_with_gradcam(
@@ -221,7 +231,7 @@ async def get_image_with_gradcam(
             image.gradcam_base64 = None
             image.gradcam_metrics = None
 
-    return image
+    return _attach_urgency(image)
 
 
 async def list_for_consultation(
@@ -234,7 +244,8 @@ async def list_for_consultation(
         .where(Image.consultation_id == consultation_id)
         .order_by(Image.uploaded_at.desc())
     )
-    return list(result.scalars().all())
+    images = list(result.scalars().all())
+    return [_attach_urgency(img) for img in images]
 
 
 async def update_image_consent(
@@ -273,7 +284,7 @@ async def update_image_consent(
     image.consent_to_reuse = consent
     await db.commit()
     await db.refresh(image)
-    return image
+    return _attach_urgency(image)
 
 
 async def set_consultation_images_consent(
@@ -299,7 +310,8 @@ async def list_for_user(user_id: UUID, db: AsyncSession) -> list[Image]:
         .where(Image.uploaded_by == user_id, Image.source == "QUICK_SCAN")
         .order_by(Image.uploaded_at.desc())
     )
-    return list(result.scalars().all())
+    images = list(result.scalars().all())
+    return [_attach_urgency(img) for img in images]
 
 
 async def list_unreviewed(
@@ -323,7 +335,8 @@ async def list_unreviewed(
         .offset(skip)
         .limit(limit)
     )
-    return list(result.scalars().all()), total
+    images = list(result.scalars().all())
+    return [_attach_urgency(img) for img in images], total
 
 
 async def list_reviewed(
@@ -347,7 +360,8 @@ async def list_reviewed(
         .offset(skip)
         .limit(limit)
     )
-    return list(result.scalars().all()), total
+    images = list(result.scalars().all())
+    return [_attach_urgency(img) for img in images], total
 
 
 async def list_all(
@@ -384,7 +398,8 @@ async def list_all(
     if criteria:
         list_query = list_query.where(*criteria)
     result = await db.execute(list_query)
-    return list(result.scalars().all()), total
+    images = list(result.scalars().all())
+    return [_attach_urgency(img) for img in images], total
 
 
 async def update_reviewed_label(
@@ -410,7 +425,7 @@ async def update_reviewed_label(
         image.allowed_review = True  # Ensure consultation images are marked allowed
     await db.commit()
     await db.refresh(image)
-    return image
+    return _attach_urgency(image)
 
 
 async def delete_image(image_id: UUID, db: AsyncSession) -> None:

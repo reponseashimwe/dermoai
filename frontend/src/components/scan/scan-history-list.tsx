@@ -59,7 +59,7 @@ export function ScanHistoryList() {
 			<div className='grid gap-4 grid-cols-1'>
 				{scans.map((scan) => {
 					const confidence = scan.confidence ?? 0;
-					const urgency = scan.predicted_condition === "UNCERTAIN" || confidence < 0.35 ? "REFER" : "MANAGE LOCALLY";
+					const urgency = scan.urgency ?? "REFER";
 					return (
 						<Card
 							key={scan.image_id}
