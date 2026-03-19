@@ -13,6 +13,7 @@ class ImageRead(BaseModel):
     storage_key: str
     predicted_condition: str | None = None
     confidence: float | None = None
+    urgency: str | None = None
     reviewed_label: str | None = None
     reviewed_by: uuid.UUID | None = None
     reviewed_by_name: str | None = None

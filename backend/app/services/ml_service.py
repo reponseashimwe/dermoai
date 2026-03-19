@@ -12,7 +12,6 @@ Classes: lupus_erythematosus, neurofibromatosis, pityriasis_rubra_pilaris,
 
 import io
 import json
-from collections import Counter
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -280,7 +279,7 @@ def predict_with_gradcam(image_url: str, layer_name: str = "top_conv") -> dict:
 
 def aggregate_predictions(images: list[dict]) -> dict[str, str | float | None]:
     """
-    Majority vote on condition + mean confidence; then classify urgency.
+    Confidence-weighted aggregation with conservative urgency escalation.
 
     Args:
         images: List of dicts with "predicted_condition" and "confidence" keys.
@@ -295,30 +294,43 @@ def aggregate_predictions(images: list[dict]) -> dict[str, str | float | None]:
             "urgency": None,
         }
 
-    conditions = [
-        img["predicted_condition"]
-        for img in images
-        if img.get("predicted_condition")
-    ]
-    confidences = [
-        img["confidence"]
-        for img in images
-        if img.get("confidence") is not None
-    ]
-
-    if not conditions:
+    valid_images = [img for img in images if img.get("predicted_condition")]
+    if not valid_images:
         return {
             "final_predicted_condition": None,
             "final_confidence": None,
             "urgency": None,
         }
 
-    counter = Counter(conditions)
-    final_condition = counter.most_common(1)[0][0]
+    scores: dict[str, float] = {}
+    condition_confidences: dict[str, list[float]] = {}
+    any_refer_signal = False
+
+    for img in valid_images:
+        condition = img["predicted_condition"]
+        confidence = img.get("confidence")
+        safe_confidence = float(confidence) if confidence is not None else 0.0
+
+        scores[condition] = scores.get(condition, 0.0) + safe_confidence
+        if confidence is not None:
+            condition_confidences.setdefault(condition, []).append(safe_confidence)
+
+        # Safety-first: if any scan indicates REFER, escalate the consultation urgency.
+        if classify_urgency(condition, safe_confidence) == "REFER":
+            any_refer_signal = True
+
+    final_condition = sorted(scores.items(), key=lambda item: item[1], reverse=True)[0][0]
+    winner_confidences = condition_confidences.get(final_condition, [])
     final_confidence = (
-        round(sum(confidences) / len(confidences), 4) if confidences else 0.0
+        round(sum(winner_confidences) / len(winner_confidences), 4)
+        if winner_confidences
+        else 0.0
     )
-    urgency = "REFER" if final_condition == "UNCERTAIN" else classify_urgency(final_condition, final_confidence)
+    urgency = (
+        "REFER"
+        if any_refer_signal
+        else classify_urgency(final_condition, final_confidence)
+    )
 
     return {
         "final_predicted_condition": final_condition,

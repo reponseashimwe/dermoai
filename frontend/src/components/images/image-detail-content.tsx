@@ -50,12 +50,7 @@ export function ImageDetailContent({
 	const rawKey = (image.predicted_condition ?? "").trim();
 	const conditionKey = rawKey ? rawKey.toLowerCase().replace(/\s+/g, "_") : "other";
 	const conditionInfo = CONDITION_INFO[conditionKey] || CONDITION_INFO.other;
-	const urgency =
-		"urgency" in image && image.urgency
-			? image.urgency
-			: image.predicted_condition === "UNCERTAIN" || (image.confidence != null && image.confidence < 0.35)
-				? "REFER"
-				: "MANAGE LOCALLY";
+	const urgency = "urgency" in image && image.urgency ? image.urgency : "REFER";
 	const showActionButtons = !hideActions && (onReferSpecialist || onSaveConsultation);
 
 	return (

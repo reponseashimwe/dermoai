@@ -107,6 +107,7 @@ export interface Image {
   storage_key: string;
   predicted_condition: string | null;
   confidence: number | null;
+  urgency?: "REFER" | "MANAGE LOCALLY" | null;
   reviewed_label: string | null;
   reviewed_by: string | null;
   reviewed_by_name: string | null;

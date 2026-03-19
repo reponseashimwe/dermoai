@@ -1,13 +1,12 @@
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from app.core.database import get_db
-from app.services import practitioner_service, websocket_service
-from app.models.user import User
 from sqlalchemy import select
+
+from app.core.database import async_session
+from app.models.user import User
+from app.services import practitioner_service, websocket_service
 
 router = APIRouter(prefix="/api/ws", tags=["websocket"])
 
@@ -16,13 +15,17 @@ router = APIRouter(prefix="/api/ws", tags=["websocket"])
 async def websocket_specialist_endpoint(
     websocket: WebSocket,
     user_id: str,
-    db: AsyncSession = Depends(get_db),
 ):
     """WebSocket endpoint for specialists to receive teleconsultation notifications."""
     practitioner_id = None
     try:
         await websocket.accept()
-        practitioner = await practitioner_service.get_by_user_id(UUID(user_id), db)
+        user_uuid = UUID(user_id)
+        async with async_session() as db:
+            practitioner = await practitioner_service.get_by_user_id(user_uuid, db)
+        if not practitioner:
+            await websocket.close(code=1008, reason="Practitioner not found")
+            return
         practitioner_id = practitioner.practitioner_id
         await websocket_service.manager.connect(websocket, practitioner_id)
 
@@ -32,29 +35,33 @@ async def websocket_specialist_endpoint(
     except WebSocketDisconnect:
         if practitioner_id is not None:
             websocket_service.manager.disconnect(websocket, practitioner_id)
-    except Exception as e:
+    except Exception:
         if practitioner_id is not None:
             try:
                 websocket_service.manager.disconnect(websocket, practitioner_id)
             except Exception:
                 pass
-        raise
+        try:
+            await websocket.close(code=1011, reason="WebSocket error")
+        except Exception:
+            pass
 
 
 @router.websocket("/users")
 async def websocket_user_endpoint(
     websocket: WebSocket,
     user_id: str,
-    db: AsyncSession = Depends(get_db),
 ):
     """WebSocket endpoint for users to receive teleconsultation notifications."""
     participant_id = None
     try:
         await websocket.accept()
-        result = await db.execute(select(User).where(User.user_id == UUID(user_id)))
-        user = result.scalar_one_or_none()
+        user_uuid = UUID(user_id)
+        async with async_session() as db:
+            result = await db.execute(select(User).where(User.user_id == user_uuid))
+            user = result.scalar_one_or_none()
         if not user:
-            await websocket.close()
+            await websocket.close(code=1008, reason="User not found")
             return
         participant_id = user.user_id
         await websocket_service.manager.connect(websocket, participant_id)
@@ -71,4 +78,7 @@ async def websocket_user_endpoint(
                 websocket_service.manager.disconnect(websocket, participant_id)
             except Exception:
                 pass
-        raise
+        try:
+            await websocket.close(code=1011, reason="WebSocket error")
+        except Exception:
+            pass
