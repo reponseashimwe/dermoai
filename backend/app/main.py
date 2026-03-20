@@ -28,7 +28,12 @@ if settings.FREEZE_TIME:
     _frozen_date = _dt.date.fromisoformat(settings.FREEZE_TIME)
     _now_kigali = _dt.datetime.now(_kigali)
     _frozen_start = _dt.datetime.combine(_frozen_date, _now_kigali.timetz())
-    _freezer = _freeze_time(_frozen_start.isoformat(), tick=True, ignore=["cloudinary"])
+    _freezer = _freeze_time(
+        _frozen_start.isoformat(),
+        tick=True,
+        # Keep deterministic app timestamps, but never freeze LiveKit token clock.
+        ignore=["cloudinary", "livekit", "app.services.livekit_service"],
+    )
     _freezer.start()
     logging.getLogger(__name__).warning("⚠ Date frozen at: %s (Kigali time ticking)", _frozen_date)
 

@@ -15,7 +15,7 @@ import { useEndTeleconsultation, useLiveKitToken } from "@/hooks/use-teleconsult
 import { useCompleteAppointment } from "@/hooks/use-appointments";
 import { Button } from "@/components/ui/button";
 import { PhoneOff, User, Monitor, MessageSquare, MoreHorizontal, ChevronLeft } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface CallInterfaceProps {
 	teleconsultationId: string;
@@ -34,9 +34,11 @@ function VideoCallInner({ onEndCall, onRemoteJoined }: { onEndCall: () => void; 
 	const remoteParticipant = participants.find((p) => !p.isLocal);
 	const [showChat, setShowChat] = useState(false);
 
-	if (remoteParticipant && onRemoteJoined) {
-		onRemoteJoined();
-	}
+	useEffect(() => {
+		if (remoteParticipant && onRemoteJoined) {
+			onRemoteJoined();
+		}
+	}, [remoteParticipant, onRemoteJoined]);
 
 	return (
 		<div className='relative flex h-full w-full min-h-0 flex-col bg-slate-900'>
@@ -143,6 +145,7 @@ export function CallInterface({ teleconsultationId, appointmentId, onEnd }: Call
 	const endMutation = useEndTeleconsultation();
 	const completeAppointment = useCompleteAppointment();
 	const [bothJoined, setBothJoined] = useState(false);
+	const [isEndingCall, setIsEndingCall] = useState(false);
 
 	const maybeCompleteAppointment = useCallback(() => {
 		if (!appointmentId || !bothJoined) return;
@@ -150,27 +153,27 @@ export function CallInterface({ teleconsultationId, appointmentId, onEnd }: Call
 		completeAppointment.mutate(appointmentId);
 	}, [appointmentId, bothJoined, completeAppointment]);
 
-	const handleDisconnected = useCallback(async () => {
+	const endCall = useCallback(async () => {
+		if (isEndingCall) return;
+		setIsEndingCall(true);
 		try {
 			await endMutation.mutateAsync(teleconsultationId);
 			maybeCompleteAppointment();
 			onEnd?.();
 		} catch {
 			// ignore
+		} finally {
+			router.push("/consultations");
 		}
-		router.push("/consultations");
-	}, [teleconsultationId, endMutation, onEnd, router]);
+	}, [teleconsultationId, endMutation, maybeCompleteAppointment, onEnd, router, isEndingCall]);
 
-	const handleEndCall = async () => {
-		try {
-			await endMutation.mutateAsync(teleconsultationId);
-			maybeCompleteAppointment();
-			onEnd?.();
-		} catch {
-			// ignore
-		}
-		router.push("/consultations");
-	};
+	const handleDisconnected = useCallback(async () => {
+		await endCall();
+	}, [endCall]);
+
+	const handleEndCall = useCallback(async () => {
+		await endCall();
+	}, [endCall]);
 
 	if (isLoading || !tokenData) {
 		return (
