@@ -24,10 +24,6 @@ class Settings(BaseSettings):
     SEED_ADMIN_PASSWORD: str = ""
     SEED_ADMIN_NAME: str = "Admin"
 
-    # Set to an ISO date/datetime string (e.g. "2026-03-13") to freeze time for all DB records.
-    # Leave empty in production.
-    FREEZE_TIME: str = ""
-
     # SMS Configuration (Mista IO)
     MISTA_API_KEY: str = ""
     MISTA_API_URL: str = "https://api.mista.io/v1/sms"
