@@ -17,6 +17,10 @@ import { Button } from "@/components/ui/button";
 import { PhoneOff, User, Monitor, MessageSquare, MoreHorizontal, ChevronLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+const TELECONSULTATION_IN_CALL_KEY = "teleconsultation:isInCall";
+const TELECONSULTATION_JOINED_AT_KEY = "teleconsultation:joinedAt";
+const TELECONSULTATION_RETURN_TO_KEY = "teleconsultation:returnTo";
+
 interface CallInterfaceProps {
 	teleconsultationId: string;
 	appointmentId?: string;
@@ -146,6 +150,20 @@ export function CallInterface({ teleconsultationId, appointmentId, onEnd }: Call
 	const completeAppointment = useCompleteAppointment();
 	const [bothJoined, setBothJoined] = useState(false);
 	const [isEndingCall, setIsEndingCall] = useState(false);
+	const [returnToPath, setReturnToPath] = useState("/consultations");
+
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		sessionStorage.setItem(TELECONSULTATION_IN_CALL_KEY, "true");
+		sessionStorage.setItem(TELECONSULTATION_JOINED_AT_KEY, String(Date.now()));
+		const savedReturnTo = sessionStorage.getItem(TELECONSULTATION_RETURN_TO_KEY);
+		if (savedReturnTo && !savedReturnTo.startsWith("/teleconsultations/")) {
+			setReturnToPath(savedReturnTo);
+		}
+		return () => {
+			sessionStorage.setItem(TELECONSULTATION_IN_CALL_KEY, "false");
+		};
+	}, []);
 
 	const maybeCompleteAppointment = useCallback(() => {
 		if (!appointmentId || !bothJoined) return;
@@ -163,9 +181,10 @@ export function CallInterface({ teleconsultationId, appointmentId, onEnd }: Call
 		} catch {
 			// ignore
 		} finally {
-			router.push("/consultations");
+			router.replace(returnToPath);
+			router.refresh();
 		}
-	}, [teleconsultationId, endMutation, maybeCompleteAppointment, onEnd, router, isEndingCall]);
+	}, [teleconsultationId, endMutation, maybeCompleteAppointment, onEnd, router, isEndingCall, returnToPath]);
 
 	const handleDisconnected = useCallback(async () => {
 		await endCall();
