@@ -7,10 +7,22 @@ import { useWebSocket } from "@/hooks/use-websocket";
 import { SpecialistCallNotification } from "./specialist-call-notification";
 import { ParticipantJoinedNotification } from "./participant-joined-notification";
 
+const TELECONSULTATION_IN_CALL_KEY = "teleconsultation:isInCall";
+const TELECONSULTATION_JOINED_AT_KEY = "teleconsultation:joinedAt";
+const RECENT_JOIN_SUPPRESS_MS = 2 * 60 * 1000;
+
 interface WebSocketMessage {
   type: string;
   teleconsultation_id?: string;
   [key: string]: unknown;
+}
+
+function shouldSuppressJoinedPopup(): boolean {
+  if (typeof window === "undefined") return false;
+  if (sessionStorage.getItem(TELECONSULTATION_IN_CALL_KEY) === "true") return true;
+  const joinedAtRaw = sessionStorage.getItem(TELECONSULTATION_JOINED_AT_KEY);
+  const joinedAt = joinedAtRaw ? Number(joinedAtRaw) : NaN;
+  return Number.isFinite(joinedAt) && Date.now() - joinedAt < RECENT_JOIN_SUPPRESS_MS;
 }
 
 export function UserTeleconsultationListener() {
@@ -25,6 +37,7 @@ export function UserTeleconsultationListener() {
       if (message.type === "teleconsultation_request" && typeof message.teleconsultation_id === "string") {
         setIncoming({ teleconsultationId: message.teleconsultation_id });
       } else if (message.type === "teleconsultation_joined" && typeof message.teleconsultation_id === "string") {
+        if (shouldSuppressJoinedPopup()) return;
         setJoined({ teleconsultationId: message.teleconsultation_id });
       }
     },

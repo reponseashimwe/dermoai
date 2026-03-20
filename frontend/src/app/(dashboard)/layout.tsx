@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { Sidebar } from "@/components/layout/sidebar";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
@@ -8,12 +10,25 @@ import { TeleconsultationListener } from "@/components/telemedicine/teleconsulta
 import { UserTeleconsultationListener } from "@/components/telemedicine/user-teleconsultation-listener";
 import { useAuth } from "@/hooks/use-auth";
 
+const TELECONSULTATION_RETURN_TO_KEY = "teleconsultation:returnTo";
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !pathname) return;
+    if (pathname.startsWith("/teleconsultations/")) return;
+
+    const query = searchParams?.toString();
+    const currentPath = query ? `${pathname}?${query}` : pathname;
+    sessionStorage.setItem(TELECONSULTATION_RETURN_TO_KEY, currentPath);
+  }, [pathname, searchParams]);
 
   return (
     <AuthGuard>

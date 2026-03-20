@@ -184,6 +184,10 @@ async def end_teleconsultation(
             detail="Teleconsultation not found",
         )
     
+    if teleconsultation.status == "COMPLETED":
+        # Idempotency: disconnect events may trigger a second "end" call.
+        return teleconsultation
+
     if teleconsultation.status not in ("ACTIVE", "PENDING"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

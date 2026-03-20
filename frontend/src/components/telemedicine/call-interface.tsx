@@ -15,7 +15,11 @@ import { useEndTeleconsultation, useLiveKitToken } from "@/hooks/use-teleconsult
 import { useCompleteAppointment } from "@/hooks/use-appointments";
 import { Button } from "@/components/ui/button";
 import { PhoneOff, User, Monitor, MessageSquare, MoreHorizontal, ChevronLeft } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const TELECONSULTATION_IN_CALL_KEY = "teleconsultation:isInCall";
+const TELECONSULTATION_JOINED_AT_KEY = "teleconsultation:joinedAt";
+const TELECONSULTATION_RETURN_TO_KEY = "teleconsultation:returnTo";
 
 interface CallInterfaceProps {
 	teleconsultationId: string;
@@ -34,9 +38,11 @@ function VideoCallInner({ onEndCall, onRemoteJoined }: { onEndCall: () => void; 
 	const remoteParticipant = participants.find((p) => !p.isLocal);
 	const [showChat, setShowChat] = useState(false);
 
-	if (remoteParticipant && onRemoteJoined) {
-		onRemoteJoined();
-	}
+	useEffect(() => {
+		if (remoteParticipant && onRemoteJoined) {
+			onRemoteJoined();
+		}
+	}, [remoteParticipant, onRemoteJoined]);
 
 	return (
 		<div className='relative flex h-full w-full min-h-0 flex-col bg-slate-900'>
@@ -143,6 +149,21 @@ export function CallInterface({ teleconsultationId, appointmentId, onEnd }: Call
 	const endMutation = useEndTeleconsultation();
 	const completeAppointment = useCompleteAppointment();
 	const [bothJoined, setBothJoined] = useState(false);
+	const [isEndingCall, setIsEndingCall] = useState(false);
+	const [returnToPath, setReturnToPath] = useState("/consultations");
+
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		sessionStorage.setItem(TELECONSULTATION_IN_CALL_KEY, "true");
+		sessionStorage.setItem(TELECONSULTATION_JOINED_AT_KEY, String(Date.now()));
+		const savedReturnTo = sessionStorage.getItem(TELECONSULTATION_RETURN_TO_KEY);
+		if (savedReturnTo && !savedReturnTo.startsWith("/teleconsultations/")) {
+			setReturnToPath(savedReturnTo);
+		}
+		return () => {
+			sessionStorage.setItem(TELECONSULTATION_IN_CALL_KEY, "false");
+		};
+	}, []);
 
 	const maybeCompleteAppointment = useCallback(() => {
 		if (!appointmentId || !bothJoined) return;
@@ -150,27 +171,28 @@ export function CallInterface({ teleconsultationId, appointmentId, onEnd }: Call
 		completeAppointment.mutate(appointmentId);
 	}, [appointmentId, bothJoined, completeAppointment]);
 
-	const handleDisconnected = useCallback(async () => {
+	const endCall = useCallback(async () => {
+		if (isEndingCall) return;
+		setIsEndingCall(true);
 		try {
 			await endMutation.mutateAsync(teleconsultationId);
 			maybeCompleteAppointment();
 			onEnd?.();
 		} catch {
 			// ignore
+		} finally {
+			router.replace(returnToPath);
+			router.refresh();
 		}
-		router.push("/consultations");
-	}, [teleconsultationId, endMutation, onEnd, router]);
+	}, [teleconsultationId, endMutation, maybeCompleteAppointment, onEnd, router, isEndingCall, returnToPath]);
 
-	const handleEndCall = async () => {
-		try {
-			await endMutation.mutateAsync(teleconsultationId);
-			maybeCompleteAppointment();
-			onEnd?.();
-		} catch {
-			// ignore
-		}
-		router.push("/consultations");
-	};
+	const handleDisconnected = useCallback(async () => {
+		await endCall();
+	}, [endCall]);
+
+	const handleEndCall = useCallback(async () => {
+		await endCall();
+	}, [endCall]);
 
 	if (isLoading || !tokenData) {
 		return (
