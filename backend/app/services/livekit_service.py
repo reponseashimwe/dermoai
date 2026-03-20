@@ -1,5 +1,4 @@
 import calendar
-import subprocess
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -16,13 +15,7 @@ def _livekit_creds() -> tuple[str, str, str]:
 
 
 def _real_epoch_now() -> int:
-    """Return wall-clock epoch seconds even when freezegun freezes process time."""
-    try:
-        output = subprocess.check_output(["date", "+%s"], text=True).strip()
-        return int(output)
-    except Exception:
-        # Fallback for environments where `date` command is unavailable.
-        return calendar.timegm(datetime.now(UTC).utctimetuple())
+    return calendar.timegm(datetime.now(UTC).utctimetuple())
 
 
 async def create_room(room_name: str) -> dict:
@@ -57,7 +50,6 @@ def generate_token(
     )
     token.with_ttl(timedelta(hours=2))
 
-    # Build JWT explicitly so nbf/exp come from real UTC time even if app time is frozen.
     now_epoch = _real_epoch_now()
     exp_epoch = now_epoch + int(timedelta(hours=2).total_seconds())
     jwt_claims = token.claims.asdict()

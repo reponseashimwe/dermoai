@@ -37,7 +37,6 @@ if _env_path.exists():
 from sqlalchemy import select  # noqa: E402
 
 from app.core.database import async_session  # noqa: E402
-from app.core.config import settings  # noqa: E402
 from app.models.appointment_request import AppointmentRequest  # noqa: E402
 from app.models.clinical_review import ClinicalReview  # noqa: E402
 from app.models.consent_pin import ConsentPin  # noqa: E402
@@ -52,27 +51,7 @@ BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 DATA_DIR = Path(__file__).parent.parent.parent / "data" / "test"
 
 
-def _parse_freeze_time(value: str) -> datetime | None:
-    """Parse Settings.FREEZE_TIME (ISO date or datetime) into an aware UTC datetime."""
-    v = (value or "").strip()
-    if not v:
-        return None
-    try:
-        dt = datetime.fromisoformat(v)
-    except ValueError:
-        # Allow plain YYYY-MM-DD
-        if len(v) == 10:
-            dt = datetime.fromisoformat(v + "T23:59:59")
-        else:
-            raise
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
-
-
-# Single source of truth for "current time" in demo data.
-# If FREEZE_TIME is set, all timestamps are capped at that value. Otherwise, cap at real now.
-MAX_TIME_UTC: datetime = _parse_freeze_time(settings.FREEZE_TIME) or datetime.now(timezone.utc)
+MAX_TIME_UTC: datetime = datetime.now(timezone.utc)
 
 # ── Triage mapping (mirrors models/final/triage_mapping.json) ─────────────────
 TRIAGE_MAPPING = {
