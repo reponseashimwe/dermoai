@@ -372,10 +372,10 @@ async def list_all(
     uploaded_by: UUID | None = None,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
-    consent_to_reuse: bool | None = None,
+    consent_to_reuse: bool = True,
 ) -> tuple[list[Image], int]:
-    """List all images (admin). Optional filters. When consent_to_reuse=True, only consented images."""
-    criteria = []
+    """List all images (admin). Defaults to consented images only."""
+    criteria = [Image.consent_to_reuse.is_(consent_to_reuse)]
     if consultation_id is not None:
         criteria.append(Image.consultation_id == consultation_id)
     if uploaded_by is not None:
@@ -384,8 +384,6 @@ async def list_all(
         criteria.append(Image.uploaded_at >= date_from)
     if date_to is not None:
         criteria.append(Image.uploaded_at <= date_to)
-    if consent_to_reuse is True:
-        criteria.append(Image.consent_to_reuse.is_(True))
 
     count_query = select(func.count()).select_from(Image)
     if criteria:

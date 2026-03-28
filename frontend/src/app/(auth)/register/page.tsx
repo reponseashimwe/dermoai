@@ -231,15 +231,23 @@ export default function RegisterPage() {
 				</Button>
 			</form>
 
-			<p className='mt-6 text-center text-sm text-slate-500'>
-				Already have an account?{" "}
+			<div className='mt-6 flex flex-col items-center gap-2 text-sm text-slate-500 sm:flex-row sm:justify-between'>
+				<p>
+					Already have an account?{" "}
+					<Link
+						href='/login'
+						className='font-medium text-primary-500 hover:text-primary-600'
+					>
+						Sign in
+					</Link>
+				</p>
 				<Link
-					href='/login'
-					className='font-medium text-primary-500 hover:text-primary-600'
+					href='/legal'
+					className='text-slate-400 hover:text-primary-600 transition-colors'
 				>
-					Sign in
+					Legal &amp; Privacy
 				</Link>
-			</p>
+			</div>
 		</div>
 	);
 }

@@ -74,7 +74,7 @@ The API starts at `http://localhost:8000`. Migrations and seed data run automati
 
 ```bash
 cd frontend
-npm install
+npm install   # or pnpm install
 ```
 
 Create `frontend/.env.local`:
@@ -85,7 +85,7 @@ NEXT_PUBLIC_LIVEKIT_URL=wss://your-project.livekit.cloud
 ```
 
 ```bash
-npm run dev
+npm run dev   # or pnpm dev
 ```
 
 App at `http://localhost:3000`.
@@ -120,6 +120,27 @@ jupyter notebook notebooks/01_data_exploration.ipynb
 
 ---
 
+## Testing
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements-test.txt
+pytest
+```
+
+Four test modules covering the ML inference pipeline and API surface. All external I/O (database, Cloudinary, ML model) is mocked — no live database or network needed.
+
+| Module | What it tests |
+| ------ | ------------- |
+| `test_ml_service.py` | Two-stage triage logic — UNCERTAIN threshold (0.35), REFER override (0.60), per-class routing |
+| `test_preprocessing.py` | Image loading from file and URL, RGBA/greyscale → RGB coercion, output tensor shape |
+| `test_triage_endpoint.py` | `POST /api/triage/scan` and `GET /api/triage/history` — auth, schema, mocked I/O |
+| `test_integration.py` | Full pipeline: preprocessing → inference → triage decision → HTTP response |
+
+---
+
 ## Model Performance
 
 - **Architecture:** EfficientNetB0 (ImageNet pretrained), input 224×224 RGB
@@ -139,6 +160,10 @@ jupyter notebook notebooks/01_data_exploration.ipynb
 - **REFER override threshold:** 0.60
 
 See [notebooks/04_model_training_efficientnet.ipynb](notebooks/04_model_training_efficientnet.ipynb) for full metrics.
+
+| Training curves (loss + accuracy, both phases) | Confusion matrix — FST V–VI test set (90 samples) |
+| ----------------------------------------------- | -------------------------------------------------- |
+| <img src="results/training/training_history.png" width="420"> | <img src="results/training/confusion_matrix.png" width="380"> |
 
 ---
 
@@ -282,11 +307,45 @@ Two-stage safety logic: confidence threshold (0.35) routes low-confidence predic
 
 ### Functional Testing — Clinical Workflow
 
+#### GP Dashboard and Consultation Creation
+
 | Screen                                             | Screenshot                                                      |
 | -------------------------------------------------- | --------------------------------------------------------------- |
 | GP (General Practitioner) Dashboard                | <img src="mockups/new/doctor-dashboard.png" width="600">        |
+| Create Consultation — new patient case             | <img src="mockups/new/create-consultation.png" width="600">     |
+
+#### Consultation — different conditions, different data
+
+| MANAGE LOCALLY — Scabies | REFER — Pityriasis Rubra Pilaris |
+| ------------------------ | -------------------------------- |
+| <img src="mockups/new/consultation-page-scabies.png" width="420"> | <img src="mockups/new/consultation-page-pityriasis.png" width="420"> |
+
+#### Consent PIN Mechanism
+
+| Screen                                                              | Screenshot                                               |
+| ------------------------------------------------------------------- | -------------------------------------------------------- |
+| Consent PIN — SMS-verified patient opt-in for image reuse           | <img src="mockups/new/consent-pin.png" width="600">      |
+
+#### Telemedicine — Appointment Booking and Video Call
+
+| Screen                                             | Screenshot                                                      |
+| -------------------------------------------------- | --------------------------------------------------------------- |
 | Available Practitioners — Telemedicine             | <img src="mockups/new/available-practitioners.png" width="600"> |
 | Book Appointment — request specialist consultation | <img src="mockups/new/book-form.png" width="600">               |
+| LiveKit Teleconsultation — video call in progress  | <img src="mockups/new/teleconsultation.png" width="600">        |
+
+#### Specialist Review — GradCAM Explainability
+
+| Review queue | Review with GradCAM dialog open |
+| ------------ | ------------------------------- |
+| <img src="mockups/new/review-queue.png" width="420"> | <img src="mockups/new/review-explainability.png" width="420"> |
+
+#### Clinical Review — Post-Consultation Documentation
+
+| Screen                                               | Screenshot                                                        |
+| ---------------------------------------------------- | ----------------------------------------------------------------- |
+| Clinical Review Form — specialist writes disposition | <img src="mockups/new/clinical-review-form.png" width="600">      |
+| Filled Clinical Review — completed case record       | <img src="mockups/new/filled-review.png" width="600">             |
 
 ---
 
@@ -333,7 +392,7 @@ DermoAI demonstrates that a focused FST V–VI dataset combined with EfficientNe
 
 1. **Expand training classes:** The current 5-class model covers high-burden FST V–VI conditions but excludes malignancies. Future work should incorporate ISIC dermoscopy data for malignant classes to enable REFER recall comparison against published benchmarks.
 
-2. **Offline-first mobile app:** The PWA currently requires network access for inference. Deploying a quantised TFLite model on-device would make the tool viable in zero-connectivity settings (rural clinics, community health workers).
+2. **Offline-first mobile app:** The PWA currently requires network access for inference. Deploying a quantised TFLite model on-device would make the tool viable in zero-connectivity settings common in rural clinics and community health worker contexts.
 
 3. **Federated learning for retraining:** The consent-gated image pool enables retraining but centralises sensitive health data. A federated learning approach would allow hospital sites to contribute model updates without sharing raw images.
 
@@ -360,7 +419,7 @@ DermoAI demonstrates that a focused FST V–VI dataset combined with EfficientNe
 
 1. Connect GitHub repo to Vercel
 2. Set root directory to `frontend`
-3. Build command: `npm run build`
+3. Build command: `npm run build` (or `pnpm build`)
 4. Add environment variables: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_LIVEKIT_URL`
 5. Deploy — auto-deploys on every push to main
 

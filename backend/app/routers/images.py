@@ -83,9 +83,9 @@ async def list_all_images(
     uploaded_by: UUID | None = None,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
-    consent_to_reuse: bool | None = Query(None, description="When true, only return images with consent to reuse"),
+    consent_to_reuse: bool = Query(True, description="Filter by consent to reuse. Defaults to true — only consented images are returned."),
 ):
-    """List all images in the system (admin). Optional filters. Paginated. Use consent_to_reuse=true for consented only."""
+    """List all images in the system (admin). Defaults to consented images only. Pass consent_to_reuse=false to override."""
     items, total = await image_service.list_all(
         db,
         skip=skip,

@@ -243,6 +243,9 @@ export default function HomePage() {
 							diagnosis or treatment, connect with a specialist via DermoAI teleconsultation.
 						</p>
 					</div>
+					<div className='mt-5 text-center'>
+						<Link href='/legal' className='text-xs text-slate-400 hover:text-primary-600 transition-colors'>Legal &amp; Privacy</Link>
+					</div>
 				</div>
 			</div>
 
@@ -348,6 +351,9 @@ export default function HomePage() {
 								No account required. Results support triage only — for diagnosis or treatment, connect
 								with a clinician via teleconsultation inside DermoAI.
 							</p>
+							<div className='mt-4 text-center'>
+								<Link href='/legal' className='text-xs text-slate-400 hover:text-primary-600 transition-colors'>Legal &amp; Privacy</Link>
+							</div>
 						</div>
 					</div>
 				</main>
@@ -503,6 +509,9 @@ export default function HomePage() {
 									<span>✓ 10 MB max</span>
 								</div>
 							</div>
+						</div>
+						<div className='shrink-0 pb-6 text-center'>
+							<Link href='/legal' className='text-xs text-slate-400 hover:text-primary-600 transition-colors'>Legal &amp; Privacy</Link>
 						</div>
 					</div>
 				</div>
