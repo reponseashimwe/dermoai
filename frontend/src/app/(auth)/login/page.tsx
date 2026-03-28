@@ -137,15 +137,23 @@ export default function LoginPage() {
 					</Button>
 				</form>
 
-				<p className='mt-8 text-center text-sm text-slate-500'>
-					Don&apos;t have an account?{" "}
+				<div className='mt-8 flex flex-col items-center gap-2 text-sm text-slate-500 sm:flex-row sm:justify-between'>
+					<p>
+						Don&apos;t have an account?{" "}
+						<Link
+							href='/register'
+							className='font-medium text-primary-500 hover:text-primary-600'
+						>
+							Create one
+						</Link>
+					</p>
 					<Link
-						href='/register'
-						className='font-medium text-primary-500 hover:text-primary-600'
+						href='/legal'
+						className='text-slate-400 hover:text-primary-600 transition-colors'
 					>
-						Create one
+						Legal &amp; Privacy
 					</Link>
-				</p>
+				</div>
 			</div>
 		</div>
 	);
