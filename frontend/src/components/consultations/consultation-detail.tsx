@@ -100,10 +100,11 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 	}
 
 	const isPractitioner = user?.role === "PRACTITIONER";
-	const isPatient = consultation?.created_by === user?.user_id;
+	const isConsultationPatient =
+		consultation?.patient_id === patient?.patient_id && patient?.user_id === user?.user_id;
 	const currentPractitioner = practitioners?.find((p) => p.user_id === user?.user_id);
 	const isSpecialist = currentPractitioner?.practitioner_type === "SPECIALIST";
-	const canChangeConsent = isPatient;
+	const canChangeConsent = isConsultationPatient;
 	const isClosed = consultation?.status === "CLOSED";
 	/** For appointment cards: show the other party (never the current user). Specialist sees requester; patient/GP sees specialist. */
 	const getAppointmentOtherParty = (apt: { specialist_name?: string | null; requester_name?: string | null }) =>
@@ -388,7 +389,7 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 												variant='outline'
 												className='h-7 text-xs'
 											>
-												Request SMS
+												Request PIN
 											</Button>
 										)}
 									</div>
@@ -424,7 +425,10 @@ export function ConsultationDetail({ consultationId, reviewSection }: Consultati
 					<CardHeader>
 						<div className='flex items-center justify-between gap-2'>
 							<h2 className='text-base font-semibold text-slate-900'>Appointments</h2>
-							{(isPractitioner || isPatient) && hasImages && !isClosed && !hasPendingAppointment && (
+							{(isPractitioner || isConsultationPatient) &&
+								hasImages &&
+								!isClosed &&
+								!hasPendingAppointment && (
 								<Button
 									size='sm'
 									onClick={() => setAppointmentModalOpen(true)}
