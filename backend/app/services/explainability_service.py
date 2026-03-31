@@ -17,7 +17,6 @@ import cv2
 import numpy as np
 from PIL import Image
 
-# Lazy import keras to avoid loading at module level
 _keras = None
 _tf = None
 
@@ -55,29 +54,19 @@ def generate_gradcam(
     """
     _ensure_imports()
 
-    # Preprocess image — must match training: efficientnet.preprocess_input maps
-    # [0, 255] → [-1, 1]. Keep original uint8 separately for the overlay blend.
     from keras.applications.efficientnet import preprocess_input as eff_preprocess
-    img_orig = np.array(image.resize((224, 224)))           # uint8 [0, 255] for overlay
-    img_array = eff_preprocess(img_orig.astype(np.float32)) # [-1, 1] for model
-    img_array = _tf.cast(np.expand_dims(img_array, axis=0), _tf.float32)  # tf.Tensor required for GradientTape.watch()
+    img_orig = np.array(image.resize((224, 224)))
+    img_array = eff_preprocess(img_orig.astype(np.float32))
+    img_array = _tf.cast(np.expand_dims(img_array, axis=0), _tf.float32)
 
-    # KERAS 3 FIX: Build grad model from backbone to avoid KeyError with nested tensors
-    # This is the same workaround used in the notebook (06_gradcam_visualization.ipynb)
-    # We split the model into three parts to prevent Keras 3 from accessing nested dict outputs
-
-    # Find the target layer (conv layer for GradCAM)
     target_layer = None
     try:
         target_layer = model.get_layer(layer_name)
     except (ValueError, KeyError):
-        # If layer_name not found, try finding last conv layer automatically
-        # Search through all layers including nested layers (e.g., inside EfficientNet)
         for layer in reversed(model.layers):
             if 'conv' in layer.name.lower():
                 target_layer = layer
                 break
-            # If it's a nested model (like efficientnetb0), search inside it
             if hasattr(layer, 'layers'):
                 for sublayer in reversed(layer.layers):
                     if 'conv' in sublayer.name.lower():
@@ -92,7 +81,6 @@ def generate_gradcam(
                 f"Available layers: {[l.name for l in model.layers[:5]]}"
             )
 
-    # Find the backbone (submodel containing the conv layers) and its index
     backbone = None
     backbone_idx = -1
     for i, layer in enumerate(model.layers):
@@ -107,11 +95,6 @@ def generate_gradcam(
             "Model structure is unexpected."
         )
 
-    # Keras 3 fixes:
-    # 1. backbone.input/output may be lists — use [0] to get the actual tensor.
-    # 2. Build backbone-only grad model; call head layers manually to avoid
-    #    "inputs not connected to outputs" when building Model(backbone.output, model.output).
-    # 3. Watch both x (before) and conv_outputs (after) for reliable gradient flow.
     backbone_inp = backbone.input[0]  if isinstance(backbone.input,  list) else backbone.input
     backbone_out_tensor = backbone.output[0] if isinstance(backbone.output, list) else backbone.output
 
@@ -123,76 +106,61 @@ def generate_gradcam(
     except Exception as e:
         raise ValueError(f"Failed to build backbone grad model: {e}. Check model architecture.")
 
-    # Layers before the backbone (skip InputLayer)
     pre_backbone = [
         l for i, l in enumerate(model.layers)
         if i < backbone_idx
         and "inputlayer" not in l.__class__.__name__.lower()
         and "input_layer" not in l.__class__.__name__.lower()
     ]
-    # Head layers after the backbone (GAP, Dense, Dropout, …)
     post_backbone = [l for i, l in enumerate(model.layers) if i > backbone_idx]
 
-    # Compute gradients of the predicted class w.r.t. the conv feature maps
     with _tf.GradientTape() as tape:
         x = img_array
         for l in pre_backbone:
             x = l(x, training=False)
 
-        tape.watch(x)                                           # watch before backbone
+        tape.watch(x)
         conv_outputs, backbone_out = backbone_grad_model(x, training=False)
-        tape.watch(conv_outputs)                                # watch intermediate too
+        tape.watch(conv_outputs)
 
-        # Apply head layers manually (avoids Keras 3 graph-connection error)
         y = backbone_out
         for l in post_backbone:
             y = l(y, training=False)
 
         class_output = y[:, class_idx]
 
-    # Gradient of the class output with respect to the conv layer output
     grads = tape.gradient(class_output, conv_outputs)
     if grads is None:
         raise ValueError(
             "Gradients are None. Ensure the conv layer is on the path to model output."
         )
 
-    # Global average pooling of the gradients (importance weights)
-    # Shape: (batch, height, width, channels) -> (batch, channels)
     pooled_grads = _tf.reduce_mean(grads, axis=(0, 1, 2))
 
-    # Weight the feature maps by the importance and sum across channels
-    conv_outputs = conv_outputs[0]  # Remove batch dimension
+    conv_outputs = conv_outputs[0]
     pooled_grads = pooled_grads.numpy()
     conv_outputs = conv_outputs.numpy()
 
     for i in range(len(pooled_grads)):
         conv_outputs[:, :, i] *= pooled_grads[i]
 
-    # Create heatmap by averaging across all channels
     heatmap = np.mean(conv_outputs, axis=-1)
 
-    # ReLU: Only keep positive activations (regions that increase class score)
     heatmap = np.maximum(heatmap, 0)
 
-    # Normalize heatmap to [0, 1]
     if heatmap.max() > 0:
         heatmap = heatmap / heatmap.max()
 
-    # Resize heatmap to match input image size (224x224)
     heatmap_resized = cv2.resize(heatmap, (224, 224))
 
-    # Convert heatmap to RGB colormap (jet colormap: blue=low, red=high)
     heatmap_colored = cv2.applyColorMap(
         np.uint8(255 * heatmap_resized), cv2.COLORMAP_JET
     )
     heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
 
-    # Superimpose heatmap on original image (alpha blending)
     superimposed_img = heatmap_colored * 0.4 + img_orig * 0.6
     superimposed_img = np.uint8(superimposed_img)
 
-    # Calculate saliency metrics
     peak_row, peak_col = np.unravel_index(
         heatmap_resized.argmax(), heatmap_resized.shape
     )
@@ -264,7 +232,6 @@ def generate_gradcam_for_prediction(
     Returns:
         Dict with gradcam_base64, gradcam_metrics, class_idx.
     """
-    # Load image (same as ml_service.py)
     from app.services.ml_service import _load_image
 
     image = _load_image(image_url)
