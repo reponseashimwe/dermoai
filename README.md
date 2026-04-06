@@ -10,8 +10,6 @@ AI-assisted dermatological triage for resource-limited settings. DermoAI classif
 - Backend API (Render): https://dermoai-24lz.onrender.com
 - API docs (Swagger): https://dermoai-24lz.onrender.com/docs
 
-**Video demo:** [DermoAI Video Demo (Google Drive)](https://drive.google.com/drive/folders/1xOsam4Ctrd44eHeENncgpYg6180lFXp7)
-
 ## Demo Access (Live System)
 
 To review the deployed system without local setup:
