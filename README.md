@@ -10,17 +10,15 @@ AI-assisted dermatological triage for resource-limited settings. DermoAI classif
 - Backend API (Render): https://dermoai-24lz.onrender.com
 - API docs (Swagger): https://dermoai-24lz.onrender.com/docs
 
-**Video demo:** [DermoAI Video Demo (Google Drive)](https://drive.google.com/drive/folders/1xOsam4Ctrd44eHeENncgpYg6180lFXp7)
-
 ## Demo Access (Live System)
 
 To review the deployed system without local setup:
 
-| Role | Email | Password |
-|---|---|---|
-| Health Worker (GP) | doctor@dermoai.rw | Doctor@123 |
-| Specialist | specialist@dermoai.rw | Doctor@123 |
-| Admin | admin@dermoai.rw | Admin@123 |
+| Role               | Email                 | Password   |
+| ------------------ | --------------------- | ---------- |
+| Health Worker (GP) | doctor@dermoai.rw     | Doctor@123 |
+| Specialist         | specialist@dermoai.rw | Doctor@123 |
+| Admin              | admin@dermoai.rw      | Admin@123  |
 
 All roles are pre-approved. Use the Quick Scan on the landing page without logging in to test anonymous triage immediately.
 
@@ -136,27 +134,27 @@ jupyter notebook notebooks/01_data_exploration.ipynb
 
 **Backend (`backend/.env`):**
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string (`postgresql+asyncpg://...`) |
-| `SECRET_KEY` | JWT signing secret |
-| `ALGORITHM` | JWT algorithm (default `HS256`) |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token TTL |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token TTL |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
-| `LIVEKIT_URL` | LiveKit WebSocket URL |
-| `LIVEKIT_API_KEY` | LiveKit API key |
-| `LIVEKIT_API_SECRET` | LiveKit API secret |
-| `MISTA_API_KEY` | MISTA SMS gateway key |
-| `CORS_ORIGINS` | Allowed origins JSON array |
+| Variable                      | Description                                               |
+| ----------------------------- | --------------------------------------------------------- |
+| `DATABASE_URL`                | PostgreSQL connection string (`postgresql+asyncpg://...`) |
+| `SECRET_KEY`                  | JWT signing secret                                        |
+| `ALGORITHM`                   | JWT algorithm (default `HS256`)                           |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token TTL                                          |
+| `REFRESH_TOKEN_EXPIRE_DAYS`   | Refresh token TTL                                         |
+| `CLOUDINARY_CLOUD_NAME`       | Cloudinary cloud name                                     |
+| `CLOUDINARY_API_KEY`          | Cloudinary API key                                        |
+| `CLOUDINARY_API_SECRET`       | Cloudinary API secret                                     |
+| `LIVEKIT_URL`                 | LiveKit WebSocket URL                                     |
+| `LIVEKIT_API_KEY`             | LiveKit API key                                           |
+| `LIVEKIT_API_SECRET`          | LiveKit API secret                                        |
+| `MISTA_API_KEY`               | MISTA SMS gateway key                                     |
+| `CORS_ORIGINS`                | Allowed origins JSON array                                |
 
 **Frontend (`frontend/.env.local`):**
 
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend base URL |
+| Variable                  | Description           |
+| ------------------------- | --------------------- |
+| `NEXT_PUBLIC_API_URL`     | Backend base URL      |
 | `NEXT_PUBLIC_LIVEKIT_URL` | LiveKit WebSocket URL |
 
 Full examples in `backend/.env.example` and `frontend/.env.example`.
@@ -247,12 +245,12 @@ pytest
 
 Four test modules covering the ML inference pipeline and API surface. All external I/O (database, Cloudinary, ML model) is mocked — no live database or network needed.
 
-| Module | What it tests |
-| ------ | ------------- |
-| `test_ml_service.py` | Two-stage triage logic — UNCERTAIN threshold (0.35), REFER override (0.60), per-class routing |
-| `test_preprocessing.py` | Image loading from file and URL, RGBA/greyscale → RGB coercion, output tensor shape |
-| `test_triage_endpoint.py` | `POST /api/triage/scan` and `GET /api/triage/history` — auth, schema, mocked I/O |
-| `test_integration.py` | Full pipeline: preprocessing → inference → triage decision → HTTP response |
+| Module                    | What it tests                                                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| `test_ml_service.py`      | Two-stage triage logic — UNCERTAIN threshold (0.35), REFER override (0.60), per-class routing |
+| `test_preprocessing.py`   | Image loading from file and URL, RGBA/greyscale → RGB coercion, output tensor shape           |
+| `test_triage_endpoint.py` | `POST /api/triage/scan` and `GET /api/triage/history` — auth, schema, mocked I/O              |
+| `test_integration.py`     | Full pipeline: preprocessing → inference → triage decision → HTTP response                    |
 
 ---
 
@@ -276,8 +274,8 @@ Four test modules covering the ML inference pipeline and API surface. All extern
 
 See [notebooks/04_model_training_efficientnet.ipynb](notebooks/04_model_training_efficientnet.ipynb) for full metrics.
 
-| Training curves (loss + accuracy, both phases) | Confusion matrix — FST V–VI test set (90 samples) |
-| ----------------------------------------------- | -------------------------------------------------- |
+| Training curves (loss + accuracy, both phases)                | Confusion matrix — FST V–VI test set (90 samples)             |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
 | <img src="results/training/training_history.png" width="420"> | <img src="results/training/confusion_matrix.png" width="380"> |
 
 ---
@@ -456,22 +454,22 @@ DermoAI demonstrates that a focused FST V–VI dataset combined with EfficientNe
 
 #### GP Dashboard and Consultation Creation
 
-| Screen                                             | Screenshot                                                      |
-| -------------------------------------------------- | --------------------------------------------------------------- |
-| GP (General Practitioner) Dashboard                | <img src="mockups/new/doctor-dashboard.png" width="600">        |
-| Create Consultation — new patient case             | <img src="mockups/new/create-consultation.png" width="600">     |
+| Screen                                 | Screenshot                                                  |
+| -------------------------------------- | ----------------------------------------------------------- |
+| GP (General Practitioner) Dashboard    | <img src="mockups/new/doctor-dashboard.png" width="600">    |
+| Create Consultation — new patient case | <img src="mockups/new/create-consultation.png" width="600"> |
 
 #### Consultation — different conditions, different data
 
-| MANAGE LOCALLY — Scabies | REFER — Pityriasis Rubra Pilaris |
-| ------------------------ | -------------------------------- |
+| MANAGE LOCALLY — Scabies                                          | REFER — Pityriasis Rubra Pilaris                                     |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------- |
 | <img src="mockups/new/consultation-page-scabies.png" width="420"> | <img src="mockups/new/consultation-page-pityriasis.png" width="420"> |
 
 #### Consent PIN Mechanism
 
-| Screen                                                              | Screenshot                                               |
-| ------------------------------------------------------------------- | -------------------------------------------------------- |
-| Consent PIN — SMS-verified patient opt-in for image reuse           | <img src="mockups/new/consent-pin.png" width="600">      |
+| Screen                                                    | Screenshot                                          |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| Consent PIN — SMS-verified patient opt-in for image reuse | <img src="mockups/new/consent-pin.png" width="600"> |
 
 #### Telemedicine — Appointment Booking and Video Call
 
@@ -483,16 +481,16 @@ DermoAI demonstrates that a focused FST V–VI dataset combined with EfficientNe
 
 #### Specialist Review — GradCAM Explainability
 
-| Review queue | Review with GradCAM dialog open |
-| ------------ | ------------------------------- |
+| Review queue                                         | Review with GradCAM dialog open                               |
+| ---------------------------------------------------- | ------------------------------------------------------------- |
 | <img src="mockups/new/review-queue.png" width="420"> | <img src="mockups/new/review-explainability.png" width="420"> |
 
 #### Clinical Review — Post-Consultation Documentation
 
-| Screen                                               | Screenshot                                                        |
-| ---------------------------------------------------- | ----------------------------------------------------------------- |
-| Clinical Review Form — specialist writes disposition | <img src="mockups/new/clinical-review-form.png" width="600">      |
-| Filled Clinical Review — completed case record       | <img src="mockups/new/filled-review.png" width="600">             |
+| Screen                                               | Screenshot                                                   |
+| ---------------------------------------------------- | ------------------------------------------------------------ |
+| Clinical Review Form — specialist writes disposition | <img src="mockups/new/clinical-review-form.png" width="600"> |
+| Filled Clinical Review — completed case record       | <img src="mockups/new/filled-review.png" width="600">        |
 
 ---
 
