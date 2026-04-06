@@ -12,6 +12,18 @@ AI-assisted dermatological triage for resource-limited settings. DermoAI classif
 
 **Video demo:** [DermoAI Video Demo (Google Drive)](https://drive.google.com/drive/folders/1xOsam4Ctrd44eHeENncgpYg6180lFXp7)
 
+## Demo Access (Live System)
+
+To review the deployed system without local setup:
+
+| Role | Email | Password |
+|---|---|---|
+| Health Worker (GP) | doctor@dermoai.rw | Doctor@123 |
+| Specialist | specialist@dermoai.rw | Doctor@123 |
+| Admin | admin@dermoai.rw | Admin@123 |
+
+All roles are pre-approved. Use the Quick Scan on the landing page without logging in to test anonymous triage immediately.
+
 ## Description
 
 DermoAI is a full-stack clinical workflow application combining:
@@ -469,6 +481,39 @@ dermoai/
 ├── mockups/          # UI screenshots (new/ = final, new/mobile/ = responsive)
 └── docs/             # PROJECT_REPORT.md (full technical documentation)
 ```
+
+The capstone report PDF is available at [`docs/Reponse Ashimwe_DermoAI_MissionCapstoneReport.pdf`](https://github.com/reponseashimwe/dermoai/blob/main/docs/Reponse%20Ashimwe_DermoAI_MissionCapstoneReport.pdf).
+
+---
+
+## Required Environment Variables
+
+**Backend (`backend/.env`):**
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string (`postgresql+asyncpg://...`) |
+| `SECRET_KEY` | JWT signing secret |
+| `ALGORITHM` | JWT algorithm (default `HS256`) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token TTL |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token TTL |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `LIVEKIT_URL` | LiveKit WebSocket URL |
+| `LIVEKIT_API_KEY` | LiveKit API key |
+| `LIVEKIT_API_SECRET` | LiveKit API secret |
+| `MISTA_API_KEY` | MISTA SMS gateway key |
+| `CORS_ORIGINS` | Allowed origins JSON array |
+
+**Frontend (`frontend/.env.local`):**
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Backend base URL |
+| `NEXT_PUBLIC_LIVEKIT_URL` | LiveKit WebSocket URL |
+
+Full examples in `backend/.env.example` and `frontend/.env.example`.
 
 ---
 
