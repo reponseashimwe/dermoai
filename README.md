@@ -10,6 +10,8 @@ AI-assisted dermatological triage for resource-limited settings. DermoAI classif
 - Backend API (Render): https://dermoai-24lz.onrender.com
 - API docs (Swagger): https://dermoai-24lz.onrender.com/docs
 
+**Video demo:** [DermoAI Video Demo (Google Drive)](https://drive.google.com/drive/folders/1xOsam4Ctrd44eHeENncgpYg6180lFXp7)
+
 ## Demo Access (Live System)
 
 To review the deployed system without local setup:
@@ -48,7 +50,7 @@ DermoAI is a full-stack clinical workflow application combining:
 - **Specialist Review Queue** — specialists review consented images, assign verified labels, and write clinical reviews.
 
 Full API documentation: https://dermoai-24lz.onrender.com/docs
-Environment variables: copy `backend/.env.example` and `frontend/.env.local.example` and fill in your credentials.
+Environment variables: copy `backend/.env.example` and `frontend/.env.example` and fill in your credentials.
 
 ---
 
@@ -127,6 +129,109 @@ jupyter notebook notebooks/01_data_exploration.ipynb
 | [02_condition_classification_strategy.ipynb](notebooks/02_condition_classification_strategy.ipynb) | Condition taxonomy: 112 diagnoses → 5 classes        |
 | [03_data_augmentation.ipynb](notebooks/03_data_augmentation.ipynb)                                 | Augmentation strategy and split statistics           |
 | [04_model_training_efficientnet.ipynb](notebooks/04_model_training_efficientnet.ipynb)             | EfficientNetB0 training, focal loss, GradCAM, export |
+
+---
+
+## Required Environment Variables
+
+**Backend (`backend/.env`):**
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string (`postgresql+asyncpg://...`) |
+| `SECRET_KEY` | JWT signing secret |
+| `ALGORITHM` | JWT algorithm (default `HS256`) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token TTL |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token TTL |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `LIVEKIT_URL` | LiveKit WebSocket URL |
+| `LIVEKIT_API_KEY` | LiveKit API key |
+| `LIVEKIT_API_SECRET` | LiveKit API secret |
+| `MISTA_API_KEY` | MISTA SMS gateway key |
+| `CORS_ORIGINS` | Allowed origins JSON array |
+
+**Frontend (`frontend/.env.local`):**
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Backend base URL |
+| `NEXT_PUBLIC_LIVEKIT_URL` | LiveKit WebSocket URL |
+
+Full examples in `backend/.env.example` and `frontend/.env.example`.
+
+---
+
+## Deployment
+
+### Environments
+
+| Component     | Platform          | URL                               |
+| ------------- | ----------------- | --------------------------------- |
+| Frontend      | Vercel            | https://dermo.vercel.app          |
+| Backend API   | Render            | https://dermoai-24lz.onrender.com |
+| Database      | Render PostgreSQL | Managed add-on                    |
+| Image Storage | Cloudinary        | CDN delivery                      |
+| Video Calls   | LiveKit Cloud     | WebRTC                            |
+| SMS Alerts    | MISTA             | Rwanda SMS gateway                |
+
+### Frontend — Vercel
+
+1. Connect GitHub repo to Vercel
+2. Set root directory to `frontend`
+3. Build command: `npm run build` (or `pnpm build`)
+4. Add environment variables: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_LIVEKIT_URL`
+5. Deploy — auto-deploys on every push to main
+
+### Backend — Render
+
+1. Create new Web Service on Render
+2. Set root directory to `backend`
+3. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Add PostgreSQL addon — `DATABASE_URL` auto-injected
+5. Copy all variables from `backend/.env.example` and fill in values
+6. Upload model files to `models/final/` before deploying (commit or mount as persistent disk)
+7. Deploy — migrations and seed data run automatically on startup
+
+### Verify deployment
+
+- Frontend live: https://dermo.vercel.app
+- Backend health: https://dermoai-24lz.onrender.com/docs
+- End-to-end: upload any skin image on the landing page → condition + triage result + GradCAM returned
+
+---
+
+## Repository Structure
+
+```
+dermoai/
+├── backend/          # FastAPI app (API, auth, ML inference, Cloudinary, LiveKit, SMS)
+│   ├── app/
+│   │   ├── core/     # config, database, security, deps, seed, migrate
+│   │   ├── models/   # SQLAlchemy ORM (13 entities)
+│   │   ├── schemas/  # Pydantic v2 request/response models
+│   │   ├── routers/  # 16 FastAPI routers
+│   │   └── services/ # ml, image, consultation, cloudinary, notification, websocket, teleconsultation
+│   ├── alembic/      # DB migrations
+│   └── scripts/      # populate_data.py (demo data seeding)
+├── frontend/         # Next.js 16 app
+│   └── src/
+│       ├── app/      # (auth)/, (dashboard)/, (admin)/
+│       ├── components/
+│       ├── hooks/    # React Query data hooks
+│       ├── lib/api/  # Axios client + typed API functions
+│       └── types/    # api.ts canonical TypeScript types
+├── notebooks/        # 01_data_exploration → 04_model_training_efficientnet
+├── src/data/         # download.py, filter.py
+├── data/             # raw/, processed/, augmented/, test/
+├── results/          # eda/, classification/, augmentation/
+├── models/final/     # best_model.keras, class_names.json, triage_mapping.json
+├── mockups/          # UI screenshots (new/ = final, new/mobile/ = responsive)
+└── docs/             # PROJECT_REPORT.md (full technical documentation)
+```
+
+The capstone report PDF is available at [`docs/Reponse Ashimwe_DermoAI_MissionCapstoneReport.pdf`](https://github.com/reponseashimwe/dermoai/blob/main/docs/Reponse%20Ashimwe_DermoAI_MissionCapstoneReport.pdf).
 
 ---
 
@@ -254,6 +359,38 @@ Two-stage safety logic: confidence threshold (0.35) routes low-confidence predic
 
 ⏳ **In progress.** Validation sessions with medical consultants are scheduled. The system is fully deployed and ready at [https://dermo.vercel.app](https://dermo.vercel.app).
 
+---
+
+## Discussion
+
+DermoAI demonstrates that a focused FST V–VI dataset combined with EfficientNetB0 and two-stage triage logic can be deployed end-to-end as a clinical workflow tool in resource-limited settings. Key design decisions and their impact:
+
+**UNCERTAIN output:** Rather than routing low-confidence predictions to an arbitrary class, the system returns UNCERTAIN when max class probability is below 0.35. This prevents false reassurance and prompts patients to retake the photo or seek clinical evaluation — a safety-first approach validated with non-skin images and poor-quality uploads.
+
+**GradCAM explainability:** Providing a visual heatmap of model attention builds clinician trust and supports the GP in contextualising the AI prediction. UNCERTAIN cases skip GradCAM entirely since there is no meaningful class to explain.
+
+**Two-role practitioner model:** Separating GP (consultation creator) from SPECIALIST (reviewer, teleconsultation approver) mirrors real referral chains in Sub-Saharan African health systems where dermatology specialists are concentrated in cities.
+
+**SMS integration (MISTA):** Appointment requests, approvals, and consent PINs are delivered via SMS, ensuring the workflow functions even without smartphone apps or stable internet on the patient side.
+
+**Consent-gated retraining pipeline:** Images only enter the admin retraining dataset after explicit patient consent verified by PIN — a critical ethical safeguard for a system trained on under-represented skin types.
+
+---
+
+## Recommendations
+
+1. **Expand training classes:** The current 5-class model covers high-burden FST V–VI conditions but excludes malignancies. Future work should incorporate ISIC dermoscopy data for malignant classes to enable REFER recall comparison against published benchmarks.
+
+2. **Offline-first mobile app:** The PWA currently requires network access for inference. Deploying a quantised TFLite model on-device would make the tool viable in zero-connectivity settings common in rural clinics and community health worker contexts.
+
+3. **Federated learning for retraining:** The consent-gated image pool enables retraining but centralises sensitive health data. A federated learning approach would allow hospital sites to contribute model updates without sharing raw images.
+
+4. **FST equity monitoring in production:** The admin ML metrics endpoint exposes per-class confidence distributions but not per-FST-subgroup performance. Adding FST metadata at upload time (self-reported or model-predicted) would enable continuous equity monitoring.
+
+5. **Clinical validation study:** Deployment as a decision-support tool requires a prospective validation against GP + specialist ground truth in at least two clinic sites. The specialist review queue is already designed to collect this ground truth at scale.
+
+---
+
 ## Testing Results
 
 ### Functional Testing — Authentication
@@ -366,152 +503,6 @@ Two-stage safety logic: confidence threshold (0.35) routes low-confidence predic
 | Admin Dashboard — national system overview              | <img src="mockups/new/admin-dashboard.png" width="600">    |
 | Admin Images — consented images for model retraining    | <img src="mockups/new/admin-images.png" width="600">       |
 | Practitioners management — approve/reject registrations | <img src="mockups/new/practitioners-page.png" width="600"> |
-
----
-
-### Performance Testing — Hardware & Software Specifications
-
-| Environment                                 | Result                                                                                                        |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Backend — Render free tier (cold start)** | ~30s cold start; ~1.5–3s warm inference per image (Cloudinary upload + EfficientNetB0 forward pass + GradCAM) |
-| **Frontend — Vercel (global CDN)**          | Static/SSR pages <1s; React Query caching eliminates redundant API calls                                      |
-| **Mobile — Android mid-range (PWA)**        | Installable via browser prompt; camera capture and file upload tested on mid-range Android devices            |
-| **Mobile — iOS Safari (PWA)**               | Camera upload and scan result rendering confirmed on iOS Safari                                               |
-| **Model size**                              | `best_model.keras` ~20MB; loaded once at backend startup, all subsequent inference in-memory                  |
-| **Database — Render PostgreSQL**            | Async SQLAlchemy (asyncpg); all queries non-blocking; connection pooling configured                           |
-
----
-
-## Discussion
-
-DermoAI demonstrates that a focused FST V–VI dataset combined with EfficientNetB0 and two-stage triage logic can be deployed end-to-end as a clinical workflow tool in resource-limited settings. Key design decisions and their impact:
-
-**UNCERTAIN output:** Rather than routing low-confidence predictions to an arbitrary class, the system returns UNCERTAIN when max class probability is below 0.35. This prevents false reassurance and prompts patients to retake the photo or seek clinical evaluation — a safety-first approach validated with non-skin images and poor-quality uploads.
-
-**GradCAM explainability:** Providing a visual heatmap of model attention builds clinician trust and supports the GP in contextualising the AI prediction. UNCERTAIN cases skip GradCAM entirely since there is no meaningful class to explain.
-
-**Two-role practitioner model:** Separating GP (consultation creator) from SPECIALIST (reviewer, teleconsultation approver) mirrors real referral chains in Sub-Saharan African health systems where dermatology specialists are concentrated in cities.
-
-**SMS integration (MISTA):** Appointment requests, approvals, and consent PINs are delivered via SMS, ensuring the workflow functions even without smartphone apps or stable internet on the patient side.
-
-**Consent-gated retraining pipeline:** Images only enter the admin retraining dataset after explicit patient consent verified by PIN — a critical ethical safeguard for a system trained on under-represented skin types.
-
----
-
-## Recommendations
-
-1. **Expand training classes:** The current 5-class model covers high-burden FST V–VI conditions but excludes malignancies. Future work should incorporate ISIC dermoscopy data for malignant classes to enable REFER recall comparison against published benchmarks.
-
-2. **Offline-first mobile app:** The PWA currently requires network access for inference. Deploying a quantised TFLite model on-device would make the tool viable in zero-connectivity settings common in rural clinics and community health worker contexts.
-
-3. **Federated learning for retraining:** The consent-gated image pool enables retraining but centralises sensitive health data. A federated learning approach would allow hospital sites to contribute model updates without sharing raw images.
-
-4. **FST equity monitoring in production:** The admin ML metrics endpoint exposes per-class confidence distributions but not per-FST-subgroup performance. Adding FST metadata at upload time (self-reported or model-predicted) would enable continuous equity monitoring.
-
-5. **Clinical validation study:** Deployment as a decision-support tool requires a prospective validation against GP + specialist ground truth in at least two clinic sites. The specialist review queue is already designed to collect this ground truth at scale.
-
----
-
-## Deployment
-
-### Environments
-
-| Component     | Platform          | URL                               |
-| ------------- | ----------------- | --------------------------------- |
-| Frontend      | Vercel            | https://dermo.vercel.app          |
-| Backend API   | Render            | https://dermoai-24lz.onrender.com |
-| Database      | Render PostgreSQL | Managed add-on                    |
-| Image Storage | Cloudinary        | CDN delivery                      |
-| Video Calls   | LiveKit Cloud     | WebRTC                            |
-| SMS Alerts    | MISTA             | Rwanda SMS gateway                |
-
-### Frontend — Vercel
-
-1. Connect GitHub repo to Vercel
-2. Set root directory to `frontend`
-3. Build command: `npm run build` (or `pnpm build`)
-4. Add environment variables: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_LIVEKIT_URL`
-5. Deploy — auto-deploys on every push to main
-
-### Backend — Render
-
-1. Create new Web Service on Render
-2. Set root directory to `backend`
-3. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Add PostgreSQL addon — `DATABASE_URL` auto-injected
-5. Copy all variables from `backend/.env.example` and fill in values
-6. Upload model files to `models/final/` before deploying (commit or mount as persistent disk)
-7. Deploy — migrations and seed data run automatically on startup
-
-### Verify deployment
-
-- Frontend live: https://dermo.vercel.app
-- Backend health: https://dermoai-24lz.onrender.com/docs
-- End-to-end: upload any skin image on the landing page → condition + triage result + GradCAM returned
-
----
-
-## Repository Structure
-
-```
-dermoai/
-├── backend/          # FastAPI app (API, auth, ML inference, Cloudinary, LiveKit, SMS)
-│   ├── app/
-│   │   ├── core/     # config, database, security, deps, seed, migrate
-│   │   ├── models/   # SQLAlchemy ORM (13 entities)
-│   │   ├── schemas/  # Pydantic v2 request/response models
-│   │   ├── routers/  # 16 FastAPI routers
-│   │   └── services/ # ml, image, consultation, cloudinary, notification, websocket, teleconsultation
-│   ├── alembic/      # DB migrations
-│   └── scripts/      # populate_data.py (demo data seeding)
-├── frontend/         # Next.js 16 app
-│   └── src/
-│       ├── app/      # (auth)/, (dashboard)/, (admin)/
-│       ├── components/
-│       ├── hooks/    # React Query data hooks
-│       ├── lib/api/  # Axios client + typed API functions
-│       └── types/    # api.ts canonical TypeScript types
-├── notebooks/        # 01_data_exploration → 04_model_training_efficientnet
-├── src/data/         # download.py, filter.py
-├── data/             # raw/, processed/, augmented/, test/
-├── results/          # eda/, classification/, augmentation/
-├── models/final/     # best_model.keras, class_names.json, triage_mapping.json
-├── mockups/          # UI screenshots (new/ = final, new/mobile/ = responsive)
-└── docs/             # PROJECT_REPORT.md (full technical documentation)
-```
-
-The capstone report PDF is available at [`docs/Reponse Ashimwe_DermoAI_MissionCapstoneReport.pdf`](https://github.com/reponseashimwe/dermoai/blob/main/docs/Reponse%20Ashimwe_DermoAI_MissionCapstoneReport.pdf).
-
----
-
-## Required Environment Variables
-
-**Backend (`backend/.env`):**
-
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string (`postgresql+asyncpg://...`) |
-| `SECRET_KEY` | JWT signing secret |
-| `ALGORITHM` | JWT algorithm (default `HS256`) |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token TTL |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token TTL |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
-| `LIVEKIT_URL` | LiveKit WebSocket URL |
-| `LIVEKIT_API_KEY` | LiveKit API key |
-| `LIVEKIT_API_SECRET` | LiveKit API secret |
-| `MISTA_API_KEY` | MISTA SMS gateway key |
-| `CORS_ORIGINS` | Allowed origins JSON array |
-
-**Frontend (`frontend/.env.local`):**
-
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend base URL |
-| `NEXT_PUBLIC_LIVEKIT_URL` | LiveKit WebSocket URL |
-
-Full examples in `backend/.env.example` and `frontend/.env.example`.
 
 ---
 
